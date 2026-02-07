@@ -17,7 +17,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #020206;
+      background: #010104;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
@@ -65,125 +65,158 @@
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-
-    let W, H, cx, cy;
-
-    function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-      cx = W / 2;
-      cy = H / 2;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    // ===== GALAXY STARS (STATIC LAYER) =====
-    const galaxyStars = [];
-
-    function initGalaxy() {
-      galaxyStars.length = 0;
-
-      // Spiral arms
-      for (let arm = 0; arm < 4; arm++) {
-        const offset = (arm / 4) * Math.PI * 2;
-        for (let i = 0; i < 400; i++) {
-          const t = i / 400;
-          const angle = t * Math.PI * 4 + offset;
-          const radius = t * Math.max(W, H) * 0.6;
-          const spread = (1 - t) * 60 + 15;
-
-          galaxyStars.push({
-            baseAngle: angle,
-            radius: radius,
-            offsetX: (Math.random() - 0.5) * spread,
-            offsetY: (Math.random() - 0.5) * spread,
-            size: Math.random() * 1.5 + 0.3,
-            alpha: 0.2 + Math.random() * 0.6,
-            hue: 200 + Math.random() * 40,
-            rotationSpeed: 0.00003 + Math.random() * 0.00002
-          });
-        }
-      }
-
-      // Background stars
-      for (let i = 0; i < 300; i++) {
-        galaxyStars.push({
+    
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let cx = W / 2;
+    let cy = H / 2;
+    
+    canvas.width = W;
+    canvas.height = H;
+    
+    // ===== BACKGROUND STARS =====
+    const bgStars = [];
+    
+    function initBgStars() {
+      bgStars.length = 0;
+      for (let i = 0; i < 400; i++) {
+        bgStars.push({
           x: Math.random() * W,
           y: Math.random() * H,
-          size: Math.random() * 1 + 0.2,
-          alpha: 0.1 + Math.random() * 0.4,
-          isBackground: true
+          size: Math.random() * 1.2 + 0.2,
+          alpha: 0.2 + Math.random() * 0.5
         });
       }
     }
-
+    
+    // ===== MASSIVE GALAXY =====
+    const galaxyStars = [];
+    let galaxyRotation = 0;
+    
+    function initGalaxy() {
+      galaxyStars.length = 0;
+      
+      const maxRadius = Math.max(W, H) * 0.75;
+      
+      // 4 spiral arms - TRIPLED star count
+      for (let arm = 0; arm < 4; arm++) {
+        const offset = (arm / 4) * Math.PI * 2;
+        const armStars = arm % 2 === 0 ? 2000 : 1500;
+        
+        for (let i = 0; i < armStars; i++) {
+          const t = i / armStars;
+          const angle = t * Math.PI * 4.5 + offset;
+          const radius = 20 + t * maxRadius;
+          const spread = 12 + t * 70;
+          
+          const brightness = Math.pow(1 - t * 0.5, 1.5);
+          
+          galaxyStars.push({
+            angle: angle,
+            radius: radius,
+            offsetX: (Math.random() - 0.5) * spread,
+            offsetY: (Math.random() - 0.5) * spread * 0.25,
+            size: (1 - t * 0.5) * (Math.random() * 1.3 + 0.3),
+            brightness: brightness * (0.4 + Math.random() * 0.6),
+            colorR: Math.floor(255 - t * 30),
+            colorG: Math.floor(248 - t * 50),
+            colorB: Math.floor(225 + t * 30)
+          });
+        }
+      }
+      
+      // Massive luminous core
+      for (let i = 0; i < 1500; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.pow(Math.random(), 2) * 150;
+        
+        galaxyStars.push({
+          angle: angle,
+          radius: radius,
+          offsetX: 0,
+          offsetY: 0,
+          size: Math.random() * 2.2 + 0.4,
+          brightness: 0.6 + Math.random() * 0.4,
+          colorR: 255,
+          colorG: 252,
+          colorB: 245,
+          isCore: true
+        });
+      }
+    }
+    
+    function drawBgStars() {
+      bgStars.forEach(star => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+    
     function drawGalaxy(time) {
+      galaxyRotation = time * 0.00003;
+      
       // Nebula
       const nebulae = [
-        { x: 0.25, y: 0.35, r: 0.3, color: [60, 30, 100] },
-        { x: 0.75, y: 0.3, r: 0.25, color: [30, 60, 120] },
-        { x: 0.5, y: 0.7, r: 0.35, color: [80, 40, 80] },
+        { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
+        { x: 0.7, y: 0.35, r: 0.45, color: [25, 50, 100] },
+        { x: 0.5, y: 0.65, r: 0.55, color: [70, 35, 80] },
       ];
-
+      
       nebulae.forEach(n => {
-        const pulse = Math.sin(time * 0.0003 + n.x * 10) * 0.02 + 1;
         const grad = ctx.createRadialGradient(
           n.x * W, n.y * H, 0,
-          n.x * W, n.y * H, n.r * Math.max(W, H) * pulse
+          n.x * W, n.y * H, n.r * Math.max(W, H)
         );
-        grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.12)`);
+        grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.1)`);
+        grad.addColorStop(0.4, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.05)`);
         grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
       });
-
-      // Galaxy core
-      const corePulse = Math.sin(time * 0.001) * 0.1 + 1;
-      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 180 * corePulse);
-      coreGrad.addColorStop(0, 'rgba(255, 240, 200, 0.25)');
-      coreGrad.addColorStop(0.4, 'rgba(255, 200, 150, 0.1)');
+      
+      // Massive core glow
+      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
+      coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
+      coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
+      coreGrad.addColorStop(0.4, 'rgba(230, 200, 255, 0.15)');
       coreGrad.addColorStop(1, 'transparent');
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
-      ctx.arc(cx, cy, 180 * corePulse, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 300, 0, Math.PI * 2);
       ctx.fill();
-
-      // Stars (rotating)
+      
+      // Draw stars
       galaxyStars.forEach(star => {
-        let x, y;
-
-        if (star.isBackground) {
-          x = star.x;
-          y = star.y;
-        } else {
-          const angle = star.baseAngle + time * star.rotationSpeed;
-          x = cx + Math.cos(angle) * star.radius + star.offsetX;
-          y = cy + Math.sin(angle) * star.radius * 0.5 + star.offsetY;
-        }
-
-        const twinkle = star.isBackground ? 1 : (Math.sin(time * 0.005 + star.baseAngle) * 0.3 + 0.7);
-
-        ctx.fillStyle = star.hue
-          ? `hsla(${star.hue}, 60%, 80%, ${star.alpha * twinkle})`
-          : `rgba(255, 255, 255, ${star.alpha * twinkle})`;
+        const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
+        const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
+        const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
+        
+        ctx.fillStyle = `rgba(${star.colorR}, ${star.colorG}, ${star.colorB}, ${star.brightness})`;
         ctx.beginPath();
         ctx.arc(x, y, star.size, 0, Math.PI * 2);
         ctx.fill();
       });
     }
-
+    
     // ===== AI AGENTS =====
     const AGENT_COUNT = 50;
+    
+    // Fixed non-overlapping team positions
     const TEAMS = [
-      { id: 'Alpha', color: '#00aaff', x: 0.2, y: 0.3 },
-      { id: 'Beta', color: '#ff6699', x: 0.8, y: 0.25 },
-      { id: 'Gamma', color: '#44ddaa', x: 0.2, y: 0.75 },
-      { id: 'Delta', color: '#ffaa44', x: 0.8, y: 0.7 },
-      { id: 'Epsilon', color: '#aa88ff', x: 0.5, y: 0.5 },
+      { id: 'ALPHA', color: '#00aaff', x: 0.15, y: 0.2 },
+      { id: 'BETA', color: '#ff6699', x: 0.85, y: 0.2 },
+      { id: 'GAMMA', color: '#44ddaa', x: 0.15, y: 0.8 },
+      { id: 'DELTA', color: '#ffaa44', x: 0.85, y: 0.8 },
+      { id: 'CORE', color: '#aa88ff', x: 0.5, y: 0.5 },
     ];
-
+    
     const agents = [];
-
+    const teamLabels = {};
+    const dataLines = []; // Dense line connections
+    const finishParticles = [];
+    
     class Agent {
       constructor(id) {
         this.id = id;
@@ -193,79 +226,140 @@
         this.targetY = this.y;
         this.vx = 0;
         this.vy = 0;
-        this.size = 3;
+        this.size = 2.5;
         this.team = null;
         this.color = '#ffffff';
       }
-
+      
       assignTeam(team) {
         this.team = team;
         this.color = team ? team.color : '#ffffff';
-
+        
         if (team) {
           const angle = Math.random() * Math.PI * 2;
-          const dist = Math.random() * 80 + 20;
+          const dist = Math.random() * 45 + 20;
           this.targetX = team.x * W + Math.cos(angle) * dist;
           this.targetY = team.y * H + Math.sin(angle) * dist;
         }
       }
-
+      
       scatter() {
         this.team = null;
         this.color = '#ffffff';
         this.targetX = Math.random() * W;
         this.targetY = Math.random() * H;
+        this.vx += (Math.random() - 0.5) * 3;
+        this.vy += (Math.random() - 0.5) * 3;
       }
-
+      
       update() {
         const dx = this.targetX - this.x;
         const dy = this.targetY - this.y;
-
-        this.vx += dx * 0.008;
-        this.vy += dy * 0.008;
+        
+        this.vx += dx * 0.015;
+        this.vy += dy * 0.015;
         this.vx *= 0.95;
         this.vy *= 0.95;
-
+        
         this.x += this.vx;
         this.y += this.vy;
       }
-
-      draw(ctx) {
-        // Glow
-        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 4);
-        grad.addColorStop(0, this.color + '80');
+      
+      draw() {
+        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+        grad.addColorStop(0, this.color + '90');
         grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * 4, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
         ctx.fill();
-
-        // Core
+        
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
       }
     }
-
+    
+    // Data line (fast, thick when stacked)
+    class DataLine {
+      constructor(from, to) {
+        this.fromAgent = from;
+        this.toAgent = to;
+        this.life = 1;
+        this.decay = 0.03 + Math.random() * 0.02;
+      }
+      
+      update() {
+        this.life -= this.decay;
+        return this.life > 0;
+      }
+      
+      draw() {
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 0.15})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(this.fromAgent.x, this.fromAgent.y);
+        ctx.lineTo(this.toAgent.x, this.toAgent.y);
+        ctx.stroke();
+      }
+    }
+    
+    // Finish particle
+    class FinishParticle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 4;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.life = 1;
+        this.color = color;
+        this.size = 1 + Math.random() * 2;
+      }
+      
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vx *= 0.98;
+        this.vy *= 0.98;
+        this.life -= 0.02;
+        return this.life > 0;
+      }
+      
+      draw() {
+        ctx.fillStyle = this.color + Math.floor(this.life * 200).toString(16).padStart(2, '0');
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
     for (let i = 0; i < AGENT_COUNT; i++) {
       agents.push(new Agent(i));
     }
-
-    // ===== CONNECTIONS =====
+    
+    // ===== PHASE =====
+    let phase = 'scatter';
+    let phaseTime = 0;
+    let startTime = null;
+    
+    const PHASE_DURATION = { scatter: 2500, gather: 4000, finish: 1500 };
+    
     function drawConnections() {
       agents.forEach((a1, i) => {
         if (!a1.team) return;
-
+        
         agents.forEach((a2, j) => {
           if (i >= j || a1.team !== a2.team) return;
-
+          
           const dx = a2.x - a1.x;
           const dy = a2.y - a1.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 100) {
-            const alpha = (1 - dist / 100) * 0.3;
+          
+          if (dist < 70) {
+            const alpha = (1 - dist / 70) * 0.3;
             ctx.strokeStyle = a1.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
             ctx.lineWidth = 0.5;
             ctx.beginPath();
@@ -276,98 +370,175 @@
         });
       });
     }
-
-    // ===== TEAM LABELS =====
-    const teamLabels = {};
-
+    
     function drawTeamLabels(time) {
       TEAMS.forEach(team => {
         const label = teamLabels[team.id];
         if (!label || !label.visible) return;
-
-        const fadeIn = Math.min(1, (time - label.startTime) / 1000);
+        
+        const elapsed = time - label.startTime;
+        const fadeIn = Math.min(1, elapsed / 400);
+        
         ctx.save();
-        ctx.globalAlpha = fadeIn * 0.8;
-        ctx.font = '600 14px system-ui';
-        ctx.fillStyle = team.color;
+        ctx.globalAlpha = fadeIn * 0.9;
+        ctx.font = '600 12px system-ui';
         ctx.textAlign = 'center';
-        ctx.fillText(`TEAM ${team.id.toUpperCase()}`, team.x * W, team.y * H - 100);
+        ctx.shadowColor = team.color;
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = team.color;
+        ctx.fillText(team.id, team.x * W, team.y * H - 65);
         ctx.restore();
       });
     }
-
-    // ===== PHASE MANAGEMENT =====
-    let phase = 'scatter';
-    let phaseTime = 0;
-    const PHASE_DURATION = { scatter: 6000, gather: 8000 };
-
+    
+    function triggerFinish() {
+      const colors = TEAMS.map(t => t.color);
+      for (let i = 0; i < 80; i++) {
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        finishParticles.push(new FinishParticle(cx, cy, color));
+      }
+    }
+    
+    function spawnDataLines() {
+      const teamAgents = agents.filter(a => a.team);
+      if (teamAgents.length < 2) return;
+      
+      // Spawn MANY lines per frame for dense coverage
+      for (let i = 0; i < 15; i++) {
+        const from = teamAgents[Math.floor(Math.random() * teamAgents.length)];
+        const to = teamAgents[Math.floor(Math.random() * teamAgents.length)];
+        if (from !== to) {
+          dataLines.push(new DataLine(from, to));
+        }
+      }
+    }
+    
+    function generateNonOverlappingPositions() {
+      const positions = [];
+      const minDist = 0.25; // Minimum distance between teams
+      
+      for (let i = 0; i < 5; i++) {
+        let valid = false;
+        let attempts = 0;
+        let x, y;
+        
+        while (!valid && attempts < 100) {
+          x = 0.15 + Math.random() * 0.7;
+          y = 0.15 + Math.random() * 0.7;
+          
+          valid = true;
+          for (const pos of positions) {
+            const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+            if (dist < minDist) {
+              valid = false;
+              break;
+            }
+          }
+          attempts++;
+        }
+        
+        positions.push({ x, y });
+      }
+      
+      return positions;
+    }
+    
     function updatePhase(time) {
       const elapsed = time - phaseTime;
-
+      
       if (phase === 'scatter' && elapsed > PHASE_DURATION.scatter) {
-        // Switch to gather
         phase = 'gather';
         phaseTime = time;
-
-        // Assign teams
-        agents.forEach((agent, i) => {
-          const team = TEAMS[i % TEAMS.length];
-          agent.assignTeam(team);
+        
+        // Generate non-overlapping positions
+        const positions = generateNonOverlappingPositions();
+        TEAMS.forEach((team, i) => {
+          team.x = positions[i].x;
+          team.y = positions[i].y;
         });
-
-        // Show labels
+        
+        agents.forEach((agent, i) => {
+          agent.assignTeam(TEAMS[i % TEAMS.length]);
+        });
+        
         TEAMS.forEach(team => {
           teamLabels[team.id] = { visible: true, startTime: time };
         });
-
+        
       } else if (phase === 'gather' && elapsed > PHASE_DURATION.gather) {
-        // Switch to scatter
+        phase = 'finish';
+        phaseTime = time;
+        triggerFinish();
+        
+      } else if (phase === 'finish' && elapsed > PHASE_DURATION.finish) {
         phase = 'scatter';
         phaseTime = time;
-
+        
         agents.forEach(agent => agent.scatter());
-
-        // Hide labels
+        dataLines.length = 0;
+        
         TEAMS.forEach(team => {
           teamLabels[team.id] = { visible: false };
         });
-
-        // Randomize team positions for next gather
-        TEAMS.forEach(team => {
-          team.x = 0.15 + Math.random() * 0.7;
-          team.y = 0.15 + Math.random() * 0.7;
-        });
+      }
+      
+      // Spawn data lines during gather
+      if (phase === 'gather') {
+        spawnDataLines();
       }
     }
-
-    // ===== ANIMATION =====
-    let startTime = null;
-
+    
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      cx = W / 2;
+      cy = H / 2;
+      canvas.width = W;
+      canvas.height = H;
+      initBgStars();
+      initGalaxy();
+    }
+    
+    window.addEventListener('resize', resize);
+    
     function animate(timestamp) {
-      if (!startTime) startTime = timestamp;
+      if (startTime === null) startTime = timestamp;
       const time = timestamp - startTime;
-
-      // Clear
-      ctx.fillStyle = '#020206';
+      
+      ctx.fillStyle = '#010104';
       ctx.fillRect(0, 0, W, H);
-
-      // Galaxy
+      
+      drawBgStars();
       drawGalaxy(time);
-
-      // Phase
       updatePhase(time);
-
-      // Agents
+      
+      // Data lines (drawn first, behind agents)
+      for (let i = dataLines.length - 1; i >= 0; i--) {
+        if (!dataLines[i].update()) {
+          dataLines.splice(i, 1);
+        } else {
+          dataLines[i].draw();
+        }
+      }
+      
+      // Finish particles
+      for (let i = finishParticles.length - 1; i >= 0; i--) {
+        if (!finishParticles[i].update()) {
+          finishParticles.splice(i, 1);
+        } else {
+          finishParticles[i].draw();
+        }
+      }
+      
       agents.forEach(a => a.update());
       drawConnections();
-      agents.forEach(a => a.draw(ctx));
-
-      // Labels
+      agents.forEach(a => a.draw());
       drawTeamLabels(time);
-
+      
       requestAnimationFrame(animate);
     }
-
+    
+    initBgStars();
     initGalaxy();
     requestAnimationFrame(animate);
   </script>
