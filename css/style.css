@@ -1,0 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Noto+Sans+JP:wght@100;300;400;500;700&family=Shippori+Mincho:wght@400;600&display=swap');
+
+:root {
+    --bg: #000000;
+    --text-main: #ffffff;
+    --text-dim: rgba(255, 255, 255, 0.6);
+    --accent-cyan: #00f2ff;
+    --accent-magenta: #bd00ff;
+    --font-sans: 'Inter', 'Noto Sans JP', sans-serif;
+    --font-serif: 'Shippori Mincho', serif;
+    --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Canvas Layer ── */
+#canvas-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* ── Grain Overlay ── */
+.grain {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* ── Scroll Container (Lenis) ── */
+.scroll-container {
+    position: relative;
+    z-index: 20;
+}
+
+/* ── Typography & Effects ── */
+.txt-glow {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.txt-serif {
+    font-family: var(--font-serif);
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.5));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ── Sections ── */
+section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 2rem;
+}
+
+/* Hero */
+.hero {
+    height: 100vh;
+    justify-content: center;
+}
+
+.hero-title {
+    font-size: clamp(3rem, 10vw, 8rem);
+    font-weight: 200;
+    letter-spacing: 0.05em;
+    text-transform: lowercase;
+    mix-blend-mode: exclusion;
+    /* Light interaction */
+}
+
+.hero-sub {
+    font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    margin-top: 2rem;
+    opacity: 0.8;
+}
+
+/* Philosophy */
+.philosophy {
+    align-items: center;
+    text-align: center;
+}
+
+.philo-main {
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 3rem;
+}
+
+.philo-desc {
+    font-size: clamp(1rem, 1.5vw, 1.5rem);
+    color: var(--text-dim);
+    max-width: 600px;
+    line-height: 1.8;
+}
+
+/* Stance (Keywords) */
+.stance {
+    display: flex;
+    flex-direction: column;
+    gap: 4vh;
+}
+
+.stance-item {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 100;
+    color: rgba(255, 255, 255, 0.2);
+    /* Dim by default */
+    transition: color 0.5s var(--ease-expo);
+    cursor: default;
+}
+
+.stance-item:hover,
+.stance-item.active {
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+}
+
+.stance-item span {
+    font-size: 0.4em;
+    letter-spacing: 0.1em;
+    margin-left: 1rem;
+    opacity: 0.5;
+    font-family: var(--font-serif);
+}
+
+/* Process (Flow) */
+.process {
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.3;
+    transition: opacity 0.5s;
+}
+
+.step.active {
+    opacity: 1;
+}
+
+.step-num {
+    font-size: 4rem;
+    font-weight: 700;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+    color: transparent;
+    margin-bottom: 1rem;
+}
+
+.step-label {
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+}
+
+/* Vision */
+.vision {
+    text-align: center;
+}
+
+.vis-text {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 5vw, 4.5rem);
+    line-height: 1.5;
+}
+
+.vis-highlight {
+    color: var(--accent-cyan);
+    font-style: italic;
+}
+
+/* Contact */
+.contact {
+    height: 80vh;
+}
+
+.contact-btn {
+    font-size: 2rem;
+    padding: 1.5rem 4rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 999px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.4s var(--ease-expo);
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s var(--ease-expo);
+    z-index: -1;
+}
+
+.contact-btn:hover {
+    border-color: #fff;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.contact-btn:hover::before {
+    transform: scaleX(1);
+}
+
+/* Footer */
+footer {
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── Scroll Animations Classes ── */
+.reveal-up {
+    opacity: 0;
+    transform: translateY(50px);
+}
+
+.reveal-blur {
+    opacity: 0;
+    filter: blur(10px);
+}
