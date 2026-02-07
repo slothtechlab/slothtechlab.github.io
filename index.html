@@ -92,7 +92,7 @@
     // ===== GALAXY (faster, constant rotation) =====
     const galaxyStars = [];
     let galaxyRotation = 0;
-    const GALAXY_ROTATION_SPEED = 0.0004; // Much faster constant speed
+    const GALAXY_ROTATION_SPEED = 0.0004;
 
     function initGalaxy() {
       galaxyStars.length = 0;
@@ -219,8 +219,15 @@
     const agents = [];
     const teamLabels = {};
     const dataLines = [];
+    const formationAgents = [];
 
-    const AGENT_COUNT = 150;
+    const AGENT_COUNT = 1000;
+    const FORMATION_AGENT_COUNT = 5000;
+
+    // Shape types for final formation
+    const SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon'];
+    let currentShape = 'circle';
+    let shapeRotation = 0;
 
     function blendColors(rgb1, rgb2) {
       return [
@@ -228,6 +235,150 @@
         Math.floor((rgb1[1] + rgb2[1]) / 2),
         Math.floor((rgb1[2] + rgb2[2]) / 2)
       ];
+    }
+
+    // Generate points for different shapes - FILLED versions
+    function getShapePosition(index, total, shapeType, radius) {
+      switch (shapeType) {
+        case 'circle':
+          const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+          const circleR = radius * Math.sqrt(index / total);
+          const circleTheta = index * goldenAngle + shapeRotation;
+          return { x: cx + circleR * Math.cos(circleTheta), y: cy + circleR * Math.sin(circleTheta) };
+
+        case 'square':
+          const side = radius * 1.8;
+          const gridSize = Math.ceil(Math.sqrt(total));
+          const cellSize = side / gridSize;
+          const row = Math.floor(index / gridSize);
+          const col = index % gridSize;
+          const jitterX = (Math.sin(index * 1.7) * 0.3) * cellSize;
+          const jitterY = (Math.cos(index * 2.3) * 0.3) * cellSize;
+          return {
+            x: cx - side / 2 + col * cellSize + cellSize / 2 + jitterX,
+            y: cy - side / 2 + row * cellSize + cellSize / 2 + jitterY
+          };
+
+        case 'triangle':
+          const triHeight = radius * 1.8;
+          const triWidth = triHeight * 1.15;
+          const triGolden = Math.PI * (3 - Math.sqrt(5));
+          const triT = index * triGolden;
+          const triR = Math.sqrt(index / total);
+          let u = (Math.abs(Math.sin(triT)) * triR);
+          let v = (Math.abs(Math.cos(triT * 1.3)) * triR);
+          if (u + v > 1) { u = 1 - u; v = 1 - v; }
+          const w = 1 - u - v;
+          const v1 = { x: cx, y: cy - triHeight / 2 };
+          const v2 = { x: cx - triWidth / 2, y: cy + triHeight / 2 };
+          const v3 = { x: cx + triWidth / 2, y: cy + triHeight / 2 };
+          return {
+            x: u * v1.x + v * v2.x + w * v3.x,
+            y: u * v1.y + v * v2.y + w * v3.y
+          };
+
+        case 'hexagon':
+          const hexRadius = radius;
+          const hexGolden = Math.PI * (3 - Math.sqrt(5));
+          const hexR = hexRadius * Math.sqrt(index / total);
+          const hexTheta = index * hexGolden + shapeRotation;
+          const hexAngle = hexTheta % (Math.PI / 3);
+          const hexFactor = Math.cos(Math.PI / 6) / Math.cos(hexAngle - Math.PI / 6);
+          const adjustedR = Math.min(hexR, hexRadius * hexFactor * Math.sqrt(index / total));
+          return {
+            x: cx + adjustedR * Math.cos(hexTheta),
+            y: cy + adjustedR * Math.sin(hexTheta)
+          };
+
+        case 'star':
+          const starOuterR = radius;
+          const starInnerR = radius * 0.38;
+          const starGolden = Math.PI * (3 - Math.sqrt(5));
+          const starBaseAngle = index * starGolden + shapeRotation - Math.PI / 2;
+          const starT = Math.sqrt(index / total);
+          const starSection = Math.floor(((starBaseAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 5));
+          const isOuterSection = starSection % 2 === 0;
+          const maxR = isOuterSection ? starOuterR : starInnerR + (starOuterR - starInnerR) * 0.4;
+          const starR = maxR * starT;
+          return {
+            x: cx + starR * Math.cos(starBaseAngle),
+            y: cy + starR * Math.sin(starBaseAngle)
+          };
+
+        case 'diamond':
+          const diamondW = radius * 1.2;
+          const diamondH = radius * 1.6;
+          const diamondGolden = Math.PI * (3 - Math.sqrt(5));
+          const diamondT = Math.sqrt(index / total);
+          const diamondTheta = index * diamondGolden + shapeRotation;
+          const dx = Math.cos(diamondTheta);
+          const dy = Math.sin(diamondTheta);
+          const l1Norm = Math.abs(dx) + Math.abs(dy);
+          const diamondR = diamondT / l1Norm;
+          return {
+            x: cx + dx * diamondR * diamondW,
+            y: cy + dy * diamondR * diamondH
+          };
+
+        case 'heart':
+          const heartT = (index / total) * Math.PI * 2;
+          const heartR = Math.sqrt(index / total) * radius * 0.9;
+          const heartX = 16 * Math.pow(Math.sin(heartT), 3);
+          const heartY = -(13 * Math.cos(heartT) - 5 * Math.cos(2 * heartT) - 2 * Math.cos(3 * heartT) - Math.cos(4 * heartT));
+          const heartScale = heartR / 18;
+          return {
+            x: cx + heartX * heartScale,
+            y: cy + heartY * heartScale
+          };
+
+        case 'spiral':
+          const spiralGolden = Math.PI * (3 - Math.sqrt(5));
+          const spiralR = radius * 0.08 * Math.sqrt(index);
+          const spiralTheta = index * spiralGolden + shapeRotation;
+          return {
+            x: cx + spiralR * Math.cos(spiralTheta),
+            y: cy + spiralR * Math.sin(spiralTheta)
+          };
+
+        case 'ring':
+          const ringOuterR = radius;
+          const ringInnerR = radius * 0.5;
+          const ringGolden = Math.PI * (3 - Math.sqrt(5));
+          const ringTheta = index * ringGolden + shapeRotation;
+          const ringT = index / total;
+          const ringRadius = ringInnerR + (ringOuterR - ringInnerR) * ringT;
+          return {
+            x: cx + ringRadius * Math.cos(ringTheta),
+            y: cy + ringRadius * Math.sin(ringTheta)
+          };
+
+        case 'flower':
+          const petalCount = 5;
+          const flowerGolden = Math.PI * (3 - Math.sqrt(5));
+          const flowerTheta = index * flowerGolden + shapeRotation;
+          const flowerT = Math.sqrt(index / total);
+          const flowerR = radius * Math.cos(petalCount * flowerTheta) * flowerT;
+          return {
+            x: cx + Math.abs(flowerR) * Math.cos(flowerTheta),
+            y: cy + Math.abs(flowerR) * Math.sin(flowerTheta)
+          };
+
+        case 'pentagon':
+          const pentRadius = radius;
+          const pentGolden = Math.PI * (3 - Math.sqrt(5));
+          const pentR = pentRadius * Math.sqrt(index / total);
+          const pentTheta = index * pentGolden + shapeRotation - Math.PI / 2;
+          const pentAngle = ((pentTheta % (Math.PI * 2 / 5)) + Math.PI * 2 / 5) % (Math.PI * 2 / 5);
+          const pentFactor = Math.cos(Math.PI / 5) / Math.cos(pentAngle - Math.PI / 5);
+          const pentAdjustedR = Math.min(pentR, pentRadius * pentFactor * Math.sqrt(index / total));
+          return {
+            x: cx + pentAdjustedR * Math.cos(pentTheta),
+            y: cy + pentAdjustedR * Math.sin(pentTheta)
+          };
+
+        default:
+          return { x: cx, y: cy };
+      }
     }
 
     class Agent {
@@ -243,6 +394,7 @@
         this.team = null;
         this.color = '#ffffff';
         this.alpha = 0.5 + Math.random() * 0.5;
+        this.formationIndex = id;
       }
 
       assignTeam(team) {
@@ -257,26 +409,25 @@
         }
       }
 
+      assignFormation(shapeType, radius) {
+        const pos = getShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius);
+        this.targetX = pos.x;
+        this.targetY = pos.y;
+      }
+
       scatter() {
         this.team = null;
         this.color = '#ffffff';
         this.targetX = Math.random() * W;
         this.targetY = Math.random() * H;
-        this.vx += (Math.random() - 0.5) * 3;
-        this.vy += (Math.random() - 0.5) * 3;
+        // No bounce - smooth transition
       }
 
       update() {
-        const dx = this.targetX - this.x;
-        const dy = this.targetY - this.y;
-
-        this.vx += dx * 0.015;
-        this.vy += dy * 0.015;
-        this.vx *= 0.95;
-        this.vy *= 0.95;
-
-        this.x += this.vx;
-        this.y += this.vy;
+        // Direct smooth movement toward target (no bounce/overshoot)
+        const lerpFactor = 0.03;
+        this.x += (this.targetX - this.x) * lerpFactor;
+        this.y += (this.targetY - this.y) * lerpFactor;
       }
 
       draw() {
@@ -330,11 +481,11 @@
     }
 
     // ===== PHASE =====
-    let phase = 'init'; // Start immediately with gather
+    let phase = 'init';
     let phaseTime = 0;
     let startTime = null;
 
-    const PHASE_DURATION = { scatter: 2500, gather: 4500 };
+    const PHASE_DURATION = { scatter: 6000, gather: 8000, formation: 6000 };
 
     function drawConnections() {
       agents.forEach((a1, i) => {
@@ -424,7 +575,7 @@
     }
 
     function createRandomTeams() {
-      const teamCount = 5 + Math.floor(Math.random() * 11); // 5-15 teams
+      const teamCount = 5 + Math.floor(Math.random() * 11);
       const positions = generateNonOverlappingPositions(teamCount);
 
       activeTeams = TEAM_COLORS.slice(0, teamCount).map((t, i) => ({
@@ -437,8 +588,8 @@
     function updatePhase(time) {
       const elapsed = time - phaseTime;
 
-      // Quick start: immediately begin gathering after 500ms
-      if (phase === 'init' && elapsed > 500) {
+      // Immediately begin gathering (no initial bounce)
+      if (phase === 'init' && elapsed > 100) {
         phase = 'gather';
         phaseTime = time;
 
@@ -467,19 +618,66 @@
         });
 
       } else if (phase === 'gather' && elapsed > PHASE_DURATION.gather) {
-        phase = 'scatter';
+        phase = 'formation';
         phaseTime = time;
 
-        agents.forEach(agent => agent.scatter());
-        dataLines.length = 0;
+        // Choose random shape
+        currentShape = SHAPE_TYPES[Math.floor(Math.random() * SHAPE_TYPES.length)];
+        shapeRotation = Math.random() * Math.PI * 2;
+
+        // Calculate formation radius
+        const formationRadius = Math.min(W, H) * 0.3;
+
+        // Create formation agents (5000 total including existing agents)
+        formationAgents.length = 0;
+        for (let i = agents.length; i < FORMATION_AGENT_COUNT; i++) {
+          const agent = new Agent(i);
+          agent.formationIndex = i;
+          agent.x = Math.random() * W;
+          agent.y = Math.random() * H;
+          // Assign random team color from active teams
+          const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
+          agent.color = randomTeam.color;
+          agent.team = randomTeam;
+          formationAgents.push(agent);
+        }
+
+        // Assign all agents (regular + formation) to formation positions
+        agents.forEach((agent, i) => {
+          agent.formationIndex = i;
+          agent.assignFormation(currentShape, formationRadius);
+        });
+        formationAgents.forEach((agent) => {
+          agent.assignFormation(currentShape, formationRadius);
+        });
 
         activeTeams.forEach(team => {
           teamLabels[team.name] = { visible: false };
         });
+
+      } else if (phase === 'formation' && elapsed > PHASE_DURATION.formation) {
+        phase = 'scatter';
+        phaseTime = time;
+
+        agents.forEach(agent => agent.scatter());
+        formationAgents.length = 0;
+        dataLines.length = 0;
       }
 
       if (phase === 'gather') {
         spawnDataLines();
+      }
+
+      // Slowly rotate shape during formation
+      if (phase === 'formation') {
+        shapeRotation += 0.002;
+        const formationRadius = Math.min(W, H) * 0.3;
+        agents.forEach((agent) => {
+          agent.assignFormation(currentShape, formationRadius);
+        });
+        formationAgents.forEach((agent) => {
+          agent.assignFormation(currentShape, formationRadius);
+        });
       }
     }
 
@@ -516,8 +714,10 @@
       }
 
       agents.forEach(a => a.update());
+      formationAgents.forEach(a => a.update());
       drawConnections();
       agents.forEach(a => a.draw());
+      formationAgents.forEach(a => a.draw());
       drawTeamLabels(time);
 
       requestAnimationFrame(animate);
