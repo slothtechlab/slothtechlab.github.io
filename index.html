@@ -59,24 +59,24 @@
 
   <div class="brand">
     <h1>ENSEMBLE INC.</h1>
-    <p>AI Agent Development</p>
+    <p>AI Agent Development & Consulting</p>
   </div>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     let W = window.innerWidth;
     let H = window.innerHeight;
     let cx = W / 2;
     let cy = H / 2;
-    
+
     canvas.width = W;
     canvas.height = H;
-    
+
     // ===== BACKGROUND STARS =====
     const bgStars = [];
-    
+
     function initBgStars() {
       bgStars.length = 0;
       for (let i = 0; i < 400; i++) {
@@ -88,39 +88,29 @@
         });
       }
     }
-    
-    // ===== GALAXY WITH DYNAMIC MOVEMENT =====
+
+    // ===== GALAXY (faster, constant rotation) =====
     const galaxyStars = [];
     let galaxyRotation = 0;
-    let galaxyRotationSpeed = 0.00003;
-    let galaxyRotationDirection = 1;
-    let galaxyPulseSpeed = 0.001;
-    let galaxyWobble = 0;
-    
-    function randomizeGalaxyMovement() {
-      galaxyRotationSpeed = 0.00002 + Math.random() * 0.00004;
-      galaxyRotationDirection = Math.random() > 0.5 ? 1 : -1;
-      galaxyPulseSpeed = 0.0005 + Math.random() * 0.001;
-      galaxyWobble = Math.random() * 0.02;
-    }
-    
+    const GALAXY_ROTATION_SPEED = 0.0004; // Much faster constant speed
+
     function initGalaxy() {
       galaxyStars.length = 0;
-      
+
       const maxRadius = Math.max(W, H) * 0.75;
-      
+
       for (let arm = 0; arm < 4; arm++) {
         const offset = (arm / 4) * Math.PI * 2;
         const armStars = arm % 2 === 0 ? 2000 : 1500;
-        
+
         for (let i = 0; i < armStars; i++) {
           const t = i / armStars;
           const angle = t * Math.PI * 4.5 + offset;
           const radius = 20 + t * maxRadius;
           const spread = 12 + t * 70;
-          
+
           const brightness = Math.pow(1 - t * 0.5, 1.5);
-          
+
           galaxyStars.push({
             angle: angle,
             radius: radius,
@@ -134,11 +124,11 @@
           });
         }
       }
-      
+
       for (let i = 0; i < 1500; i++) {
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.pow(Math.random(), 2) * 150;
-        
+
         galaxyStars.push({
           angle: angle,
           radius: radius,
@@ -153,7 +143,7 @@
         });
       }
     }
-    
+
     function drawBgStars() {
       bgStars.forEach(star => {
         ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
@@ -162,17 +152,16 @@
         ctx.fill();
       });
     }
-    
+
     function drawGalaxy(time) {
-      galaxyRotation += galaxyRotationSpeed * galaxyRotationDirection;
-      const wobbleOffset = Math.sin(time * galaxyPulseSpeed) * galaxyWobble;
-      
+      galaxyRotation += GALAXY_ROTATION_SPEED;
+
       const nebulae = [
         { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
         { x: 0.7, y: 0.35, r: 0.45, color: [25, 50, 100] },
         { x: 0.5, y: 0.65, r: 0.55, color: [70, 35, 80] },
       ];
-      
+
       nebulae.forEach(n => {
         const grad = ctx.createRadialGradient(
           n.x * W, n.y * H, 0,
@@ -184,7 +173,7 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
       });
-      
+
       const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
       coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
       coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
@@ -194,35 +183,45 @@
       ctx.beginPath();
       ctx.arc(cx, cy, 300, 0, Math.PI * 2);
       ctx.fill();
-      
+
       galaxyStars.forEach(star => {
-        const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1) + wobbleOffset;
+        const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
         const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
         const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
-        
+
         ctx.fillStyle = `rgba(${star.colorR}, ${star.colorG}, ${star.colorB}, ${star.brightness})`;
         ctx.beginPath();
         ctx.arc(x, y, star.size, 0, Math.PI * 2);
         ctx.fill();
       });
     }
-    
-    // ===== AI AGENTS =====
-    const AGENT_COUNT = 150;
-    
-    const TEAMS = [
-      { id: 'ALPHA', color: '#00aaff', rgb: [0, 170, 255], x: 0.15, y: 0.2 },
-      { id: 'BETA', color: '#ff6699', rgb: [255, 102, 153], x: 0.85, y: 0.2 },
-      { id: 'GAMMA', color: '#44ddaa', rgb: [68, 221, 170], x: 0.15, y: 0.8 },
-      { id: 'DELTA', color: '#ffaa44', rgb: [255, 170, 68], x: 0.85, y: 0.8 },
-      { id: 'CORE', color: '#aa88ff', rgb: [170, 136, 255], x: 0.5, y: 0.5 },
+
+    // ===== TEAM COLORS (15 distinct, Greek alphabet) =====
+    const TEAM_COLORS = [
+      { name: 'ALPHA', color: '#00aaff', rgb: [0, 170, 255] },
+      { name: 'BETA', color: '#ff6699', rgb: [255, 102, 153] },
+      { name: 'GAMMA', color: '#44ddaa', rgb: [68, 221, 170] },
+      { name: 'DELTA', color: '#ffaa44', rgb: [255, 170, 68] },
+      { name: 'EPSILON', color: '#aa88ff', rgb: [170, 136, 255] },
+      { name: 'ZETA', color: '#ff88aa', rgb: [255, 136, 170] },
+      { name: 'ETA', color: '#88ffcc', rgb: [136, 255, 204] },
+      { name: 'THETA', color: '#ffcc44', rgb: [255, 204, 68] },
+      { name: 'IOTA', color: '#44aaff', rgb: [68, 170, 255] },
+      { name: 'KAPPA', color: '#cc88ff', rgb: [204, 136, 255] },
+      { name: 'LAMBDA', color: '#88ddff', rgb: [136, 221, 255] },
+      { name: 'MU', color: '#ffaa88', rgb: [255, 170, 136] },
+      { name: 'NU', color: '#88ffaa', rgb: [136, 255, 170] },
+      { name: 'XI', color: '#ff88cc', rgb: [255, 136, 204] },
+      { name: 'OMICRON', color: '#aaffcc', rgb: [170, 255, 204] },
     ];
-    
+
+    let activeTeams = [];
     const agents = [];
     const teamLabels = {};
     const dataLines = [];
-    
-    // Blend two colors
+
+    const AGENT_COUNT = 150;
+
     function blendColors(rgb1, rgb2) {
       return [
         Math.floor((rgb1[0] + rgb2[0]) / 2),
@@ -230,7 +229,7 @@
         Math.floor((rgb1[2] + rgb2[2]) / 2)
       ];
     }
-    
+
     class Agent {
       constructor(id) {
         this.id = id;
@@ -245,11 +244,11 @@
         this.color = '#ffffff';
         this.alpha = 0.5 + Math.random() * 0.5;
       }
-      
+
       assignTeam(team) {
         this.team = team;
         this.color = team ? team.color : '#ffffff';
-        
+
         if (team) {
           const angle = Math.random() * Math.PI * 2;
           const dist = Math.random() * 55 + 10;
@@ -257,7 +256,7 @@
           this.targetY = team.y * H + Math.sin(angle) * dist;
         }
       }
-      
+
       scatter() {
         this.team = null;
         this.color = '#ffffff';
@@ -266,20 +265,20 @@
         this.vx += (Math.random() - 0.5) * 3;
         this.vy += (Math.random() - 0.5) * 3;
       }
-      
+
       update() {
         const dx = this.targetX - this.x;
         const dy = this.targetY - this.y;
-        
+
         this.vx += dx * 0.015;
         this.vy += dy * 0.015;
         this.vx *= 0.95;
         this.vy *= 0.95;
-        
+
         this.x += this.vx;
         this.y += this.vy;
       }
-      
+
       draw() {
         const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2.5);
         grad.addColorStop(0, this.color + '70');
@@ -288,7 +287,7 @@
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.fillStyle = this.color;
         ctx.globalAlpha = this.alpha;
         ctx.beginPath();
@@ -297,25 +296,24 @@
         ctx.globalAlpha = 1;
       }
     }
-    
+
     class DataLine {
       constructor(from, to) {
         this.fromAgent = from;
         this.toAgent = to;
         this.life = 1;
         this.decay = 0.03 + Math.random() * 0.02;
-        
-        // Blend colors between teams
+
         const rgb1 = from.team ? from.team.rgb : [255, 255, 255];
         const rgb2 = to.team ? to.team.rgb : [255, 255, 255];
         this.blendedColor = blendColors(rgb1, rgb2);
       }
-      
+
       update() {
         this.life -= this.decay;
         return this.life > 0;
       }
-      
+
       draw() {
         const [r, g, b] = this.blendedColor;
         ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${this.life * 0.25})`;
@@ -326,29 +324,29 @@
         ctx.stroke();
       }
     }
-    
+
     for (let i = 0; i < AGENT_COUNT; i++) {
       agents.push(new Agent(i));
     }
-    
+
     // ===== PHASE =====
-    let phase = 'scatter';
+    let phase = 'init'; // Start immediately with gather
     let phaseTime = 0;
     let startTime = null;
-    
+
     const PHASE_DURATION = { scatter: 2500, gather: 4500 };
-    
+
     function drawConnections() {
       agents.forEach((a1, i) => {
         if (!a1.team) return;
-        
+
         agents.forEach((a2, j) => {
           if (i >= j || a1.team !== a2.team) return;
-          
+
           const dx = a2.x - a1.x;
           const dy = a2.y - a1.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (dist < 50) {
             const alpha = (1 - dist / 50) * 0.2;
             ctx.strokeStyle = a1.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
@@ -361,15 +359,15 @@
         });
       });
     }
-    
+
     function drawTeamLabels(time) {
-      TEAMS.forEach(team => {
-        const label = teamLabels[team.id];
+      activeTeams.forEach(team => {
+        const label = teamLabels[team.name];
         if (!label || !label.visible) return;
-        
+
         const elapsed = time - label.startTime;
         const fadeIn = Math.min(1, elapsed / 400);
-        
+
         ctx.save();
         ctx.globalAlpha = fadeIn * 0.9;
         ctx.font = '600 11px system-ui';
@@ -377,15 +375,15 @@
         ctx.shadowColor = team.color;
         ctx.shadowBlur = 10;
         ctx.fillStyle = team.color;
-        ctx.fillText('TEAM ' + team.id, team.x * W, team.y * H - 70);
+        ctx.fillText('AGENT TEAM ' + team.name, team.x * W, team.y * H - 70);
         ctx.restore();
       });
     }
-    
+
     function spawnDataLines() {
       const teamAgents = agents.filter(a => a.team);
       if (teamAgents.length < 2) return;
-      
+
       for (let i = 0; i < 15; i++) {
         const from = teamAgents[Math.floor(Math.random() * teamAgents.length)];
         const to = teamAgents[Math.floor(Math.random() * teamAgents.length)];
@@ -394,20 +392,20 @@
         }
       }
     }
-    
-    function generateNonOverlappingPositions() {
+
+    function generateNonOverlappingPositions(count) {
       const positions = [];
-      const minDist = 0.25;
-      
-      for (let i = 0; i < 5; i++) {
+      const minDist = 0.18;
+
+      for (let i = 0; i < count; i++) {
         let valid = false;
         let attempts = 0;
         let x, y;
-        
+
         while (!valid && attempts < 100) {
-          x = 0.15 + Math.random() * 0.7;
-          y = 0.15 + Math.random() * 0.7;
-          
+          x = 0.1 + Math.random() * 0.8;
+          y = 0.1 + Math.random() * 0.8;
+
           valid = true;
           for (const pos of positions) {
             const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
@@ -418,54 +416,73 @@
           }
           attempts++;
         }
-        
+
         positions.push({ x, y });
       }
-      
+
       return positions;
     }
-    
+
+    function createRandomTeams() {
+      const teamCount = 5 + Math.floor(Math.random() * 11); // 5-15 teams
+      const positions = generateNonOverlappingPositions(teamCount);
+
+      activeTeams = TEAM_COLORS.slice(0, teamCount).map((t, i) => ({
+        ...t,
+        x: positions[i].x,
+        y: positions[i].y
+      }));
+    }
+
     function updatePhase(time) {
       const elapsed = time - phaseTime;
-      
-      if (phase === 'scatter' && elapsed > PHASE_DURATION.scatter) {
+
+      // Quick start: immediately begin gathering after 500ms
+      if (phase === 'init' && elapsed > 500) {
         phase = 'gather';
         phaseTime = time;
-        
-        const positions = generateNonOverlappingPositions();
-        TEAMS.forEach((team, i) => {
-          team.x = positions[i].x;
-          team.y = positions[i].y;
-        });
-        
+
+        createRandomTeams();
+
         agents.forEach((agent, i) => {
-          agent.assignTeam(TEAMS[i % TEAMS.length]);
+          agent.assignTeam(activeTeams[i % activeTeams.length]);
         });
-        
-        TEAMS.forEach(team => {
-          teamLabels[team.id] = { visible: true, startTime: time };
+
+        activeTeams.forEach(team => {
+          teamLabels[team.name] = { visible: true, startTime: time };
         });
-        
+
+      } else if (phase === 'scatter' && elapsed > PHASE_DURATION.scatter) {
+        phase = 'gather';
+        phaseTime = time;
+
+        createRandomTeams();
+
+        agents.forEach((agent, i) => {
+          agent.assignTeam(activeTeams[i % activeTeams.length]);
+        });
+
+        activeTeams.forEach(team => {
+          teamLabels[team.name] = { visible: true, startTime: time };
+        });
+
       } else if (phase === 'gather' && elapsed > PHASE_DURATION.gather) {
         phase = 'scatter';
         phaseTime = time;
-        
+
         agents.forEach(agent => agent.scatter());
         dataLines.length = 0;
-        
-        TEAMS.forEach(team => {
-          teamLabels[team.id] = { visible: false };
+
+        activeTeams.forEach(team => {
+          teamLabels[team.name] = { visible: false };
         });
-        
-        // Randomize galaxy movement for next cycle
-        randomizeGalaxyMovement();
       }
-      
+
       if (phase === 'gather') {
         spawnDataLines();
       }
     }
-    
+
     function resize() {
       W = window.innerWidth;
       H = window.innerHeight;
@@ -476,20 +493,20 @@
       initBgStars();
       initGalaxy();
     }
-    
+
     window.addEventListener('resize', resize);
-    
+
     function animate(timestamp) {
       if (startTime === null) startTime = timestamp;
       const time = timestamp - startTime;
-      
+
       ctx.fillStyle = '#010104';
       ctx.fillRect(0, 0, W, H);
-      
+
       drawBgStars();
       drawGalaxy(time);
       updatePhase(time);
-      
+
       for (let i = dataLines.length - 1; i >= 0; i--) {
         if (!dataLines[i].update()) {
           dataLines.splice(i, 1);
@@ -497,18 +514,17 @@
           dataLines[i].draw();
         }
       }
-      
+
       agents.forEach(a => a.update());
       drawConnections();
       agents.forEach(a => a.draw());
       drawTeamLabels(time);
-      
+
       requestAnimationFrame(animate);
     }
-    
+
     initBgStars();
     initGalaxy();
-    randomizeGalaxyMovement();
     requestAnimationFrame(animate);
   </script>
 </body>
