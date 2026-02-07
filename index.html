@@ -89,16 +89,26 @@
       }
     }
     
-    // ===== MASSIVE GALAXY =====
+    // ===== GALAXY WITH DYNAMIC MOVEMENT =====
     const galaxyStars = [];
     let galaxyRotation = 0;
+    let galaxyRotationSpeed = 0.00003;
+    let galaxyRotationDirection = 1;
+    let galaxyPulseSpeed = 0.001;
+    let galaxyWobble = 0;
+    
+    function randomizeGalaxyMovement() {
+      galaxyRotationSpeed = 0.00002 + Math.random() * 0.00004;
+      galaxyRotationDirection = Math.random() > 0.5 ? 1 : -1;
+      galaxyPulseSpeed = 0.0005 + Math.random() * 0.001;
+      galaxyWobble = Math.random() * 0.02;
+    }
     
     function initGalaxy() {
       galaxyStars.length = 0;
       
       const maxRadius = Math.max(W, H) * 0.75;
       
-      // 4 spiral arms - TRIPLED star count
       for (let arm = 0; arm < 4; arm++) {
         const offset = (arm / 4) * Math.PI * 2;
         const armStars = arm % 2 === 0 ? 2000 : 1500;
@@ -125,7 +135,6 @@
         }
       }
       
-      // Massive luminous core
       for (let i = 0; i < 1500; i++) {
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.pow(Math.random(), 2) * 150;
@@ -155,9 +164,9 @@
     }
     
     function drawGalaxy(time) {
-      galaxyRotation = time * 0.00003;
+      galaxyRotation += galaxyRotationSpeed * galaxyRotationDirection;
+      const wobbleOffset = Math.sin(time * galaxyPulseSpeed) * galaxyWobble;
       
-      // Nebula
       const nebulae = [
         { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
         { x: 0.7, y: 0.35, r: 0.45, color: [25, 50, 100] },
@@ -176,7 +185,6 @@
         ctx.fillRect(0, 0, W, H);
       });
       
-      // Massive core glow
       const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
       coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
       coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
@@ -187,9 +195,8 @@
       ctx.arc(cx, cy, 300, 0, Math.PI * 2);
       ctx.fill();
       
-      // Draw stars
       galaxyStars.forEach(star => {
-        const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
+        const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1) + wobbleOffset;
         const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
         const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
         
@@ -201,21 +208,28 @@
     }
     
     // ===== AI AGENTS =====
-    const AGENT_COUNT = 50;
+    const AGENT_COUNT = 150;
     
-    // Fixed non-overlapping team positions
     const TEAMS = [
-      { id: 'ALPHA', color: '#00aaff', x: 0.15, y: 0.2 },
-      { id: 'BETA', color: '#ff6699', x: 0.85, y: 0.2 },
-      { id: 'GAMMA', color: '#44ddaa', x: 0.15, y: 0.8 },
-      { id: 'DELTA', color: '#ffaa44', x: 0.85, y: 0.8 },
-      { id: 'CORE', color: '#aa88ff', x: 0.5, y: 0.5 },
+      { id: 'ALPHA', color: '#00aaff', rgb: [0, 170, 255], x: 0.15, y: 0.2 },
+      { id: 'BETA', color: '#ff6699', rgb: [255, 102, 153], x: 0.85, y: 0.2 },
+      { id: 'GAMMA', color: '#44ddaa', rgb: [68, 221, 170], x: 0.15, y: 0.8 },
+      { id: 'DELTA', color: '#ffaa44', rgb: [255, 170, 68], x: 0.85, y: 0.8 },
+      { id: 'CORE', color: '#aa88ff', rgb: [170, 136, 255], x: 0.5, y: 0.5 },
     ];
     
     const agents = [];
     const teamLabels = {};
-    const dataLines = []; // Dense line connections
-    const finishParticles = [];
+    const dataLines = [];
+    
+    // Blend two colors
+    function blendColors(rgb1, rgb2) {
+      return [
+        Math.floor((rgb1[0] + rgb2[0]) / 2),
+        Math.floor((rgb1[1] + rgb2[1]) / 2),
+        Math.floor((rgb1[2] + rgb2[2]) / 2)
+      ];
+    }
     
     class Agent {
       constructor(id) {
@@ -226,9 +240,10 @@
         this.targetY = this.y;
         this.vx = 0;
         this.vy = 0;
-        this.size = 2.5;
+        this.size = Math.random() * 1.2 + 0.4;
         this.team = null;
         this.color = '#ffffff';
+        this.alpha = 0.5 + Math.random() * 0.5;
       }
       
       assignTeam(team) {
@@ -237,7 +252,7 @@
         
         if (team) {
           const angle = Math.random() * Math.PI * 2;
-          const dist = Math.random() * 45 + 20;
+          const dist = Math.random() * 55 + 10;
           this.targetX = team.x * W + Math.cos(angle) * dist;
           this.targetY = team.y * H + Math.sin(angle) * dist;
         }
@@ -266,28 +281,34 @@
       }
       
       draw() {
-        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
-        grad.addColorStop(0, this.color + '90');
+        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2.5);
+        grad.addColorStop(0, this.color + '70');
         grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.alpha;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
+        ctx.globalAlpha = 1;
       }
     }
     
-    // Data line (fast, thick when stacked)
     class DataLine {
       constructor(from, to) {
         this.fromAgent = from;
         this.toAgent = to;
         this.life = 1;
         this.decay = 0.03 + Math.random() * 0.02;
+        
+        // Blend colors between teams
+        const rgb1 = from.team ? from.team.rgb : [255, 255, 255];
+        const rgb2 = to.team ? to.team.rgb : [255, 255, 255];
+        this.blendedColor = blendColors(rgb1, rgb2);
       }
       
       update() {
@@ -296,43 +317,13 @@
       }
       
       draw() {
-        ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 0.15})`;
+        const [r, g, b] = this.blendedColor;
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${this.life * 0.25})`;
         ctx.lineWidth = 0.8;
         ctx.beginPath();
         ctx.moveTo(this.fromAgent.x, this.fromAgent.y);
         ctx.lineTo(this.toAgent.x, this.toAgent.y);
         ctx.stroke();
-      }
-    }
-    
-    // Finish particle
-    class FinishParticle {
-      constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 2 + Math.random() * 4;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
-        this.life = 1;
-        this.color = color;
-        this.size = 1 + Math.random() * 2;
-      }
-      
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vx *= 0.98;
-        this.vy *= 0.98;
-        this.life -= 0.02;
-        return this.life > 0;
-      }
-      
-      draw() {
-        ctx.fillStyle = this.color + Math.floor(this.life * 200).toString(16).padStart(2, '0');
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * this.life, 0, Math.PI * 2);
-        ctx.fill();
       }
     }
     
@@ -345,7 +336,7 @@
     let phaseTime = 0;
     let startTime = null;
     
-    const PHASE_DURATION = { scatter: 2500, gather: 4000, finish: 1500 };
+    const PHASE_DURATION = { scatter: 2500, gather: 4500 };
     
     function drawConnections() {
       agents.forEach((a1, i) => {
@@ -358,10 +349,10 @@
           const dy = a2.y - a1.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           
-          if (dist < 70) {
-            const alpha = (1 - dist / 70) * 0.3;
+          if (dist < 50) {
+            const alpha = (1 - dist / 50) * 0.2;
             ctx.strokeStyle = a1.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-            ctx.lineWidth = 0.5;
+            ctx.lineWidth = 0.3;
             ctx.beginPath();
             ctx.moveTo(a1.x, a1.y);
             ctx.lineTo(a2.x, a2.y);
@@ -381,29 +372,20 @@
         
         ctx.save();
         ctx.globalAlpha = fadeIn * 0.9;
-        ctx.font = '600 12px system-ui';
+        ctx.font = '600 11px system-ui';
         ctx.textAlign = 'center';
         ctx.shadowColor = team.color;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 10;
         ctx.fillStyle = team.color;
-        ctx.fillText(team.id, team.x * W, team.y * H - 65);
+        ctx.fillText('TEAM ' + team.id, team.x * W, team.y * H - 70);
         ctx.restore();
       });
-    }
-    
-    function triggerFinish() {
-      const colors = TEAMS.map(t => t.color);
-      for (let i = 0; i < 80; i++) {
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        finishParticles.push(new FinishParticle(cx, cy, color));
-      }
     }
     
     function spawnDataLines() {
       const teamAgents = agents.filter(a => a.team);
       if (teamAgents.length < 2) return;
       
-      // Spawn MANY lines per frame for dense coverage
       for (let i = 0; i < 15; i++) {
         const from = teamAgents[Math.floor(Math.random() * teamAgents.length)];
         const to = teamAgents[Math.floor(Math.random() * teamAgents.length)];
@@ -415,7 +397,7 @@
     
     function generateNonOverlappingPositions() {
       const positions = [];
-      const minDist = 0.25; // Minimum distance between teams
+      const minDist = 0.25;
       
       for (let i = 0; i < 5; i++) {
         let valid = false;
@@ -450,7 +432,6 @@
         phase = 'gather';
         phaseTime = time;
         
-        // Generate non-overlapping positions
         const positions = generateNonOverlappingPositions();
         TEAMS.forEach((team, i) => {
           team.x = positions[i].x;
@@ -466,11 +447,6 @@
         });
         
       } else if (phase === 'gather' && elapsed > PHASE_DURATION.gather) {
-        phase = 'finish';
-        phaseTime = time;
-        triggerFinish();
-        
-      } else if (phase === 'finish' && elapsed > PHASE_DURATION.finish) {
         phase = 'scatter';
         phaseTime = time;
         
@@ -480,9 +456,11 @@
         TEAMS.forEach(team => {
           teamLabels[team.id] = { visible: false };
         });
+        
+        // Randomize galaxy movement for next cycle
+        randomizeGalaxyMovement();
       }
       
-      // Spawn data lines during gather
       if (phase === 'gather') {
         spawnDataLines();
       }
@@ -512,21 +490,11 @@
       drawGalaxy(time);
       updatePhase(time);
       
-      // Data lines (drawn first, behind agents)
       for (let i = dataLines.length - 1; i >= 0; i--) {
         if (!dataLines[i].update()) {
           dataLines.splice(i, 1);
         } else {
           dataLines[i].draw();
-        }
-      }
-      
-      // Finish particles
-      for (let i = finishParticles.length - 1; i >= 0; i--) {
-        if (!finishParticles[i].update()) {
-          finishParticles.splice(i, 1);
-        } else {
-          finishParticles[i].draw();
         }
       }
       
@@ -540,6 +508,7 @@
     
     initBgStars();
     initGalaxy();
+    randomizeGalaxyMovement();
     requestAnimationFrame(animate);
   </script>
 </body>
