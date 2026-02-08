@@ -734,7 +734,7 @@
 
         // Generate text points for ALL world times (2-column layout)
         const allTimes = getAllWorldTimes();
-        textPoints = textToPoints(allTimes, 44, 2);
+        textPoints = textToPoints(allTimes, 44, 3);
 
         // Select random neon color for this display
         currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
@@ -746,32 +746,35 @@
         const formationRadius = Math.min(W, H) * 0.3;
 
         // Create formation agents ONLY for text points (no extra dots)
+        // Spawn from existing team cluster positions for seamless transition
         formationAgents.length = 0;
         const neededAgents = Math.max(0, textPoints.length - agents.length);
         for (let i = 0; i < neededAgents; i++) {
           const agent = new Agent(agents.length + i);
           agent.formationIndex = agents.length + i;
-          agent.x = Math.random() * W;
-          agent.y = Math.random() * H;
-          // Use random team color for variety
-          const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
-          agent.color = randomTeam ? randomTeam.color : TEAM_COLORS[Math.floor(Math.random() * TEAM_COLORS.length)].color;
+          // Spawn from a random existing agent's position (team cluster)
+          const sourceAgent = agents[Math.floor(Math.random() * agents.length)];
+          agent.x = sourceAgent.x + (Math.random() - 0.5) * 20;
+          agent.y = sourceAgent.y + (Math.random() - 0.5) * 20;
+          // Inherit color from source agent
+          agent.color = sourceAgent.color;
           agent.team = null;
           formationAgents.push(agent);
         }
 
-        // Apply random team colors to regular agents
+        // Keep existing agent colors (don't override) - seamless transition
         agents.forEach((agent, i) => {
-          const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
-          agent.color = randomTeam ? randomTeam.color : TEAM_COLORS[Math.floor(Math.random() * TEAM_COLORS.length)].color;
           agent.formationIndex = i;
+          agent.team = null; // Release from team but keep color
           if (i < textPoints.length) {
             agent.targetX = textPoints[i].x;
             agent.targetY = textPoints[i].y;
           } else {
-            // Hide extra agents off-screen
-            agent.targetX = -100;
-            agent.targetY = -100;
+            // Fade out extra agents instead of teleporting off-screen
+            agent.targetX = agent.x + (Math.random() - 0.5) * 200;
+            agent.targetY = agent.y + (Math.random() - 0.5) * 200;
+            agent.scatterTime = Date.now();
+            agent.scatterColor = agent.color;
           }
         });
 
