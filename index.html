@@ -401,29 +401,8 @@
     let cx = W / 2;
     let cy = H / 2;
 
-    // Virtual canvas: minimum 1024px width for consistent rendering
-    const MIN_CANVAS_WIDTH = 1024;
-    function applyCanvasSize() {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      if (vw < MIN_CANVAS_WIDTH) {
-        const scale = vw / MIN_CANVAS_WIDTH;
-        W = MIN_CANVAS_WIDTH;
-        H = Math.round(vh / scale);
-        canvas.style.width = vw + 'px';
-        canvas.style.height = vh + 'px';
-      } else {
-        W = vw;
-        H = vh;
-        canvas.style.width = '';
-        canvas.style.height = '';
-      }
-      cx = W / 2;
-      cy = H / 2;
-      canvas.width = W;
-      canvas.height = H;
-    }
-    applyCanvasSize();
+    canvas.width = W;
+    canvas.height = H;
 
     // ===== BACKGROUND STARS =====
     const bgStars = [];
@@ -579,8 +558,30 @@
     const formationAgents = [];
 
     // ===== RESPONSIVE PARAMETERS =====
-    // Always use desktop values - mobile uses virtual canvas scaling
     function getResponsiveParams() {
+      const w = window.innerWidth;
+      if (w < 600) return {
+        agentCount: 800, formationCount: 4000,
+        maxTeams: 5, minTeams: 3,
+        fontSize: 32, spacing: 2,
+        clockFontSize: 36, chartLineWidth: 6,
+        chartMargin: 20, chartDotSize: 6,
+        singleColumn: true, minTeamDist: 0.22,
+        teamLabelSize: 11, teamLabelOffset: 50,
+        teamPosMin: 0.12, teamPosRange: 0.76,
+        iconScale: 0.8
+      };
+      if (w < 1024) return {
+        agentCount: 800, formationCount: 4000,
+        maxTeams: 8, minTeams: 4,
+        fontSize: 36, spacing: 2,
+        clockFontSize: 38, chartLineWidth: 7,
+        chartMargin: 40, chartDotSize: 7,
+        singleColumn: false, minTeamDist: 0.20,
+        teamLabelSize: 11, teamLabelOffset: 60,
+        teamPosMin: 0.10, teamPosRange: 0.80,
+        iconScale: 0.9
+      };
       return {
         agentCount: 1000, formationCount: 5000,
         maxTeams: 15, minTeams: 5,
@@ -2260,7 +2261,12 @@
     }
 
     function resize() {
-      applyCanvasSize();
+      W = window.innerWidth;
+      H = window.innerHeight;
+      cx = W / 2;
+      cy = H / 2;
+      canvas.width = W;
+      canvas.height = H;
 
       // Update responsive parameters
       rp = getResponsiveParams();
