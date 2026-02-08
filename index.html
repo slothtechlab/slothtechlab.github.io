@@ -509,17 +509,16 @@
         // Fade out during scatter phase: color transitions from team color to white, then fades
         if (this.scatterTime > 0) {
           const elapsed = (Date.now() - this.scatterTime) / 1000;
-          // Phase 1 (0-3s): keep color, spread across screen
-          // Phase 2 (3-6s): fade color to white and reduce alpha
-          if (elapsed < 3) {
+          // Phase 1 (0-1.5s): keep color, spread across screen
+          // Phase 2 (1.5-4s): fade color to white and reduce alpha
+          if (elapsed < 1.5) {
             this.color = this.scatterColor || '#ffffff';
             this.alpha = this.baseAlpha;
             this.size = this.baseSize;
           } else {
-            const fadeProgress = Math.min(1, (elapsed - 3) / 3);
-            // Blend scatter color toward white
+            const fadeProgress = Math.min(1, (elapsed - 1.5) / 2.5);
             this.color = this.scatterColor || '#ffffff';
-            this.alpha = this.baseAlpha * (1 - fadeProgress * 0.85);
+            this.alpha = this.baseAlpha * (1 - fadeProgress * 0.9);
             this.size = this.baseSize * (1 - fadeProgress * 0.5);
           }
         }
@@ -591,7 +590,7 @@
     let phaseTime = 0;
     let startTime = null;
 
-    const PHASE_DURATION = { scatter: 6000, gather: 8000, formation: 7000 };
+    const PHASE_DURATION = { scatter: 8000, gather: 8000, formation: 7000 };
 
     function drawConnections() {
       agents.forEach((a1, i) => {
@@ -695,7 +694,7 @@
       const elapsed = time - phaseTime;
 
       // Immediately begin gathering (no initial bounce)
-      if (phase === 'init' && elapsed > 100) {
+      if (phase === 'init' && elapsed > 3000) {
         phase = 'gather';
         phaseTime = time;
 
