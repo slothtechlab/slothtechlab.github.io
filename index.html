@@ -295,27 +295,30 @@
     /* ===== RESPONSIVE: Mobile ===== */
     @media (max-width: 599px) {
       .brand {
-        bottom: 42px;
-        left: 10px;
+        bottom: 46px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
       }
 
       .brand h1 {
-        font-size: 18px;
+        font-size: 20px;
         letter-spacing: 0.08em;
       }
 
       .brand p {
-        font-size: 8px;
+        font-size: 9px;
         margin-top: 2px;
         letter-spacing: 0.15em;
       }
 
       .about-trigger {
-        bottom: 10px;
-        left: 10px;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
         right: auto;
-        font-size: 10px;
-        padding: 6px 14px;
+        font-size: 11px;
+        padding: 6px 16px;
       }
 
       .about-panel {
@@ -2126,82 +2129,13 @@
             }
           });
 
-          // Apply single neon color for worldtime and forex formations
-          if (formationType === 'worldtime' || formationType === 'forex') {
-            agents.forEach((agent, i) => {
-              if (i < textPoints.length) agent.color = currentNeonColor;
-            });
-            formationAgents.forEach((agent, i) => {
-              if (agents.length + i < textPoints.length) agent.color = currentNeonColor;
-            });
-          }
-
-          // Weather: color agents by weather condition
-          if (formationType === 'weather' && weatherData) {
-            const weatherColors = (code) => {
-              if (code <= 1) return '#FF8C00';
-              if (code <= 3) return '#E0E8F0';
-              if (code <= 48) return '#C8D0D8';
-              if (code <= 67) return '#4488FF';
-              if (code <= 77) return '#88CCFF';
-              if (code <= 82) return '#4488FF';
-              if (code <= 86) return '#88CCFF';
-              return '#FFD700';
-            };
-            const applyWeatherColor = (agent, pointIdx) => {
-              if (pointIdx < textPoints.length) {
-                const lineIdx = textPoints[pointIdx].lineIdx;
-                if (lineIdx >= 0 && lineIdx < weatherData.length) {
-                  agent.color = weatherColors(weatherData[lineIdx].code);
-                }
-              }
-            };
-            agents.forEach((agent, i) => { if (i < textPoints.length) applyWeatherColor(agent, i); });
-            formationAgents.forEach((agent, i) => applyWeatherColor(agent, agents.length + i));
-          }
-
-          // Crypto: gradient from green (top) to gold (bottom)
-          if (formationType === 'crypto') {
-            const chartTop = H / 2 - 40;
-            const chartBottom = H / 2 + 120;
-            const chartRange = chartBottom - chartTop;
-            const applyCryptoColor = (agent, pointIdx) => {
-              if (pointIdx < textPoints.length) {
-                const py = textPoints[pointIdx].y;
-                const t = Math.max(0, Math.min(1, (py - chartTop) / chartRange));
-                const r = Math.round(0 + t * 255);
-                const g = Math.round(200 - t * 20);
-                const b = Math.round(100 - t * 60);
-                const rHex = r.toString(16).padStart(2, '0');
-                const gHex = g.toString(16).padStart(2, '0');
-                const bHex = b.toString(16).padStart(2, '0');
-                agent.color = `#${rHex}${gHex}${bHex}`;
-              }
-            };
-            agents.forEach((agent, i) => { if (i < textPoints.length) applyCryptoColor(agent, i); });
-            formationAgents.forEach((agent, i) => applyCryptoColor(agent, agents.length + i));
-          }
-
-          // Earthquake: color by magnitude
-          if (formationType === 'earthquake') {
-            const quakeColor = (mag) => {
-              if (mag >= 7.0) return '#FF0000';
-              if (mag >= 6.0) return '#FF3322';
-              if (mag >= 5.5) return '#FF6622';
-              if (mag >= 5.0) return '#FF9933';
-              return '#FFCC44';
-            };
-            const applyQuakeColor = (agent, pointIdx) => {
-              if (pointIdx < textPoints.length && earthquakeData) {
-                const lineIdx = textPoints[pointIdx].lineIdx;
-                if (lineIdx >= 0 && lineIdx < earthquakeData.length) {
-                  agent.color = quakeColor(earthquakeData[lineIdx].mag);
-                }
-              }
-            };
-            agents.forEach((agent, i) => { if (i < textPoints.length) applyQuakeColor(agent, i); });
-            formationAgents.forEach((agent, i) => applyQuakeColor(agent, agents.length + i));
-          }
+          // Apply single neon color for ALL formation types
+          // This ensures text dots are uniform color, not mixed team colors
+          const applyFormationColor = (agent, pointIdx) => {
+            if (pointIdx < textPoints.length) agent.color = currentNeonColor;
+          };
+          agents.forEach((agent, i) => applyFormationColor(agent, i));
+          formationAgents.forEach((agent, i) => applyFormationColor(agent, agents.length + i));
 
         } else {
           // ===== OFFLINE MODE: Geometric shapes (original main branch code) =====
