@@ -295,24 +295,25 @@
     /* ===== RESPONSIVE: Mobile ===== */
     @media (max-width: 599px) {
       .brand {
-        bottom: 40px;
+        bottom: 12px;
         left: 12px;
+        max-width: 55%;
       }
 
       .brand h1 {
         font-size: 16px;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.08em;
       }
 
       .brand p {
         font-size: 7px;
         margin-top: 3px;
+        letter-spacing: 0.15em;
       }
 
       .about-trigger {
         bottom: 12px;
-        left: 12px;
-        right: auto;
+        right: 12px;
         font-size: 8px;
         padding: 5px 10px;
       }
@@ -560,15 +561,15 @@
     function getResponsiveParams() {
       const w = window.innerWidth;
       if (w < 600) return {
-        agentCount: 200, formationCount: 800,
+        agentCount: 300, formationCount: 1500,
         maxTeams: 4, minTeams: 2,
-        fontSize: 14, spacing: 4,
-        clockFontSize: 18, chartLineWidth: 3,
-        chartMargin: 15, chartDotSize: 3,
+        fontSize: 24, spacing: 2,
+        clockFontSize: 30, chartLineWidth: 4,
+        chartMargin: 15, chartDotSize: 4,
         singleColumn: true, minTeamDist: 0.28,
-        teamLabelSize: 8, teamLabelOffset: 40,
+        teamLabelSize: 9, teamLabelOffset: 45,
         teamPosMin: 0.15, teamPosRange: 0.70,
-        iconScale: 0.5
+        iconScale: 0.7
       };
       if (w < 1024) return {
         agentCount: 500, formationCount: 2500,
@@ -1200,9 +1201,8 @@
     let CLOCK_FONT_SIZE = rp.clockFontSize;
     let CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
     const CLOCK_Y = () => {
-      // On mobile, push icon higher to avoid text overlap
-      const multiplier = W < 600 ? 4.5 : (W < 1024 ? 3.5 : 2.8);
-      return H / 2 - CLOCK_LINE_HEIGHT * multiplier;
+      // Position icon above text area - using same ratio across all screen sizes
+      return H / 2 - CLOCK_LINE_HEIGHT * 2.8;
     };
     let CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
 
@@ -1690,10 +1690,13 @@
 
       const lineCenters = [];
       if (rp.singleColumn) {
-        // Mobile: single column, limit items and position below icon
+        // Mobile: single column, show 6 items, positioned below icon
         const displayTimes = times.slice(0, 6);
         const totalLines = displayTimes.length;
-        const startY = H / 2 - lineHeight * (totalLines / 2 - 1.5);
+        // Position text block so it starts below the icon area
+        // CLOCK_Y ≈ H/2 - CLOCK_LINE_HEIGHT*2.8, icon bottom ≈ CLOCK_Y + CLOCK_RADIUS
+        // We want startY to be well below that
+        const startY = H * 0.45;
         displayTimes.forEach((time, i) => {
           const x = W / 2;
           const y = startY + i * lineHeight;
