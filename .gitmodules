@@ -1,0 +1,4 @@
+[submodule "company"]
+	path = company
+	url = https://github.com/slothtechlab/ensemble.git
+	branch = main
