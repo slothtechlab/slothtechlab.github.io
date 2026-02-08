@@ -1737,7 +1737,8 @@
             // Determine lineIdx by closest line center Y (within same column)
             let lineIdx = 0;
             let minDist = Infinity;
-            const col = x < W / 2 ? 0 : 1;
+            // In single column mode, everything is column 0 regardless of x position
+            const col = rp.singleColumn ? 0 : (x < W / 2 ? 0 : 1);
             for (const lc of lineCenters) {
               if (lc.col === col) {
                 const dist = Math.abs(y - lc.y);
