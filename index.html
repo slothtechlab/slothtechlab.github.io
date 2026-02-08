@@ -481,6 +481,12 @@
           isCore: true
         });
       }
+
+      // Pre-compute color strings for stars to avoid per-frame string allocation
+      for (let i = 0; i < galaxyStars.length; i++) {
+        const s = galaxyStars[i];
+        s.colorStr = `rgb(${s.colorR},${s.colorG},${s.colorB})`;
+      }
     }
 
     function drawBgStars() {
@@ -498,6 +504,50 @@
       ctx.globalAlpha = 1;
     }
 
+    // ===== PRE-RENDERED NEBULA + CORE CACHE =====
+    let _nebulaCanvas = null;
+    let _coreCanvas = null;
+
+    function initNebulaCoreCache() {
+      // Pre-render nebulae at full opacity
+      _nebulaCanvas = document.createElement('canvas');
+      _nebulaCanvas.width = W;
+      _nebulaCanvas.height = H;
+      const nctx = _nebulaCanvas.getContext('2d');
+      const nebulae = [
+        { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
+        { x: 0.7, y: 0.35, r: 0.45, color: [25, 50, 100] },
+        { x: 0.5, y: 0.65, r: 0.55, color: [70, 35, 80] },
+      ];
+      for (let i = 0; i < nebulae.length; i++) {
+        const n = nebulae[i];
+        const grad = nctx.createRadialGradient(
+          n.x * W, n.y * H, 0,
+          n.x * W, n.y * H, n.r * Math.max(W, H)
+        );
+        grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.1)`);
+        grad.addColorStop(0.4, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.05)`);
+        grad.addColorStop(1, 'transparent');
+        nctx.fillStyle = grad;
+        nctx.fillRect(0, 0, W, H);
+      }
+
+      // Pre-render core at full opacity
+      _coreCanvas = document.createElement('canvas');
+      _coreCanvas.width = 600;
+      _coreCanvas.height = 600;
+      const cctx = _coreCanvas.getContext('2d');
+      const coreGrad = cctx.createRadialGradient(300, 300, 0, 300, 300, 300);
+      coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
+      coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
+      coreGrad.addColorStop(0.4, 'rgba(230, 200, 255, 0.15)');
+      coreGrad.addColorStop(1, 'transparent');
+      cctx.fillStyle = coreGrad;
+      cctx.beginPath();
+      cctx.arc(300, 300, 300, 0, Math.PI * 2);
+      cctx.fill();
+    }
+
     function drawGalaxy(time) {
       galaxyRotation += GALAXY_ROTATION_SPEED;
 
@@ -505,35 +555,19 @@
       const targetDim = (phase === 'formation') ? 0.05 : 1.0;
       galaxyDimFactor += (targetDim - galaxyDimFactor) * 0.08;
 
-      const nebulae = [
-        { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
-        { x: 0.7, y: 0.35, r: 0.45, color: [25, 50, 100] },
-        { x: 0.5, y: 0.65, r: 0.55, color: [70, 35, 80] },
-      ];
+      // Draw cached nebulae with current dim factor
+      if (_nebulaCanvas) {
+        ctx.globalAlpha = galaxyDimFactor;
+        ctx.drawImage(_nebulaCanvas, 0, 0);
+      }
 
-      nebulae.forEach(n => {
-        const grad = ctx.createRadialGradient(
-          n.x * W, n.y * H, 0,
-          n.x * W, n.y * H, n.r * Math.max(W, H)
-        );
-        grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, ${0.1 * galaxyDimFactor})`);
-        grad.addColorStop(0.4, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, ${0.05 * galaxyDimFactor})`);
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, W, H);
-      });
+      // Draw cached core with current dim factor
+      if (_coreCanvas) {
+        ctx.globalAlpha = galaxyDimFactor;
+        ctx.drawImage(_coreCanvas, cx - 300, cy - 300);
+      }
 
-      // Core brightness affected by dim factor
-      const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
-      coreGrad.addColorStop(0, `rgba(255, 255, 250, ${0.6 * galaxyDimFactor})`);
-      coreGrad.addColorStop(0.15, `rgba(255, 245, 220, ${0.4 * galaxyDimFactor})`);
-      coreGrad.addColorStop(0.4, `rgba(230, 200, 255, ${0.15 * galaxyDimFactor})`);
-      coreGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = coreGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, 300, 0, Math.PI * 2);
-      ctx.fill();
-
+      // Stars: draw every frame (rotation needs smooth animation)
       for (let i = 0; i < galaxyStars.length; i++) {
         const star = galaxyStars[i];
         const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
@@ -541,7 +575,7 @@
         const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
 
         ctx.globalAlpha = star.brightness * galaxyDimFactor;
-        ctx.fillStyle = `rgb(${star.colorR},${star.colorG},${star.colorB})`;
+        ctx.fillStyle = star.colorStr;
         const s = star.size;
         ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
       }
@@ -2354,6 +2388,7 @@
 
       initBgStars();
       initGalaxy();
+      initNebulaCoreCache();
       clockInitialized = false;
       forexIconInitialized = false;
       weatherIconInitialized = false;
@@ -2416,6 +2451,7 @@
 
     initBgStars();
     initGalaxy();
+    initNebulaCoreCache();
     requestAnimationFrame(animate);
 
     // About trigger events - click to toggle
