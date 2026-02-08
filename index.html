@@ -1834,6 +1834,17 @@
         }
       }
 
+      // Cap points to FORMATION_AGENT_COUNT to prevent creating too many agents
+      // Weather/earthquake text can produce 20,000-50,000 points at spacing=2
+      if (points.length > FORMATION_AGENT_COUNT) {
+        const step = points.length / FORMATION_AGENT_COUNT;
+        const sampled = [];
+        for (let i = 0; i < FORMATION_AGENT_COUNT; i++) {
+          sampled.push(points[Math.floor(i * step)]);
+        }
+        return sampled;
+      }
+
       return points;
     }
 
