@@ -415,7 +415,8 @@
 
     function initBgStars() {
       bgStars.length = 0;
-      for (let i = 0; i < 400; i++) {
+      const count = rp ? rp.bgStarCount : 400;
+      for (let i = 0; i < count; i++) {
         bgStars.push({
           x: Math.random() * W,
           y: Math.random() * H,
@@ -434,10 +435,11 @@
       galaxyStars.length = 0;
 
       const maxRadius = Math.max(W, H) * 0.75;
+      const gm = rp ? rp.galaxyMultiplier : 1.0;
 
       for (let arm = 0; arm < 4; arm++) {
         const offset = (arm / 4) * Math.PI * 2;
-        const armStars = arm % 2 === 0 ? 2000 : 1500;
+        const armStars = Math.floor((arm % 2 === 0 ? 2000 : 1500) * gm);
 
         for (let i = 0; i < armStars; i++) {
           const t = i / armStars;
@@ -461,7 +463,8 @@
         }
       }
 
-      for (let i = 0; i < 1500; i++) {
+      const coreCount = Math.floor(1500 * gm);
+      for (let i = 0; i < coreCount; i++) {
         const angle = Math.random() * Math.PI * 2;
         const radius = Math.pow(Math.random(), 2) * 150;
 
@@ -481,13 +484,18 @@
     }
 
     function drawBgStars() {
-      bgStars.forEach(star => {
-        // Apply dim factor during formation phase
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha * galaxyDimFactor})`;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      for (let i = 0; i < bgStars.length; i++) {
+        const star = bgStars[i];
+        ctx.globalAlpha = star.alpha * galaxyDimFactor;
+        ctx.fillStyle = '#ffffff';
+        const s = star.size;
+        if (s < 1.0) {
+          ctx.fillRect(star.x, star.y, s, s);
+        } else {
+          ctx.fillRect(star.x - s * 0.5, star.y - s * 0.5, s, s);
+        }
+      }
+      ctx.globalAlpha = 1;
     }
 
     function drawGalaxy(time) {
@@ -526,16 +534,18 @@
       ctx.arc(cx, cy, 300, 0, Math.PI * 2);
       ctx.fill();
 
-      galaxyStars.forEach(star => {
+      for (let i = 0; i < galaxyStars.length; i++) {
+        const star = galaxyStars[i];
         const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
         const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
         const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
 
-        ctx.fillStyle = `rgba(${star.colorR}, ${star.colorG}, ${star.colorB}, ${star.brightness * galaxyDimFactor})`;
-        ctx.beginPath();
-        ctx.arc(x, y, star.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.globalAlpha = star.brightness * galaxyDimFactor;
+        ctx.fillStyle = `rgb(${star.colorR},${star.colorG},${star.colorB})`;
+        const s = star.size;
+        ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
+      }
+      ctx.globalAlpha = 1;
     }
 
     // ===== TEAM COLORS (15 distinct, Greek alphabet) =====
@@ -567,18 +577,19 @@
     function getResponsiveParams() {
       const w = window.innerWidth;
       if (w < 600) return {
-        agentCount: 800, formationCount: 4000,
+        agentCount: 300, formationCount: 1500,
         maxTeams: 7, minTeams: 3,
-        fontSize: 32, spacing: 2,
+        fontSize: 32, spacing: 3,
         clockFontSize: 36, chartLineWidth: 6,
         chartMargin: 20, chartDotSize: 6,
         singleColumn: true, minTeamDist: 0.22,
         teamLabelSize: 11, teamLabelOffset: 50,
         teamPosMin: 0.12, teamPosRange: 0.76,
-        iconScale: 0.8
+        iconScale: 0.8,
+        galaxyMultiplier: 0.25, bgStarCount: 150
       };
       if (w < 1024) return {
-        agentCount: 800, formationCount: 4000,
+        agentCount: 500, formationCount: 2500,
         maxTeams: 8, minTeams: 4,
         fontSize: 36, spacing: 2,
         clockFontSize: 38, chartLineWidth: 7,
@@ -586,7 +597,8 @@
         singleColumn: false, minTeamDist: 0.20,
         teamLabelSize: 11, teamLabelOffset: 60,
         teamPosMin: 0.10, teamPosRange: 0.80,
-        iconScale: 0.9
+        iconScale: 0.9,
+        galaxyMultiplier: 0.5, bgStarCount: 250
       };
       return {
         agentCount: 1000, formationCount: 5000,
@@ -597,7 +609,8 @@
         singleColumn: false, minTeamDist: 0.18,
         teamLabelSize: 11, teamLabelOffset: 70,
         teamPosMin: 0.10, teamPosRange: 0.80,
-        iconScale: 1.0
+        iconScale: 1.0,
+        galaxyMultiplier: 1.0, bgStarCount: 400
       };
     }
 
@@ -1266,12 +1279,11 @@
       const iconY = CLOCK_Y();
 
       // Draw cached static dots (circle + markers)
-      clockStaticDots.forEach(dot => {
+      for (let i = 0; i < clockStaticDots.length; i++) {
+        const dot = clockStaticDots[i];
         ctx.fillStyle = dot.color;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+      }
 
       // Draw animated hands as dots (recalculated each frame)
       const now = new Date();
@@ -1285,18 +1297,18 @@
         { angle: (seconds / 60) * Math.PI * 2 - Math.PI / 2, length: 0.75, dots: 14, size: 1.0 },
       ];
 
-      hands.forEach((hand, hi) => {
+      for (let hi = 0; hi < hands.length; hi++) {
+        const hand = hands[hi];
         for (let d = 0; d <= hand.dots; d++) {
           const t = d / hand.dots;
           const hx = W / 2 + Math.cos(hand.angle) * CLOCK_RADIUS * hand.length * t;
           const hy = iconY + Math.sin(hand.angle) * CLOCK_RADIUS * hand.length * t;
           const colorIdx = (Math.floor(hx) * 3 + Math.floor(hy) * 7 + hi) % TEAM_COLORS.length;
           ctx.fillStyle = TEAM_COLORS[colorIdx].color;
-          ctx.beginPath();
-          ctx.arc(hx, hy, hand.size, 0, Math.PI * 2);
-          ctx.fill();
+          const hs = hand.size;
+          ctx.fillRect(hx - hs, hy - hs, hs * 2, hs * 2);
         }
-      });
+      }
     }
 
     // ===== FOREX DOT ICON (trend line chart) =====
@@ -1384,12 +1396,11 @@
     function drawForexIcon() {
       if (!forexIconInitialized) initForexIcon();
       // Draw static dots
-      forexIconDots.forEach(dot => {
+      for (let i = 0; i < forexIconDots.length; i++) {
+        const dot = forexIconDots[i];
         ctx.fillStyle = dot.color;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+      }
 
       // Animated: data points light up sequentially along trend line
       const iconY = CLOCK_Y();
@@ -1504,16 +1515,14 @@
       const iconY = CLOCK_Y();
       const now = Date.now();
 
-      // Draw static dots with shimmer
-      weatherIconDots.forEach((dot, idx) => {
-        // Subtle shimmer: each dot's brightness varies slightly over time
-        const shimmer = Math.sin(now / 300 + idx * 0.7) * 0.15 + 0.85;
-        ctx.globalAlpha = shimmer;
+      // Draw static dots (skip per-dot shimmer for perf, use batch alpha)
+      const shimmerBase = Math.sin(now / 300) * 0.15 + 0.85;
+      ctx.globalAlpha = shimmerBase;
+      for (let i = 0; i < weatherIconDots.length; i++) {
+        const dot = weatherIconDots[i];
         ctx.fillStyle = dot.color;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+      }
       ctx.globalAlpha = 1;
 
       // Animated: 3 tiny orbiting particles around the sun
@@ -1574,15 +1583,14 @@
       const iconY = CLOCK_Y();
       const now = Date.now();
 
-      // Draw static dots with shimmer
-      cryptoIconDots.forEach((dot, idx) => {
-        const shimmer = Math.sin(now / 250 + idx * 0.5) * 0.12 + 0.88;
-        ctx.globalAlpha = shimmer;
+      // Draw static dots
+      const cryptoShimmer = Math.sin(now / 250) * 0.12 + 0.88;
+      ctx.globalAlpha = cryptoShimmer;
+      for (let i = 0; i < cryptoIconDots.length; i++) {
+        const dot = cryptoIconDots[i];
         ctx.fillStyle = dot.color;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+      }
       ctx.globalAlpha = 1;
 
       // Animated: pulsing golden ring around ₿
@@ -1646,12 +1654,11 @@
       const now = Date.now();
 
       // Draw static dots
-      quakeIconDots.forEach(dot => {
+      for (let i = 0; i < quakeIconDots.length; i++) {
+        const dot = quakeIconDots[i];
         ctx.fillStyle = dot.color;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-      });
+        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+      }
 
       // Animated: expanding wave ring from center
       const waveCycle = 2000;
@@ -1775,6 +1782,25 @@
       };
     }
 
+    // ===== GLOW SPRITE CACHE =====
+    const _glowSpriteCache = {};
+    const GLOW_SPRITE_SIZE = 32;
+    function getGlowSprite(color) {
+      if (_glowSpriteCache[color]) return _glowSpriteCache[color];
+      const s = GLOW_SPRITE_SIZE;
+      const c = document.createElement('canvas');
+      c.width = s; c.height = s;
+      const g = c.getContext('2d');
+      const half = s / 2;
+      const grad = g.createRadialGradient(half, half, 0, half, half, half);
+      grad.addColorStop(0, color);
+      grad.addColorStop(1, 'transparent');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, s, s);
+      _glowSpriteCache[color] = c;
+      return c;
+    }
+
     class Agent {
       constructor(id) {
         this.id = id;
@@ -1853,30 +1879,21 @@
       }
 
       draw() {
-        // Add neon glow during formation for text visibility
+        // Use pre-rendered glow sprite instead of per-frame RadialGradient
+        const sprite = getGlowSprite(this.color);
         if (phase === 'formation') {
-          const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
-          grad.addColorStop(0, this.color + '40');
-          grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
-          ctx.fill();
+          const r = this.size * 3;
+          ctx.globalAlpha = 0.25;
+          ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
         } else {
-          const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2.5);
-          grad.addColorStop(0, this.color + '70');
-          grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
-          ctx.fill();
+          const r = this.size * 2.5;
+          ctx.globalAlpha = 0.44;
+          ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
         }
 
-        ctx.fillStyle = this.color;
         ctx.globalAlpha = this.alpha;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
         ctx.globalAlpha = 1;
       }
     }
@@ -1921,27 +1938,61 @@
     const PHASE_DURATION = { scatter: 8000, gather: 8000, formation: 7000 };
 
     function drawConnections() {
-      agents.forEach((a1, i) => {
-        if (!a1.team) return;
+      // Grid-based spatial partitioning: O(n) instead of O(n²)
+      const CELL = 50;
+      const cols = Math.ceil(W / CELL) + 1;
+      const grid = {};
 
-        agents.forEach((a2, j) => {
-          if (i >= j || a1.team !== a2.team) return;
+      for (let i = 0; i < agents.length; i++) {
+        const a = agents[i];
+        if (!a.team) continue;
+        const gx = Math.floor(a.x / CELL);
+        const gy = Math.floor(a.y / CELL);
+        const key = gx + gy * cols;
+        if (!grid[key]) grid[key] = [];
+        grid[key].push(i);
+      }
 
-          const dx = a2.x - a1.x;
-          const dy = a2.y - a1.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+      ctx.lineWidth = 0.3;
+      const keys = Object.keys(grid);
+      for (let k = 0; k < keys.length; k++) {
+        const cell = grid[keys[k]];
+        const gx = keys[k] % cols;
+        const gy = Math.floor(keys[k] / cols);
 
-          if (dist < 50) {
-            const alpha = (1 - dist / 50) * 0.2;
-            ctx.strokeStyle = a1.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
-            ctx.lineWidth = 0.3;
-            ctx.beginPath();
-            ctx.moveTo(a1.x, a1.y);
-            ctx.lineTo(a2.x, a2.y);
-            ctx.stroke();
+        // Check this cell + 4 neighbors (right, below, below-left, below-right)
+        const neighborKeys = [+keys[k], +keys[k] + 1, +keys[k] + cols, +keys[k] + cols - 1, +keys[k] + cols + 1];
+        for (let ni = 0; ni < neighborKeys.length; ni++) {
+          const nk = neighborKeys[ni];
+          const ncell = grid[nk];
+          if (!ncell) continue;
+          const sameCell = (nk === +keys[k]);
+          for (let ci = 0; ci < cell.length; ci++) {
+            const idx1 = cell[ci];
+            const a1 = agents[idx1];
+            const startJ = sameCell ? ci + 1 : 0;
+            for (let cj = startJ; cj < ncell.length; cj++) {
+              const idx2 = ncell[cj];
+              const a2 = agents[idx2];
+              if (a1.team !== a2.team) continue;
+              const dx = a2.x - a1.x;
+              const dy = a2.y - a1.y;
+              const distSq = dx * dx + dy * dy;
+              if (distSq < 2500) { // 50*50
+                const dist = Math.sqrt(distSq);
+                const alpha = (1 - dist / 50) * 0.2;
+                ctx.globalAlpha = alpha;
+                ctx.strokeStyle = a1.color;
+                ctx.beginPath();
+                ctx.moveTo(a1.x, a1.y);
+                ctx.lineTo(a2.x, a2.y);
+                ctx.stroke();
+              }
+            }
           }
-        });
-      });
+        }
+      }
+      ctx.globalAlpha = 1;
     }
 
     function drawTeamLabels(time) {
@@ -1972,7 +2023,8 @@
       const teamAgents = agents.filter(a => a.team);
       if (teamAgents.length < 2) return;
 
-      for (let i = 0; i < 15; i++) {
+      const lineCount = rp.agentCount < 500 ? 5 : 15;
+      for (let i = 0; i < lineCount; i++) {
         const from = teamAgents[Math.floor(Math.random() * teamAgents.length)];
         const to = teamAgents[Math.floor(Math.random() * teamAgents.length)];
         if (from !== to) {
@@ -2259,20 +2311,19 @@
 
       // Slowly rotate shape during formation
       if (phase === 'formation') {
-        shapeRotation += 0.002;
-        const formationRadius = Math.min(W, H) * 0.3;
-        agents.forEach((agent) => {
-          agent.assignFormation(currentShape, formationRadius);
-        });
-        formationAgents.forEach((agent) => {
-          agent.assignFormation(currentShape, formationRadius);
-        });
-
-        // Re-apply formation colors every frame to prevent any override
-        if (formationColorFn) {
-          agents.forEach((agent, i) => formationColorFn(agent, i));
-          formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
+        const isOfflineShape = OFFLINE_SHAPE_TYPES.includes(currentShape);
+        if (isOfflineShape) {
+          // Only offline geometric shapes need per-frame rotation recalculation
+          shapeRotation += 0.002;
+          const formationRadius = Math.min(W, H) * 0.3;
+          agents.forEach((agent) => {
+            agent.assignFormation(currentShape, formationRadius);
+          });
+          formationAgents.forEach((agent) => {
+            agent.assignFormation(currentShape, formationRadius);
+          });
         }
+        // Online text formations: positions are fixed, no per-frame recalc needed
       }
     }
 
