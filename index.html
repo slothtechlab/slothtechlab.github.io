@@ -489,18 +489,36 @@
       }
     }
 
-    function drawBgStars() {
+    // ===== CACHED BG STARS =====
+    let _bgStarCanvas = null;
+    let _bgStarDimFactor = -1;
+
+    function initBgStarCache() {
+      _bgStarCanvas = document.createElement('canvas');
+      _bgStarCanvas.width = W;
+      _bgStarCanvas.height = H;
+      const bctx = _bgStarCanvas.getContext('2d');
+      bctx.fillStyle = '#ffffff';
+
       for (let i = 0; i < bgStars.length; i++) {
         const star = bgStars[i];
-        ctx.globalAlpha = star.alpha * galaxyDimFactor;
-        ctx.fillStyle = '#ffffff';
+        // Pre-draw with max alpha, modulate globalAlpha later
+        bctx.globalAlpha = star.alpha;
         const s = star.size;
         if (s < 1.0) {
-          ctx.fillRect(star.x, star.y, s, s);
+          bctx.fillRect(star.x, star.y, s, s);
         } else {
-          ctx.fillRect(star.x - s * 0.5, star.y - s * 0.5, s, s);
+          bctx.fillRect(star.x - s * 0.5, star.y - s * 0.5, s, s);
         }
       }
+    }
+
+    function drawBgStars() {
+      if (!_bgStarCanvas) initBgStarCache();
+
+      // Only dimming affects the cached image
+      ctx.globalAlpha = galaxyDimFactor;
+      ctx.drawImage(_bgStarCanvas, 0, 0);
       ctx.globalAlpha = 1;
     }
 
@@ -1971,46 +1989,79 @@
 
     const PHASE_DURATION = { scatter: 8000, gather: 8000, formation: 7000 };
 
-    function drawConnections() {
-      // Grid-based spatial partitioning: O(n) instead of O(n²)
-      const CELL = 50;
-      const cols = Math.ceil(W / CELL) + 1;
-      const grid = {};
+    // Grid reuse to reduce GC
+    let _gridCells = [];
+    let _gridCols = 0;
+    const GRID_CELL_SIZE = 50;
 
+    function drawConnections() {
+      const cols = Math.ceil(W / GRID_CELL_SIZE) + 1;
+      const rows = Math.ceil(H / GRID_CELL_SIZE) + 1;
+      const totalCells = cols * rows;
+
+      // Reallocate grid if screen size changed
+      if (_gridCells.length < totalCells || _gridCols !== cols) {
+        _gridCells = new Array(totalCells).fill(null).map(() => []);
+        _gridCols = cols;
+      }
+
+      // Clear grid
+      for (let i = 0; i < totalCells; i++) {
+        _gridCells[i].length = 0;
+      }
+
+      // Populate grid
       for (let i = 0; i < agents.length; i++) {
         const a = agents[i];
         if (!a.team) continue;
-        const gx = Math.floor(a.x / CELL);
-        const gy = Math.floor(a.y / CELL);
-        const key = gx + gy * cols;
-        if (!grid[key]) grid[key] = [];
-        grid[key].push(i);
+        const gx = Math.floor(a.x / GRID_CELL_SIZE);
+        const gy = Math.floor(a.y / GRID_CELL_SIZE);
+        // Bounds check
+        if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) {
+          const key = gx + gy * cols;
+          _gridCells[key].push(i);
+        }
       }
 
       ctx.lineWidth = 0.3;
-      const keys = Object.keys(grid);
-      for (let k = 0; k < keys.length; k++) {
-        const cell = grid[keys[k]];
-        const gx = keys[k] % cols;
-        const gy = Math.floor(keys[k] / cols);
 
-        // Check this cell + 4 neighbors (right, below, below-left, below-right)
-        const neighborKeys = [+keys[k], +keys[k] + 1, +keys[k] + cols, +keys[k] + cols - 1, +keys[k] + cols + 1];
-        for (let ni = 0; ni < neighborKeys.length; ni++) {
-          const nk = neighborKeys[ni];
-          const ncell = grid[nk];
-          if (!ncell) continue;
-          const sameCell = (nk === +keys[k]);
+      // Iterate valid cells
+      for (let k = 0; k < totalCells; k++) {
+        const cell = _gridCells[k];
+        if (cell.length === 0) continue;
+
+        // Check neighbors (right, below, below-left, below-right)
+        // Note: k + 1 is right, k + cols is below
+        const neighbors = [k, k + 1, k + cols, k + cols - 1, k + cols + 1];
+
+        for (let ni = 0; ni < neighbors.length; ni++) {
+          const nk = neighbors[ni];
+          if (nk < 0 || nk >= totalCells) continue;
+
+          const ncell = _gridCells[nk];
+          if (ncell.length === 0) continue;
+
+          // Check if same cell to avoid double processing within cell
+          const isSameCell = (nk === k);
+
           for (let ci = 0; ci < cell.length; ci++) {
             const idx1 = cell[ci];
             const a1 = agents[idx1];
-            const startJ = sameCell ? ci + 1 : 0;
+
+            // If same cell, start from next index to optimize
+            const startJ = isSameCell ? ci + 1 : 0;
+
             for (let cj = startJ; cj < ncell.length; cj++) {
               const idx2 = ncell[cj];
               const a2 = agents[idx2];
+
               if (a1.team !== a2.team) continue;
+
               const dx = a2.x - a1.x;
               const dy = a2.y - a1.y;
+              // Simple box check first for speed
+              if (Math.abs(dx) > 50 || Math.abs(dy) > 50) continue;
+
               const distSq = dx * dx + dy * dy;
               if (distSq < 2500) { // 50*50
                 const dist = Math.sqrt(distSq);
@@ -2389,11 +2440,18 @@
       initBgStars();
       initGalaxy();
       initNebulaCoreCache();
+      initBgStarCache();
       clockInitialized = false;
       forexIconInitialized = false;
       weatherIconInitialized = false;
       cryptoIconInitialized = false;
       quakeIconInitialized = false;
+
+      // Reset offscreen caches
+      _bgStarCanvas = null;
+      _bgStarDimFactor = -1;
+      _nebulaCanvas = null;
+      _coreCanvas = null;
     }
 
     window.addEventListener('resize', resize);
@@ -2452,6 +2510,7 @@
     initBgStars();
     initGalaxy();
     initNebulaCoreCache();
+    initBgStarCache();
     requestAnimationFrame(animate);
 
     // About trigger events - click to toggle
