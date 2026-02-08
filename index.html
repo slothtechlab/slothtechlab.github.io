@@ -295,7 +295,7 @@
     /* ===== RESPONSIVE: Mobile ===== */
     @media (max-width: 599px) {
       .brand {
-        bottom: 48px;
+        bottom: 50px;
         left: 50%;
         transform: translateX(-50%);
         text-align: center;
@@ -303,7 +303,7 @@
       }
 
       .brand h1 {
-        font-size: 22px;
+        font-size: 24px;
         letter-spacing: 0.08em;
       }
 
@@ -614,6 +614,7 @@
     let currentNeonColor = '#00aaff';
     let galaxyDimFactor = 1.0; // 1.0 = normal, 0.3 = dimmed
     let formationStartTime = 0; // Track when formation started for animation
+    let formationColorFn = null; // Color function to re-apply every frame during formation
 
     // Neon colors for visibility
     const NEON_COLORS = [
@@ -2057,6 +2058,7 @@
       } else if (phase === 'gather' && elapsed > PHASE_DURATION.gather) {
         phase = 'formation';
         phaseTime = time;
+        formationColorFn = null; // Reset from previous cycle
 
         const isOnline = navigator.onLine;
 
@@ -2143,7 +2145,7 @@
               if (code <= 86) return '#88CCFF';
               return '#FFD700';
             };
-            const applyWeatherColor = (agent, pointIdx) => {
+            formationColorFn = (agent, pointIdx) => {
               if (pointIdx < textPoints.length) {
                 const lineIdx = textPoints[pointIdx].lineIdx;
                 if (lineIdx >= 0 && lineIdx < weatherData.length) {
@@ -2151,8 +2153,8 @@
                 }
               }
             };
-            agents.forEach((agent, i) => { if (i < textPoints.length) applyWeatherColor(agent, i); });
-            formationAgents.forEach((agent, i) => applyWeatherColor(agent, agents.length + i));
+            agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
+            formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
           }
 
           // Crypto: gradient from green (top) to gold (bottom)
@@ -2160,7 +2162,7 @@
             const chartTop = H / 2 - 40;
             const chartBottom = H / 2 + 120;
             const chartRange = chartBottom - chartTop;
-            const applyCryptoColor = (agent, pointIdx) => {
+            formationColorFn = (agent, pointIdx) => {
               if (pointIdx < textPoints.length) {
                 const py = textPoints[pointIdx].y;
                 const t = Math.max(0, Math.min(1, (py - chartTop) / chartRange));
@@ -2173,8 +2175,8 @@
                 agent.color = `#${rHex}${gHex}${bHex}`;
               }
             };
-            agents.forEach((agent, i) => { if (i < textPoints.length) applyCryptoColor(agent, i); });
-            formationAgents.forEach((agent, i) => applyCryptoColor(agent, agents.length + i));
+            agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
+            formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
           }
 
           // Earthquake: color by magnitude
@@ -2186,7 +2188,7 @@
               if (mag >= 5.0) return '#FF9933';
               return '#FFCC44';
             };
-            const applyQuakeColor = (agent, pointIdx) => {
+            formationColorFn = (agent, pointIdx) => {
               if (pointIdx < textPoints.length && earthquakeData) {
                 const lineIdx = textPoints[pointIdx].lineIdx;
                 if (lineIdx >= 0 && lineIdx < earthquakeData.length) {
@@ -2194,8 +2196,8 @@
                 }
               }
             };
-            agents.forEach((agent, i) => { if (i < textPoints.length) applyQuakeColor(agent, i); });
-            formationAgents.forEach((agent, i) => applyQuakeColor(agent, agents.length + i));
+            agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
+            formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
           }
 
         } else {
@@ -2235,6 +2237,7 @@
       } else if (phase === 'formation' && elapsed > PHASE_DURATION.formation + (currentShape === 'worldtime' ? 1000 : 0)) {
         phase = 'scatter';
         phaseTime = time;
+        formationColorFn = null; // Clear color function
 
         // Re-fetch data for next cycle
         fetchForexData();
@@ -2262,6 +2265,12 @@
         formationAgents.forEach((agent) => {
           agent.assignFormation(currentShape, formationRadius);
         });
+
+        // Re-apply formation colors every frame to prevent any override
+        if (formationColorFn) {
+          agents.forEach((agent, i) => formationColorFn(agent, i));
+          formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
+        }
       }
     }
 
