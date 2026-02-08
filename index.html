@@ -295,27 +295,27 @@
     /* ===== RESPONSIVE: Mobile ===== */
     @media (max-width: 599px) {
       .brand {
-        bottom: 12px;
-        left: 12px;
+        bottom: 10px;
+        left: 10px;
         max-width: 55%;
       }
 
       .brand h1 {
-        font-size: 16px;
+        font-size: 18px;
         letter-spacing: 0.08em;
       }
 
       .brand p {
-        font-size: 7px;
+        font-size: 8px;
         margin-top: 3px;
         letter-spacing: 0.15em;
       }
 
       .about-trigger {
-        bottom: 12px;
-        right: 12px;
-        font-size: 8px;
-        padding: 5px 10px;
+        bottom: 10px;
+        right: 10px;
+        font-size: 10px;
+        padding: 6px 14px;
       }
 
       .about-panel {
@@ -401,8 +401,29 @@
     let cx = W / 2;
     let cy = H / 2;
 
-    canvas.width = W;
-    canvas.height = H;
+    // Virtual canvas: minimum 1024px width for consistent rendering
+    const MIN_CANVAS_WIDTH = 1024;
+    function applyCanvasSize() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      if (vw < MIN_CANVAS_WIDTH) {
+        const scale = vw / MIN_CANVAS_WIDTH;
+        W = MIN_CANVAS_WIDTH;
+        H = Math.round(vh / scale);
+        canvas.style.width = vw + 'px';
+        canvas.style.height = vh + 'px';
+      } else {
+        W = vw;
+        H = vh;
+        canvas.style.width = '';
+        canvas.style.height = '';
+      }
+      cx = W / 2;
+      cy = H / 2;
+      canvas.width = W;
+      canvas.height = H;
+    }
+    applyCanvasSize();
 
     // ===== BACKGROUND STARS =====
     const bgStars = [];
@@ -558,30 +579,8 @@
     const formationAgents = [];
 
     // ===== RESPONSIVE PARAMETERS =====
+    // Always use desktop values - mobile uses virtual canvas scaling
     function getResponsiveParams() {
-      const w = window.innerWidth;
-      if (w < 600) return {
-        agentCount: 300, formationCount: 1500,
-        maxTeams: 4, minTeams: 2,
-        fontSize: 24, spacing: 2,
-        clockFontSize: 30, chartLineWidth: 4,
-        chartMargin: 15, chartDotSize: 4,
-        singleColumn: true, minTeamDist: 0.28,
-        teamLabelSize: 9, teamLabelOffset: 45,
-        teamPosMin: 0.15, teamPosRange: 0.70,
-        iconScale: 0.7
-      };
-      if (w < 1024) return {
-        agentCount: 500, formationCount: 2500,
-        maxTeams: 6, minTeams: 3,
-        fontSize: 28, spacing: 3,
-        clockFontSize: 30, chartLineWidth: 5,
-        chartMargin: 30, chartDotSize: 5,
-        singleColumn: false, minTeamDist: 0.22,
-        teamLabelSize: 10, teamLabelOffset: 55,
-        teamPosMin: 0.12, teamPosRange: 0.76,
-        iconScale: 0.7
-      };
       return {
         agentCount: 1000, formationCount: 5000,
         maxTeams: 15, minTeams: 5,
@@ -2261,12 +2260,7 @@
     }
 
     function resize() {
-      W = window.innerWidth;
-      H = window.innerHeight;
-      cx = W / 2;
-      cy = H / 2;
-      canvas.width = W;
-      canvas.height = H;
+      applyCanvasSize();
 
       // Update responsive parameters
       rp = getResponsiveParams();
