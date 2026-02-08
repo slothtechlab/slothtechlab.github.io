@@ -1482,21 +1482,45 @@
 
         if (intensity > 0) {
           const radius = 4 + intensity * 6;
-          const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
           // Green for upward movement, red for downward
           const nextPy = idx < trendPoints.length - 1 ? trendPoints[idx + 1][1] : py;
           const moveColor = nextPy < py ? '#00FF88' : '#FF4466'; // up=green, down=red
-          grad.addColorStop(0, moveColor);
-          grad.addColorStop(0.5, moveColor + '40');
-          grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
+
+          const sprite = getForexSprite(moveColor, 10); // Standardize radius for cache hits (max size ~10)
+          const size = radius * 2;
+
           ctx.globalAlpha = intensity;
-          ctx.beginPath();
-          ctx.arc(x, y, radius, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.drawImage(sprite, x - radius, y - radius, size, size);
           ctx.globalAlpha = 1;
         }
       });
+    }
+
+    // Forex Glow Sprites Cache
+    const _forexSpriteCache = {};
+    function getForexSprite(color, radius) {
+      const key = `${color}-${radius}`;
+      if (_forexSpriteCache[key]) return _forexSpriteCache[key];
+
+      const canvas = document.createElement('canvas');
+      const size = Math.ceil(radius * 2);
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const center = size / 2;
+
+      const grad = ctx.createRadialGradient(center, center, 0, center, center, radius);
+      grad.addColorStop(0, color);
+      grad.addColorStop(0.5, color + '40'); // Hex alpha 40 = ~25%
+      grad.addColorStop(1, 'transparent');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(center, center, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      _forexSpriteCache[key] = canvas;
+      return canvas;
     }
 
     // ===== WEATHER DOT ICON (sun + rain cloud) =====
@@ -1589,9 +1613,7 @@
 
         ctx.globalAlpha = trail;
         ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(ox, oy, 1.5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
         ctx.globalAlpha = 1;
       }
     }
