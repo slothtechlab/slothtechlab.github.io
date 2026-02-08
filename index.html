@@ -148,7 +148,8 @@
       pointer-events: none;
       transition: opacity 0.8s ease, transform 0.8s ease;
       text-align: center;
-      min-width: 480px;
+      min-width: min(480px, 90vw);
+      max-width: 90vw;
       overflow: hidden;
     }
 
@@ -266,6 +267,74 @@
 
     .about-panel .info-value.dim {
       color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ===== RESPONSIVE: Tablet ===== */
+    @media (max-width: 1023px) {
+      .brand {
+        bottom: 20px;
+        left: 20px;
+      }
+
+      .about-trigger {
+        bottom: 20px;
+        right: 20px;
+        font-size: 10px;
+        padding: 7px 14px;
+      }
+
+      .about-panel {
+        padding: 32px 28px;
+      }
+
+      .about-panel h2 {
+        font-size: 22px;
+      }
+    }
+
+    /* ===== RESPONSIVE: Mobile ===== */
+    @media (max-width: 599px) {
+      .brand {
+        bottom: 12px;
+        left: 12px;
+      }
+
+      .brand h1 {
+        font-size: 18px;
+      }
+
+      .brand p {
+        font-size: 8px;
+        margin-top: 4px;
+      }
+
+      .about-trigger {
+        bottom: 12px;
+        right: 12px;
+        font-size: 9px;
+        padding: 6px 12px;
+      }
+
+      .about-panel {
+        padding: 24px 20px;
+        min-width: auto;
+        width: 90vw;
+      }
+
+      .about-panel h2 {
+        font-size: 18px;
+        letter-spacing: 0.12em;
+      }
+
+      .about-panel .tagline {
+        font-size: 8px;
+        margin-bottom: 16px;
+      }
+
+      .about-panel .info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
     }
   </style>
 </head>
@@ -485,8 +554,38 @@
     const dataLines = [];
     const formationAgents = [];
 
-    const AGENT_COUNT = 1000;
-    const FORMATION_AGENT_COUNT = 5000;
+    // ===== RESPONSIVE PARAMETERS =====
+    function getResponsiveParams() {
+      const w = window.innerWidth;
+      if (w < 600) return {
+        agentCount: 250, formationCount: 1000,
+        maxTeams: 5, minTeams: 3,
+        fontSize: 22, spacing: 3,
+        clockFontSize: 24, chartLineWidth: 4,
+        chartMargin: 20, chartDotSize: 4,
+        singleColumn: true, minTeamDist: 0.22
+      };
+      if (w < 1024) return {
+        agentCount: 500, formationCount: 2500,
+        maxTeams: 8, minTeams: 4,
+        fontSize: 32, spacing: 2,
+        clockFontSize: 32, chartLineWidth: 6,
+        chartMargin: 40, chartDotSize: 6,
+        singleColumn: false, minTeamDist: 0.20
+      };
+      return {
+        agentCount: 1000, formationCount: 5000,
+        maxTeams: 15, minTeams: 5,
+        fontSize: 44, spacing: 2,
+        clockFontSize: 44, chartLineWidth: 8,
+        chartMargin: 60, chartDotSize: 8,
+        singleColumn: false, minTeamDist: 0.18
+      };
+    }
+
+    let rp = getResponsiveParams();
+    let AGENT_COUNT = rp.agentCount;
+    let FORMATION_AGENT_COUNT = rp.formationCount;
 
     // Only worldtime display (no shapes)
     const DISPLAY_TYPES = ['worldtime'];
@@ -654,11 +753,11 @@
       offCanvas.height = H;
 
       // Chart area - positioned below icon
-      const chartMargin = 60;
-      const chartLeft = chartMargin + 60;
-      const chartRight = W - chartMargin - 40;
-      const chartTop = H / 2 - 40;
-      const chartBottom = H / 2 + 120;
+      const chartMargin = rp.chartMargin;
+      const chartLeft = chartMargin + (W < 600 ? 20 : 60);
+      const chartRight = W - chartMargin - (W < 600 ? 10 : 40);
+      const chartTop = H / 2 - (W < 600 ? 20 : 40);
+      const chartBottom = H / 2 + (W < 600 ? 80 : 120);
       const chartW = chartRight - chartLeft;
       const chartH = chartBottom - chartTop;
 
@@ -670,7 +769,7 @@
 
       // Draw chart line (thick stroke for visibility)
       offCtx.strokeStyle = '#fff';
-      offCtx.lineWidth = 8;
+      offCtx.lineWidth = rp.chartLineWidth;
       offCtx.beginPath();
       cryptoData.forEach((point, i) => {
         const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
@@ -686,7 +785,7 @@
         const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
         const y = chartBottom - ((point[1] - minP) / rangeP) * chartH;
         offCtx.beginPath();
-        offCtx.arc(x, y, 8, 0, Math.PI * 2);
+        offCtx.arc(x, y, rp.chartDotSize, 0, Math.PI * 2);
         offCtx.fill();
       });
 
@@ -703,25 +802,28 @@
       const lastPrice = prices[prices.length - 1];
       const priceStr = `BTC 7D  $${lastPrice.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
       offCtx.fillStyle = '#fff';
-      offCtx.font = `bold 56px system-ui`;
+      const titleFontSize = W < 600 ? 28 : (W < 1024 ? 40 : 56);
+      offCtx.font = `bold ${titleFontSize}px system-ui`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
-      offCtx.fillText(priceStr, W / 2, chartTop - 50);
+      offCtx.fillText(priceStr, W / 2, chartTop - (W < 600 ? 30 : 50));
 
       // Price change
       const firstPrice = prices[0];
       const change = ((lastPrice - firstPrice) / firstPrice * 100).toFixed(1);
       const changeStr = `${change > 0 ? '+' : ''}${change}%`;
-      offCtx.font = `bold 36px system-ui`;
-      offCtx.fillText(changeStr, W / 2, chartTop - 15);
+      const changeFontSize = W < 600 ? 20 : (W < 1024 ? 28 : 36);
+      offCtx.font = `bold ${changeFontSize}px system-ui`;
+      offCtx.fillText(changeStr, W / 2, chartTop - (W < 600 ? 8 : 15));
 
       // Axis labels (day labels)
-      offCtx.font = `bold 16px system-ui`;
+      const labelFontSize = W < 600 ? 10 : (W < 1024 ? 13 : 16);
+      offCtx.font = `bold ${labelFontSize}px system-ui`;
       const days = ['7D', '6D', '5D', '4D', '3D', '2D', '1D', 'NOW'];
       cryptoData.forEach((_, i) => {
         if (i < days.length) {
           const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
-          offCtx.fillText(days[i], x, chartBottom + 18);
+          offCtx.fillText(days[i], x, chartBottom + (W < 600 ? 12 : 18));
         }
       });
 
@@ -1084,10 +1186,10 @@
     // ===== ANIMATED DOT CLOCK =====
     let clockStaticDots = []; // Cached: circle + markers
     let clockInitialized = false;
-    const CLOCK_FONT_SIZE = 44;
-    const CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
+    let CLOCK_FONT_SIZE = rp.clockFontSize;
+    let CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
     const CLOCK_Y = () => H / 2 - CLOCK_LINE_HEIGHT * 2.8;
-    const CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
+    let CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
 
     function initClockDots() {
       clockStaticDots = [];
@@ -1553,8 +1655,10 @@
       ctx.stroke();
     }
 
-    // ===== TEXT TO POINTS CONVERSION (2-column layout, text only) =====
-    function textToPoints(times, fontSize = 28, spacing = 2) {
+    // ===== TEXT TO POINTS CONVERSION (responsive layout) =====
+    function textToPoints(times, fontSize, spacing) {
+      fontSize = fontSize || rp.fontSize;
+      spacing = spacing || rp.spacing;
       const offCanvas = document.createElement('canvas');
       const offCtx = offCanvas.getContext('2d');
       offCanvas.width = W;
@@ -1565,24 +1669,37 @@
       offCtx.textBaseline = 'middle';
 
       const lineHeight = fontSize * 1.3;
-      const columnGap = 115;
-      const leftX = W / 2 - columnGap - 150;
-      const rightX = W / 2 + columnGap + 150;
 
-      // Draw times in 2 columns (4 each)
+      // Responsive layout: single column on mobile, 2 columns on tablet/desktop
       offCtx.font = `bold ${fontSize}px system-ui`;
-      const startY = H / 2 - lineHeight * 1.0;
 
-      // Store center Y for each line
       const lineCenters = [];
-      times.forEach((time, i) => {
-        const col = i < 4 ? 0 : 1;
-        const row = i % 4;
-        const x = col === 0 ? leftX : rightX;
-        const y = startY + row * lineHeight;
-        offCtx.fillText(time, x, y);
-        lineCenters.push({ idx: i, x: x, y: y, col: col });
-      });
+      if (rp.singleColumn) {
+        // Mobile: single column, all items stacked
+        const totalLines = times.length;
+        const startY = H / 2 - lineHeight * (totalLines / 2 - 0.5);
+        times.forEach((time, i) => {
+          const x = W / 2;
+          const y = startY + i * lineHeight;
+          offCtx.fillText(time, x, y);
+          lineCenters.push({ idx: i, x: x, y: y, col: 0 });
+        });
+      } else {
+        // Desktop/Tablet: 2 columns
+        const columnGap = W < 1024 ? 80 : 115;
+        const colOffset = W < 1024 ? 100 : 150;
+        const leftX = W / 2 - columnGap - colOffset;
+        const rightX = W / 2 + columnGap + colOffset;
+        const startY = H / 2 - lineHeight * 1.0;
+        times.forEach((time, i) => {
+          const col = i < 4 ? 0 : 1;
+          const row = i % 4;
+          const x = col === 0 ? leftX : rightX;
+          const y = startY + row * lineHeight;
+          offCtx.fillText(time, x, y);
+          lineCenters.push({ idx: i, x: x, y: y, col: col });
+        });
+      }
 
       const imageData = offCtx.getImageData(0, 0, W, H);
       const points = [];
@@ -1836,7 +1953,7 @@
 
     function generateNonOverlappingPositions(count) {
       const positions = [];
-      const minDist = 0.18;
+      const minDist = rp.minTeamDist;
 
       for (let i = 0; i < count; i++) {
         let valid = false;
@@ -1865,7 +1982,7 @@
     }
 
     function createRandomTeams() {
-      const teamCount = 5 + Math.floor(Math.random() * 11);
+      const teamCount = rp.minTeams + Math.floor(Math.random() * (rp.maxTeams - rp.minTeams + 1));
       const positions = generateNonOverlappingPositions(teamCount);
 
       activeTeams = TEAM_COLORS.slice(0, teamCount).map((t, i) => ({
@@ -1925,18 +2042,18 @@
           let displayTexts;
           if (formationType === 'worldtime') {
             displayTexts = getAllWorldTimes();
-            textPoints = textToPoints(displayTexts, 44, 2);
+            textPoints = textToPoints(displayTexts);
           } else if (formationType === 'forex') {
             displayTexts = getForexTexts();
-            textPoints = textToPoints(displayTexts, 44, 2);
+            textPoints = textToPoints(displayTexts);
           } else if (formationType === 'weather') {
             displayTexts = getWeatherTexts();
-            textPoints = textToPoints(displayTexts, 44, 2);
+            textPoints = textToPoints(displayTexts);
           } else if (formationType === 'crypto') {
             textPoints = getCryptoChartPoints();
           } else if (formationType === 'earthquake') {
             displayTexts = getEarthquakeTexts();
-            textPoints = textToPoints(displayTexts, 44, 2);
+            textPoints = textToPoints(displayTexts);
           }
 
           // Select random neon color for this display
@@ -2127,6 +2244,24 @@
       cy = H / 2;
       canvas.width = W;
       canvas.height = H;
+
+      // Update responsive parameters
+      rp = getResponsiveParams();
+      AGENT_COUNT = rp.agentCount;
+      FORMATION_AGENT_COUNT = rp.formationCount;
+      CLOCK_FONT_SIZE = rp.clockFontSize;
+      CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
+      CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
+
+      // Adjust agent count if needed
+      if (agents.length > AGENT_COUNT) {
+        agents.length = AGENT_COUNT;
+      } else {
+        while (agents.length < AGENT_COUNT) {
+          agents.push(new Agent(agents.length));
+        }
+      }
+
       initBgStars();
       initGalaxy();
       clockInitialized = false;
