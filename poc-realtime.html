@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POC: Real-time Info Display</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #010104;
+            font-family: system-ui;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        #info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 12px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 400px;
+        }
+
+        #info h3 {
+            color: #0af;
+            margin-bottom: 8px;
+        }
+
+        #info div {
+            margin: 5px 0;
+        }
+
+        .success {
+            color: #4d4;
+        }
+
+        .error {
+            color: #f44;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="info">
+        <h3>POC: Real-time Info Display</h3>
+        <div id="time-status">時刻: 読み込み中...</div>
+        <div id="weather-status">天気: 読み込み中...</div>
+        <div id="exchange-status">為替: 読み込み中...</div>
+        <div id="display-mode">表示モード: <select id="mode-select">
+                <option value="dots">ドット表現</option>
+                <option value="neon">ネオンテキスト</option>
+            </select></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let W = window.innerWidth;
+        let H = window.innerHeight;
+        canvas.width = W;
+        canvas.height = H;
+
+        // ===== DATA STORAGE =====
+        let realtimeData = {
+            time: '',
+            weather: null,
+            exchange: null
+        };
+
+        // ===== TEXT TO DOTS CONVERSION =====
+        function textToPoints(text, fontSize = 80, spacing = 3) {
+            const offCanvas = document.createElement('canvas');
+            const offCtx = offCanvas.getContext('2d');
+            offCanvas.width = W;
+            offCanvas.height = H;
+
+            offCtx.fillStyle = '#fff';
+            offCtx.font = `bold ${fontSize}px system-ui`;
+            offCtx.textAlign = 'center';
+            offCtx.textBaseline = 'middle';
+            offCtx.fillText(text, W / 2, H / 2);
+
+            const imageData = offCtx.getImageData(0, 0, W, H);
+            const points = [];
+
+            for (let y = 0; y < H; y += spacing) {
+                for (let x = 0; x < W; x += spacing) {
+                    const i = (y * W + x) * 4;
+                    if (imageData.data[i + 3] > 128) {
+                        points.push({ x, y });
+                    }
+                }
+            }
+
+            return points;
+        }
+
+        // ===== WORLD TIME (JavaScript native) =====
+        function getWorldTimes() {
+            const now = new Date();
+            const timezones = [
+                { city: 'Tokyo', tz: 'Asia/Tokyo' },
+                { city: 'NYC', tz: 'America/New_York' },
+                { city: 'London', tz: 'Europe/London' },
+                { city: 'Paris', tz: 'Europe/Paris' },
+                { city: 'Sydney', tz: 'Australia/Sydney' }
+            ];
+
+            return timezones.map(t => ({
+                city: t.city,
+                time: now.toLocaleTimeString('en-US', {
+                    timeZone: t.tz,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                })
+            }));
+        }
+
+        // ===== WEATHER API (Open-Meteo - No API key required) =====
+        async function fetchWeather() {
+            try {
+                const cities = [
+                    { name: 'Tokyo', lat: 35.6762, lon: 139.6503 },
+                    { name: 'NYC', lat: 40.7128, lon: -74.0060 },
+                    { name: 'London', lat: 51.5074, lon: -0.1278 }
+                ];
+
+                const results = await Promise.all(cities.map(async city => {
+                    const res = await fetch(
+                        `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code`
+                    );
+                    const data = await res.json();
+                    return {
+                        city: city.name,
+                        temp: data.current.temperature_2m,
+                        code: data.current.weather_code
+                    };
+                }));
+
+                document.getElementById('weather-status').innerHTML =
+                    `<span class="success">天気: ✓ Open-Meteo API成功</span>`;
+                return results;
+            } catch (e) {
+                document.getElementById('weather-status').innerHTML =
+                    `<span class="error">天気: ✗ ${e.message}</span>`;
+                return null;
+            }
+        }
+
+        // ===== EXCHANGE RATE API (fawazahmed0 - No API key required) =====
+        async function fetchExchange() {
+            try {
+                const res = await fetch(
+                    'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+                );
+                const data = await res.json();
+
+                document.getElementById('exchange-status').innerHTML =
+                    `<span class="success">為替: ✓ Exchange API成功 (USD/JPY: ${data.usd.jpy.toFixed(2)})</span>`;
+                return {
+                    usdJpy: data.usd.jpy,
+                    usdEur: data.usd.eur,
+                    usdGbp: data.usd.gbp
+                };
+            } catch (e) {
+                document.getElementById('exchange-status').innerHTML =
+                    `<span class="error">為替: ✗ ${e.message}</span>`;
+                return null;
+            }
+        }
+
+        // ===== DOT PARTICLES =====
+        const dots = [];
+        let targetPoints = [];
+
+        class Dot {
+            constructor() {
+                this.x = Math.random() * W;
+                this.y = Math.random() * H;
+                this.targetX = this.x;
+                this.targetY = this.y;
+                this.size = 1.5 + Math.random();
+                this.color = '#00aaff';
+            }
+
+            update() {
+                this.x += (this.targetX - this.x) * 0.05;
+                this.y += (this.targetY - this.y) * 0.05;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = 0.8;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // Create dots
+        for (let i = 0; i < 5000; i++) {
+            dots.push(new Dot());
+        }
+
+        // ===== NEON TEXT DRAWING =====
+        function drawNeonText(text, y, color = '#00aaff') {
+            ctx.save();
+            ctx.font = 'bold 48px system-ui';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = color;
+            ctx.fillText(text, W / 2, y);
+            ctx.shadowBlur = 10;
+            ctx.fillText(text, W / 2, y);
+            ctx.restore();
+        }
+
+        // ===== DISPLAY MODE =====
+        let displayMode = 'dots';
+        let currentDisplayText = '';
+        let displayIndex = 0;
+
+        document.getElementById('mode-select').addEventListener('change', (e) => {
+            displayMode = e.target.value;
+        });
+
+        // ===== UPDATE DISPLAY =====
+        function updateDisplay() {
+            const times = getWorldTimes();
+            const timeStr = times.map(t => `${t.city} ${t.time}`).join('  |  ');
+
+            document.getElementById('time-status').innerHTML =
+                `<span class="success">時刻: ✓ ${times[0].city} ${times[0].time}</span>`;
+
+            // Cycle through different displays
+            const displays = [
+                times[0].city + ' ' + times[0].time,
+                times[1].city + ' ' + times[1].time,
+                times[2].city + ' ' + times[2].time,
+                realtimeData.weather ? `${realtimeData.weather[0].city} ${realtimeData.weather[0].temp}°C` : 'Weather...',
+                realtimeData.exchange ? `USD/JPY ${realtimeData.exchange.usdJpy.toFixed(1)}` : 'Exchange...'
+            ];
+
+            currentDisplayText = displays[displayIndex % displays.length];
+
+            if (displayMode === 'dots') {
+                targetPoints = textToPoints(currentDisplayText, 70, 4);
+
+                // Assign targets to dots
+                dots.forEach((dot, i) => {
+                    if (i < targetPoints.length) {
+                        dot.targetX = targetPoints[i].x;
+                        dot.targetY = targetPoints[i].y;
+                        dot.color = '#00aaff';
+                    } else {
+                        dot.targetX = Math.random() * W;
+                        dot.targetY = Math.random() * H;
+                        dot.color = '#224466';
+                    }
+                });
+            }
+        }
+
+        // Cycle display every 3 seconds
+        setInterval(() => {
+            displayIndex++;
+            updateDisplay();
+        }, 3000);
+
+        // ===== ANIMATION =====
+        function animate() {
+            ctx.fillStyle = '#010104';
+            ctx.fillRect(0, 0, W, H);
+
+            if (displayMode === 'dots') {
+                dots.forEach(d => {
+                    d.update();
+                    d.draw();
+                });
+            } else {
+                // Neon text mode
+                drawNeonText(currentDisplayText, H / 2, '#00aaff');
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // ===== INIT =====
+        async function init() {
+            // Fetch data
+            realtimeData.weather = await fetchWeather();
+            realtimeData.exchange = await fetchExchange();
+
+            // Start display
+            updateDisplay();
+            animate();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

@@ -225,9 +225,64 @@
     const FORMATION_AGENT_COUNT = 5000;
 
     // Shape types for final formation
-    const SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon'];
+    const SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon', 'worldtime'];
     let currentShape = 'circle';
     let shapeRotation = 0;
+    let textPoints = [];
+    let currentTimeDisplay = '';
+    let timeDisplayIndex = 0;
+
+    // ===== WORLD TIME =====
+    const WORLD_CITIES = [
+      { city: 'TOKYO', tz: 'Asia/Tokyo' },
+      { city: 'NEW YORK', tz: 'America/New_York' },
+      { city: 'LONDON', tz: 'Europe/London' },
+      { city: 'PARIS', tz: 'Europe/Paris' },
+      { city: 'SYDNEY', tz: 'Australia/Sydney' },
+      { city: 'SINGAPORE', tz: 'Asia/Singapore' },
+      { city: 'DUBAI', tz: 'Asia/Dubai' },
+      { city: 'SAO PAULO', tz: 'America/Sao_Paulo' }
+    ];
+
+    function getWorldTime(cityIndex) {
+      const city = WORLD_CITIES[cityIndex % WORLD_CITIES.length];
+      const now = new Date();
+      const time = now.toLocaleTimeString('en-US', {
+        timeZone: city.tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      return `${city.city}  ${time}`;
+    }
+
+    // ===== TEXT TO POINTS CONVERSION =====
+    function textToPoints(text, fontSize = 60, spacing = 4) {
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+
+      offCtx.fillStyle = '#fff';
+      offCtx.font = `bold ${fontSize}px system-ui`;
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.fillText(text, W / 2, H / 2);
+
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      const points = [];
+
+      for (let y = 0; y < H; y += spacing) {
+        for (let x = 0; x < W; x += spacing) {
+          const i = (y * W + x) * 4;
+          if (imageData.data[i + 3] > 128) {
+            points.push({ x, y });
+          }
+        }
+      }
+
+      return points;
+    }
 
     function blendColors(rgb1, rgb2) {
       return [
@@ -374,6 +429,19 @@
           return {
             x: cx + pentAdjustedR * Math.cos(pentTheta),
             y: cy + pentAdjustedR * Math.sin(pentTheta)
+          };
+
+        case 'worldtime':
+          // Use pre-computed text points
+          if (index < textPoints.length) {
+            return textPoints[index];
+          }
+          // Scatter remaining agents around the text
+          const scatterAngle = index * 2.399963;
+          const scatterR = Math.sqrt(index / total) * radius * 1.5;
+          return {
+            x: cx + scatterR * Math.cos(scatterAngle) + (Math.random() - 0.5) * 50,
+            y: cy + scatterR * Math.sin(scatterAngle) + (Math.random() - 0.5) * 50
           };
 
         default:
@@ -636,9 +704,15 @@
         phase = 'formation';
         phaseTime = time;
 
-        // Choose random shape
-        currentShape = SHAPE_TYPES[Math.floor(Math.random() * SHAPE_TYPES.length)];
-        shapeRotation = Math.random() * Math.PI * 2;
+        // Always use worldtime for now (testing)
+        currentShape = 'worldtime';
+
+        // Generate text points for current world time
+        currentTimeDisplay = getWorldTime(timeDisplayIndex);
+        textPoints = textToPoints(currentTimeDisplay, 70, 3);
+        timeDisplayIndex++;
+
+        shapeRotation = 0;
 
         // Calculate formation radius
         const formationRadius = Math.min(W, H) * 0.3;
