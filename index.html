@@ -641,7 +641,7 @@
         teamLabelSize: 11, teamLabelOffset: 50,
         teamPosMin: 0.12, teamPosRange: 0.76,
         iconScale: 0.8,
-        galaxyMultiplier: 0.5, bgStarCount: 250,
+        galaxyMultiplier: 0.7, bgStarCount: 250,
         coreSize: 300
       };
       if (w < 1024) return {
@@ -1006,6 +1006,18 @@
 
     // ===== OFFLINE: SHAPE ROTATION (original main branch) =====
     const OFFLINE_SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon'];
+    let offlineShapeQueue = [];
+
+    function getNextOfflineShape() {
+      if (offlineShapeQueue.length === 0) {
+        offlineShapeQueue = [...OFFLINE_SHAPE_TYPES];
+        for (let i = offlineShapeQueue.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [offlineShapeQueue[i], offlineShapeQueue[j]] = [offlineShapeQueue[j], offlineShapeQueue[i]];
+        }
+      }
+      return offlineShapeQueue.shift();
+    }
 
     // Offline: geometric shape position calculator (original main branch code)
     function getOfflineShapePosition(index, total, shapeType, radius) {
@@ -1022,26 +1034,37 @@
           const cellSize = side / gridSize;
           const row = Math.floor(index / gridSize);
           const col = index % gridSize;
-          const jx = (Math.sin(index * 1.7) * 0.3) * cellSize;
-          const jy = (Math.cos(index * 2.3) * 0.3) * cellSize;
+          const jx = (Math.sin(index * 1.7 + shapeRotation) * 0.3) * cellSize;
+          const jy = (Math.cos(index * 2.3 + shapeRotation) * 0.3) * cellSize;
+          // Rotate grid position around center
+          const sqX = -side / 2 + col * cellSize + cellSize / 2 + jx;
+          const sqY = -side / 2 + row * cellSize + cellSize / 2 + jy;
+          const cosR = Math.cos(shapeRotation * 0.3);
+          const sinR = Math.sin(shapeRotation * 0.3);
           return {
-            x: cx - side / 2 + col * cellSize + cellSize / 2 + jx,
-            y: cy - side / 2 + row * cellSize + cellSize / 2 + jy
+            x: cx + sqX * cosR - sqY * sinR,
+            y: cy + sqX * sinR + sqY * cosR
           };
         }
         case 'triangle': {
           const triHeight = radius * 1.8;
           const triWidth = triHeight * 1.15;
-          const triT = index * goldenAngle;
+          const triT = index * goldenAngle + shapeRotation;
           const triR = Math.sqrt(index / total);
           let u = Math.abs(Math.sin(triT)) * triR;
           let v = Math.abs(Math.cos(triT * 1.3)) * triR;
           if (u + v > 1) { u = 1 - u; v = 1 - v; }
           const w = 1 - u - v;
-          const v1 = { x: cx, y: cy - triHeight / 2 };
-          const v2 = { x: cx - triWidth / 2, y: cy + triHeight / 2 };
-          const v3 = { x: cx + triWidth / 2, y: cy + triHeight / 2 };
-          return { x: u * v1.x + v * v2.x + w * v3.x, y: u * v1.y + v * v2.y + w * v3.y };
+          // Rotate triangle vertices around center
+          const triAngle = shapeRotation * 0.5;
+          const triCos = Math.cos(triAngle), triSin = Math.sin(triAngle);
+          const v1x = 0, v1y = -triHeight / 2;
+          const v2x = -triWidth / 2, v2y = triHeight / 2;
+          const v3x = triWidth / 2, v3y = triHeight / 2;
+          const r1 = { x: cx + v1x * triCos - v1y * triSin, y: cy + v1x * triSin + v1y * triCos };
+          const r2 = { x: cx + v2x * triCos - v2y * triSin, y: cy + v2x * triSin + v2y * triCos };
+          const r3 = { x: cx + v3x * triCos - v3y * triSin, y: cy + v3x * triSin + v3y * triCos };
+          return { x: u * r1.x + v * r2.x + w * r3.x, y: u * r1.y + v * r2.y + w * r3.y };
         }
         case 'hexagon': {
           const hexR = radius * Math.sqrt(index / total);
@@ -1070,12 +1093,12 @@
           return { x: cx + dx * r * dw, y: cy + dy * r * dh };
         }
         case 'heart': {
-          const t = (index / total) * Math.PI * 2;
-          const r = Math.sqrt(index / total) * radius * 0.9;
-          const hx = 16 * Math.pow(Math.sin(t), 3);
-          const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-          const s = r / 18;
-          return { x: cx + hx * s, y: cy + hy * s };
+          const ht = (index / total) * Math.PI * 2 + shapeRotation;
+          const hr = Math.sqrt(index / total) * radius * 0.9;
+          const hx = 16 * Math.pow(Math.sin(ht), 3);
+          const hy = -(13 * Math.cos(ht) - 5 * Math.cos(2 * ht) - 2 * Math.cos(3 * ht) - Math.cos(4 * ht));
+          const hs = hr / 18;
+          return { x: cx + hx * hs, y: cy + hy * hs };
         }
         case 'spiral': {
           const r = radius * 0.08 * Math.sqrt(index);
@@ -2382,7 +2405,7 @@
 
         } else {
           // ===== OFFLINE MODE: Geometric shapes (original main branch code) =====
-          currentShape = OFFLINE_SHAPE_TYPES[Math.floor(Math.random() * OFFLINE_SHAPE_TYPES.length)];
+          currentShape = getNextOfflineShape();
           shapeRotation = Math.random() * Math.PI * 2;
 
           const formationRadius = Math.min(W, H) * 0.3;
