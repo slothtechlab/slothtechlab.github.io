@@ -51,6 +51,222 @@
       margin: 8px 0 0 0;
       text-transform: uppercase;
     }
+
+    .about-trigger {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 100;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(0, 200, 255, 0.7);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      user-select: none;
+      padding: 9px 20px;
+      border: 1px solid rgba(0, 180, 255, 0.25);
+      border-radius: 20px;
+      background: rgba(0, 40, 80, 0.15);
+      text-shadow: 0 0 8px rgba(0, 200, 255, 0.5);
+      box-shadow: 0 0 12px rgba(0, 150, 255, 0.1), inset 0 0 12px rgba(0, 100, 200, 0.05);
+      transition: all 0.4s ease;
+      animation: neon-breathe 3s ease-in-out infinite;
+    }
+
+    @keyframes neon-breathe {
+
+      0%,
+      100% {
+        box-shadow: 0 0 12px rgba(0, 150, 255, 0.1), inset 0 0 12px rgba(0, 100, 200, 0.05);
+        border-color: rgba(0, 180, 255, 0.2);
+      }
+
+      50% {
+        box-shadow: 0 0 18px rgba(0, 150, 255, 0.2), inset 0 0 15px rgba(0, 100, 200, 0.08);
+        border-color: rgba(0, 180, 255, 0.35);
+      }
+    }
+
+    .about-trigger:hover {
+      color: rgba(0, 230, 255, 1);
+      border-color: rgba(0, 200, 255, 0.6);
+      background: rgba(0, 60, 120, 0.25);
+      text-shadow: 0 0 14px rgba(0, 200, 255, 0.8), 0 0 28px rgba(0, 200, 255, 0.3);
+      box-shadow: 0 0 24px rgba(0, 150, 255, 0.3), inset 0 0 20px rgba(0, 100, 200, 0.1);
+      animation: none;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        opacity: 0.4;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* About overlay */
+    .about-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.85) 100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .about-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .about-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      z-index: 95;
+      padding: 48px 56px;
+      border: 1px solid rgba(0, 180, 255, 0.15);
+      border-radius: 2px;
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(0, 80, 180, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(0, 120, 255, 0.06) 0%, transparent 50%),
+        rgba(2, 4, 15, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow:
+        0 0 40px rgba(0, 100, 200, 0.08),
+        inset 0 0 60px rgba(0, 40, 100, 0.05);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      text-align: center;
+      min-width: 480px;
+      overflow: hidden;
+    }
+
+    /* Corner brackets for sci-fi feel */
+    .about-panel::before,
+    .about-panel::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-color: rgba(0, 180, 255, 0.3);
+      border-style: solid;
+    }
+
+    .about-panel::before {
+      top: 8px;
+      left: 8px;
+      border-width: 1px 0 0 1px;
+    }
+
+    .about-panel::after {
+      bottom: 8px;
+      right: 8px;
+      border-width: 0 1px 1px 0;
+    }
+
+    /* Subtle scan line effect */
+    .about-panel .scan-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 180, 255, 0.15), transparent);
+      animation: scan 4s linear infinite;
+    }
+
+    @keyframes scan {
+      0% {
+        top: 0;
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        top: 100%;
+        opacity: 0;
+      }
+    }
+
+    .about-panel.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .about-panel h2 {
+      font-size: 26px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.2em;
+      margin: 0 0 6px 0;
+    }
+
+    .about-panel .tagline {
+      font-size: 10px;
+      font-weight: 300;
+      color: rgba(0, 200, 255, 0.6);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin: 0 0 28px 0;
+    }
+
+    .about-panel .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 150, 255, 0.2), transparent);
+      margin: 0 0 24px 0;
+    }
+
+    .about-panel .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 40px;
+      text-align: left;
+    }
+
+    .about-panel .info-item {
+      text-align: left;
+    }
+
+    .about-panel .info-label {
+      font-size: 8px;
+      font-weight: 400;
+      color: rgba(0, 180, 255, 0.5);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin: 0 0 4px 0;
+    }
+
+    .about-panel .info-value {
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: 0.08em;
+      margin: 0;
+    }
+
+    .about-panel .info-value.dim {
+      color: rgba(255, 255, 255, 0.3);
+    }
   </style>
 </head>
 
@@ -60,6 +276,48 @@
   <div class="brand">
     <h1>ENSEMBLE INC.</h1>
     <p>AI Agent Development & Consulting</p>
+  </div>
+
+  <div class="about-trigger" id="aboutTrigger">COMPANY INFO</div>
+
+  <div class="about-overlay" id="aboutOverlay"></div>
+  <div class="about-panel" id="aboutPanel">
+    <div class="scan-line"></div>
+    <div id="aboutClose"
+      style="position:absolute;top:14px;right:18px;cursor:pointer;color:rgba(255,255,255,0.3);font-size:18px;line-height:1;transition:color 0.3s;z-index:10;"
+      onmouseover="this.style.color='rgba(255,255,255,0.8)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
+      &times;</div>
+    <h2>ENSEMBLE INC.</h2>
+    <p class="tagline">AI Agent Development & Consulting</p>
+    <div class="divider"></div>
+    <div style="display: flex; justify-content: center; gap: 48px; margin-bottom: 20px;">
+      <div style="text-align: center;">
+        <p class="info-label">CEO</p>
+        <p class="info-value">TAKESHI MASUDA</p>
+      </div>
+      <div style="text-align: center;">
+        <p class="info-label">COO</p>
+        <p class="info-value">MIKITO MATSUI</p>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="display: flex; justify-content: center; gap: 48px;">
+      <div style="text-align: center;">
+        <p class="info-label">Address</p>
+        <p class="info-value dim">&mdash;</p>
+      </div>
+      <div style="text-align: center;">
+        <p class="info-label">Capital</p>
+        <p class="info-value dim">&mdash;</p>
+      </div>
+    </div>
+    <div class="divider" style="margin-top: 24px;"></div>
+    <div style="text-align: center; margin-top: 20px;">
+      <p class="info-label">Contact</p>
+      <p class="info-value"
+        style="font-size: 14px; font-weight: 400; color: rgba(0, 200, 255, 0.85); letter-spacing: 0.1em; text-shadow: 0 0 8px rgba(0, 200, 255, 0.3);">
+        contact@ensemble.inc</p>
+    </div>
   </div>
 
   <script>
@@ -290,6 +548,139 @@
         hour12: false
       });
       return `${city.city}  ${time}`;
+    }
+
+    // ===== ABOUT TEXT TO POINTS =====
+    function aboutTextToPoints(fontSize = 24, spacing = 2) {
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+
+      offCtx.fillStyle = '#fff';
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+
+      const lines = [
+        { text: 'ENSEMBLE INC.', size: fontSize * 1.4, weight: '700' },
+        { text: '', size: fontSize * 0.5, weight: '400' },
+        { text: 'AI AGENT DEVELOPMENT & CONSULTING', size: fontSize * 0.7, weight: '400' },
+        { text: '', size: fontSize * 0.8, weight: '400' },
+        { text: 'CEO    TAKESHI MASUDA', size: fontSize * 0.75, weight: '400' },
+        { text: 'COO    MIKITO MATSUI', size: fontSize * 0.75, weight: '400' },
+      ];
+
+      const totalHeight = lines.reduce((sum, l) => sum + (l.size || fontSize) * 1.5, 0);
+      let y = H / 2 - totalHeight / 2;
+
+      lines.forEach(line => {
+        const s = line.size || fontSize;
+        y += s * 1.5;
+        if (line.text) {
+          offCtx.font = `${line.weight} ${s}px system-ui`;
+          offCtx.fillText(line.text, W / 2, y);
+        }
+      });
+
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      const points = [];
+      for (let py = 0; py < H; py += spacing) {
+        for (let px = 0; px < W; px += spacing) {
+          const i = (py * W + px) * 4;
+          if (imageData.data[i + 3] > 128) {
+            points.push({ x: px, y: py });
+          }
+        }
+      }
+      return points;
+    }
+
+    // ===== ABOUT STATE =====
+    let aboutActive = false;
+    let aboutFormationAgents = [];
+    let aboutTextPoints = [];
+    let savedPhase = null;
+    let savedPhaseTime = 0;
+
+    function activateAbout() {
+      if (aboutActive) return;
+      aboutActive = true;
+      savedPhase = phase;
+      savedPhaseTime = phaseTime;
+
+      // Generate about text points
+      aboutTextPoints = aboutTextToPoints(26, 2);
+
+      // Pause the normal cycle
+      phase = 'about';
+
+      // Dim galaxy
+      galaxyDimFactor = 0.05;
+
+      // Show HTML panel
+      document.getElementById('aboutOverlay').classList.add('active');
+      document.getElementById('aboutPanel').classList.add('active');
+
+      // Move existing agents to about text positions
+      agents.forEach((agent, i) => {
+        agent.team = null;
+        if (i < aboutTextPoints.length) {
+          agent.targetX = aboutTextPoints[i].x;
+          agent.targetY = aboutTextPoints[i].y;
+        } else {
+          agent.targetX = agent.x + (Math.random() - 0.5) * 200;
+          agent.targetY = agent.y + (Math.random() - 0.5) * 200;
+          agent.scatterTime = Date.now();
+          agent.scatterColor = agent.color;
+        }
+      });
+
+      // Create additional agents from existing positions
+      aboutFormationAgents = [];
+      const needed = Math.max(0, aboutTextPoints.length - agents.length);
+      for (let i = 0; i < needed; i++) {
+        const agent = new Agent(agents.length + i);
+        const source = agents[Math.floor(Math.random() * agents.length)];
+        agent.x = source.x + (Math.random() - 0.5) * 20;
+        agent.y = source.y + (Math.random() - 0.5) * 20;
+        agent.color = source.color;
+        agent.formationIndex = agents.length + i;
+        agent.team = null;
+        const pi = agents.length + i;
+        if (pi < aboutTextPoints.length) {
+          agent.targetX = aboutTextPoints[pi].x;
+          agent.targetY = aboutTextPoints[pi].y;
+        }
+        aboutFormationAgents.push(agent);
+      }
+    }
+
+    function deactivateAbout() {
+      if (!aboutActive) return;
+      aboutActive = false;
+
+      // Restore phase
+      phase = savedPhase || 'scatter';
+      phaseTime = performance.now() - (performance.now() - savedPhaseTime);
+
+      // Restore galaxy
+      galaxyDimFactor = 1.0;
+
+      // Hide HTML panel
+      document.getElementById('aboutOverlay').classList.remove('active');
+      document.getElementById('aboutPanel').classList.remove('active');
+
+      // Scatter agents
+      agents.forEach(agent => {
+        agent.scatterTime = 0;
+        agent.alpha = agent.baseAlpha;
+        agent.size = agent.baseSize;
+        agent.targetX = Math.random() * W;
+        agent.targetY = Math.random() * H;
+      });
+
+      aboutFormationAgents = [];
+      aboutTextPoints = [];
     }
 
     // ===== ANIMATED DOT CLOCK =====
@@ -525,7 +916,7 @@
       }
 
       draw() {
-        // Add subtle neon glow during formation
+        // Add neon glow during formation for text visibility
         if (phase === 'formation') {
           const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
           grad.addColorStop(0, this.color + '40');
@@ -534,7 +925,7 @@
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
           ctx.fill();
-        } else if (phase !== 'formation') {
+        } else {
           const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2.5);
           grad.addColorStop(0, this.color + '70');
           grad.addColorStop(1, 'transparent');
@@ -734,7 +1125,7 @@
 
         // Generate text points for ALL world times (2-column layout)
         const allTimes = getAllWorldTimes();
-        textPoints = textToPoints(allTimes, 44, 3);
+        textPoints = textToPoints(allTimes, 44, 2);
 
         // Select random neon color for this display
         currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
@@ -852,17 +1243,20 @@
 
       agents.forEach(a => a.update());
       formationAgents.forEach(a => a.update());
-      // Skip connections and team labels during formation
-      if (phase !== 'formation') {
+      // Update about agents
+      aboutFormationAgents.forEach(a => a.update());
+      // Skip connections and team labels during formation or about
+      if (phase !== 'formation' && phase !== 'about') {
         drawConnections();
       }
       agents.forEach(a => a.draw());
       formationAgents.forEach(a => a.draw());
+      aboutFormationAgents.forEach(a => a.draw());
       // Draw animated clock on top during formation
       if (phase === 'formation') {
         drawAnimatedClock();
       }
-      if (phase !== 'formation') {
+      if (phase !== 'formation' && phase !== 'about') {
         drawTeamLabels(time);
       }
 
@@ -872,6 +1266,16 @@
     initBgStars();
     initGalaxy();
     requestAnimationFrame(animate);
+
+    // About trigger events - click to toggle
+    const aboutTrigger = document.getElementById('aboutTrigger');
+    const aboutOverlay = document.getElementById('aboutOverlay');
+    aboutTrigger.addEventListener('click', () => {
+      if (aboutActive) deactivateAbout();
+      else activateAbout();
+    });
+    aboutOverlay.addEventListener('click', deactivateAbout);
+    document.getElementById('aboutClose').addEventListener('click', deactivateAbout);
   </script>
 </body>
 
