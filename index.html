@@ -1995,7 +1995,13 @@
         agents.forEach((agent, i) => {
           agent.formationIndex = i;
           agent.team = null; // Release from team but keep color
-          if (i < textPoints.length) {
+          if (formationType.startsWith('offline:')) {
+            // Offline shape: position agents directly using geometric shape
+            const pos = getShapePosition(i, agents.length, formationType, Math.min(W, H) * 0.3);
+            agent.targetX = pos.x;
+            agent.targetY = pos.y;
+            agent.scatterTime = 0; // Ensure no fade out
+          } else if (i < textPoints.length) {
             agent.targetX = textPoints[i].x;
             agent.targetY = textPoints[i].y;
           } else {
