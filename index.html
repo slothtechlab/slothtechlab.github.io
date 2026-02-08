@@ -295,14 +295,15 @@
     /* ===== RESPONSIVE: Mobile ===== */
     @media (max-width: 599px) {
       .brand {
-        bottom: 46px;
+        bottom: 48px;
         left: 50%;
         transform: translateX(-50%);
         text-align: center;
+        white-space: nowrap;
       }
 
       .brand h1 {
-        font-size: 20px;
+        font-size: 22px;
         letter-spacing: 0.08em;
       }
 
@@ -310,14 +311,15 @@
         font-size: 9px;
         margin-top: 2px;
         letter-spacing: 0.15em;
+        white-space: nowrap;
       }
 
       .about-trigger {
-        bottom: 12px;
+        bottom: 14px;
         left: 50%;
         transform: translateX(-50%);
         right: auto;
-        font-size: 11px;
+        font-size: 12px;
         padding: 6px 16px;
       }
 
@@ -1831,10 +1833,9 @@
         this.y += (this.targetY - this.y) * lerpFactor;
 
         // Fade out during scatter phase: color transitions from team color to white, then fades
-        if (this.scatterTime > 0) {
+        // Skip color override during formation - formation sets its own colors
+        if (this.scatterTime > 0 && phase !== 'formation') {
           const elapsed = (Date.now() - this.scatterTime) / 1000;
-          // Phase 1 (0-1.5s): keep color, spread across screen
-          // Phase 2 (1.5-4s): fade color to white and reduce alpha
           if (elapsed < 1.5) {
             this.color = this.scatterColor || '#ffffff';
             this.alpha = this.baseAlpha;
