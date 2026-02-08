@@ -585,17 +585,19 @@
         ctx.drawImage(_coreCanvas, cx - 300, cy - 300);
       }
 
-      // Stars: draw every frame (rotation needs smooth animation)
-      for (let i = 0; i < galaxyStars.length; i++) {
-        const star = galaxyStars[i];
-        const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
-        const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
-        const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
+      // Stars: skip during formation (dimFactor very low, barely visible)
+      if (galaxyDimFactor > 0.12) {
+        for (let i = 0; i < galaxyStars.length; i++) {
+          const star = galaxyStars[i];
+          const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
+          const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
+          const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
 
-        ctx.globalAlpha = star.brightness * galaxyDimFactor;
-        ctx.fillStyle = star.colorStr;
-        const s = star.size;
-        ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
+          ctx.globalAlpha = star.brightness * galaxyDimFactor;
+          ctx.fillStyle = star.colorStr;
+          const s = star.size;
+          ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
+        }
       }
       ctx.globalAlpha = 1;
     }
@@ -1834,6 +1836,18 @@
         }
       }
 
+      // Cap points to FORMATION_AGENT_COUNT to prevent creating too many agents
+      // Weather/earthquake text can produce 20,000-50,000 points at spacing=2
+      if (points.length > FORMATION_AGENT_COUNT) {
+        // Uniform sampling to thin down while preserving text shape
+        const step = points.length / FORMATION_AGENT_COUNT;
+        const sampled = [];
+        for (let i = 0; i < FORMATION_AGENT_COUNT; i++) {
+          sampled.push(points[Math.floor(i * step)]);
+        }
+        return sampled;
+      }
+
       return points;
     }
 
@@ -1953,22 +1967,24 @@
       }
 
       draw() {
-        // Use pre-rendered glow sprite instead of per-frame RadialGradient
-        const sprite = getGlowSprite(this.color);
         if (phase === 'formation') {
-          const r = this.size * 3;
-          ctx.globalAlpha = 0.25;
-          ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
+          // Formation: skip glow sprite entirely, just draw core dot
+          // This halves draw calls during formation (5000+ agents)
+          ctx.globalAlpha = this.alpha;
+          ctx.fillStyle = this.color;
+          ctx.fillRect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
+          ctx.globalAlpha = 1;
         } else {
+          // Normal phases: draw glow sprite + core dot
+          const sprite = getGlowSprite(this.color);
           const r = this.size * 2.5;
           ctx.globalAlpha = 0.44;
           ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
+          ctx.globalAlpha = this.alpha;
+          ctx.fillStyle = this.color;
+          ctx.fillRect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
+          ctx.globalAlpha = 1;
         }
-
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
-        ctx.globalAlpha = 1;
       }
     }
 
