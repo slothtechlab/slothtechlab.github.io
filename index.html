@@ -493,7 +493,8 @@
 
       scatter() {
         this.team = null;
-        this.color = '#ffffff';
+        // Keep current color, don't reset to white immediately
+        this.scatterColor = this.color;
         this.targetX = Math.random() * W;
         this.targetY = Math.random() * H;
         this.scatterTime = Date.now();
@@ -505,18 +506,36 @@
         this.x += (this.targetX - this.x) * lerpFactor;
         this.y += (this.targetY - this.y) * lerpFactor;
 
-        // Fade out during scatter phase
+        // Fade out during scatter phase: color transitions from team color to white, then fades
         if (this.scatterTime > 0) {
           const elapsed = (Date.now() - this.scatterTime) / 1000;
-          const fadeProgress = Math.min(1, elapsed / 4);
-          this.alpha = this.baseAlpha * (1 - fadeProgress * 0.8);
-          this.size = this.baseSize * (1 - fadeProgress * 0.6);
+          // Phase 1 (0-3s): keep color, spread across screen
+          // Phase 2 (3-6s): fade color to white and reduce alpha
+          if (elapsed < 3) {
+            this.color = this.scatterColor || '#ffffff';
+            this.alpha = this.baseAlpha;
+            this.size = this.baseSize;
+          } else {
+            const fadeProgress = Math.min(1, (elapsed - 3) / 3);
+            // Blend scatter color toward white
+            this.color = this.scatterColor || '#ffffff';
+            this.alpha = this.baseAlpha * (1 - fadeProgress * 0.85);
+            this.size = this.baseSize * (1 - fadeProgress * 0.5);
+          }
         }
       }
 
       draw() {
-        // Skip glow effect during formation to avoid horizontal haze
-        if (phase !== 'formation') {
+        // Add subtle neon glow during formation
+        if (phase === 'formation') {
+          const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+          grad.addColorStop(0, this.color + '40');
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (phase !== 'formation') {
           const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2.5);
           grad.addColorStop(0, this.color + '70');
           grad.addColorStop(1, 'transparent');
@@ -572,7 +591,7 @@
     let phaseTime = 0;
     let startTime = null;
 
-    const PHASE_DURATION = { scatter: 6000, gather: 8000, formation: 6000 };
+    const PHASE_DURATION = { scatter: 6000, gather: 8000, formation: 7000 };
 
     function drawConnections() {
       agents.forEach((a1, i) => {
@@ -694,6 +713,9 @@
         phase = 'gather';
         phaseTime = time;
 
+        // Clear formation agents from previous cycle
+        formationAgents.length = 0;
+
         createRandomTeams();
 
         agents.forEach((agent, i) => {
@@ -772,7 +794,8 @@
         phaseTime = time;
 
         agents.forEach(agent => agent.scatter());
-        formationAgents.length = 0;
+        // Also scatter formation agents instead of removing them instantly
+        formationAgents.forEach(agent => agent.scatter());
         dataLines.length = 0;
       }
 
