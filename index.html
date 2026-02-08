@@ -295,24 +295,26 @@
     /* ===== RESPONSIVE: Mobile ===== */
     @media (max-width: 599px) {
       .brand {
-        bottom: 12px;
+        bottom: 40px;
         left: 12px;
       }
 
       .brand h1 {
-        font-size: 18px;
+        font-size: 16px;
+        letter-spacing: 0.1em;
       }
 
       .brand p {
-        font-size: 8px;
-        margin-top: 4px;
+        font-size: 7px;
+        margin-top: 3px;
       }
 
       .about-trigger {
         bottom: 12px;
-        right: 12px;
-        font-size: 9px;
-        padding: 6px 12px;
+        left: 12px;
+        right: auto;
+        font-size: 8px;
+        padding: 5px 10px;
       }
 
       .about-panel {
@@ -558,20 +560,26 @@
     function getResponsiveParams() {
       const w = window.innerWidth;
       if (w < 600) return {
-        agentCount: 250, formationCount: 1000,
-        maxTeams: 5, minTeams: 3,
-        fontSize: 22, spacing: 3,
-        clockFontSize: 24, chartLineWidth: 4,
-        chartMargin: 20, chartDotSize: 4,
-        singleColumn: true, minTeamDist: 0.22
+        agentCount: 200, formationCount: 800,
+        maxTeams: 4, minTeams: 2,
+        fontSize: 14, spacing: 4,
+        clockFontSize: 18, chartLineWidth: 3,
+        chartMargin: 15, chartDotSize: 3,
+        singleColumn: true, minTeamDist: 0.28,
+        teamLabelSize: 8, teamLabelOffset: 40,
+        teamPosMin: 0.15, teamPosRange: 0.70,
+        iconScale: 0.5
       };
       if (w < 1024) return {
         agentCount: 500, formationCount: 2500,
-        maxTeams: 8, minTeams: 4,
-        fontSize: 32, spacing: 2,
-        clockFontSize: 32, chartLineWidth: 6,
-        chartMargin: 40, chartDotSize: 6,
-        singleColumn: false, minTeamDist: 0.20
+        maxTeams: 6, minTeams: 3,
+        fontSize: 28, spacing: 3,
+        clockFontSize: 30, chartLineWidth: 5,
+        chartMargin: 30, chartDotSize: 5,
+        singleColumn: false, minTeamDist: 0.22,
+        teamLabelSize: 10, teamLabelOffset: 55,
+        teamPosMin: 0.12, teamPosRange: 0.76,
+        iconScale: 0.7
       };
       return {
         agentCount: 1000, formationCount: 5000,
@@ -579,7 +587,10 @@
         fontSize: 44, spacing: 2,
         clockFontSize: 44, chartLineWidth: 8,
         chartMargin: 60, chartDotSize: 8,
-        singleColumn: false, minTeamDist: 0.18
+        singleColumn: false, minTeamDist: 0.18,
+        teamLabelSize: 11, teamLabelOffset: 70,
+        teamPosMin: 0.10, teamPosRange: 0.80,
+        iconScale: 1.0
       };
     }
 
@@ -1188,7 +1199,11 @@
     let clockInitialized = false;
     let CLOCK_FONT_SIZE = rp.clockFontSize;
     let CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
-    const CLOCK_Y = () => H / 2 - CLOCK_LINE_HEIGHT * 2.8;
+    const CLOCK_Y = () => {
+      // On mobile, push icon higher to avoid text overlap
+      const multiplier = W < 600 ? 4.5 : (W < 1024 ? 3.5 : 2.8);
+      return H / 2 - CLOCK_LINE_HEIGHT * multiplier;
+    };
     let CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
 
     function initClockDots() {
@@ -1675,10 +1690,11 @@
 
       const lineCenters = [];
       if (rp.singleColumn) {
-        // Mobile: single column, all items stacked
-        const totalLines = times.length;
-        const startY = H / 2 - lineHeight * (totalLines / 2 - 0.5);
-        times.forEach((time, i) => {
+        // Mobile: single column, limit items and position below icon
+        const displayTimes = times.slice(0, 6);
+        const totalLines = displayTimes.length;
+        const startY = H / 2 - lineHeight * (totalLines / 2 - 1.5);
+        displayTimes.forEach((time, i) => {
           const x = W / 2;
           const y = startY + i * lineHeight;
           offCtx.fillText(time, x, y);
@@ -1928,12 +1944,16 @@
 
         ctx.save();
         ctx.globalAlpha = fadeIn * 0.9;
-        ctx.font = '600 11px system-ui';
+        const labelSize = rp.teamLabelSize;
+        ctx.font = `600 ${labelSize}px system-ui`;
         ctx.textAlign = 'center';
         ctx.shadowColor = team.color;
         ctx.shadowBlur = 10;
         ctx.fillStyle = team.color;
-        ctx.fillText('AGENT TEAM ' + team.name, team.x * W, team.y * H - 70);
+        // Clamp label position to stay within visible screen area
+        const labelX = Math.max(60, Math.min(W - 60, team.x * W));
+        const labelY = Math.max(rp.teamLabelOffset + 10, Math.min(H - 80, team.y * H - rp.teamLabelOffset));
+        ctx.fillText('AGENT TEAM ' + team.name, labelX, labelY);
         ctx.restore();
       });
     }
@@ -1961,8 +1981,8 @@
         let x, y;
 
         while (!valid && attempts < 100) {
-          x = 0.1 + Math.random() * 0.8;
-          y = 0.1 + Math.random() * 0.8;
+          x = rp.teamPosMin + Math.random() * rp.teamPosRange;
+          y = rp.teamPosMin + Math.random() * rp.teamPosRange;
 
           valid = true;
           for (const pos of positions) {
