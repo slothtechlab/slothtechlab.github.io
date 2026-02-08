@@ -146,7 +146,8 @@
 
     function drawBgStars() {
       bgStars.forEach(star => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+        // Apply dim factor during formation phase
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha * galaxyDimFactor})`;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
@@ -155,6 +156,10 @@
 
     function drawGalaxy(time) {
       galaxyRotation += GALAXY_ROTATION_SPEED;
+
+      // Smoothly transition dim factor
+      const targetDim = (phase === 'formation') ? 0.05 : 1.0;
+      galaxyDimFactor += (targetDim - galaxyDimFactor) * 0.08;
 
       const nebulae = [
         { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
@@ -167,17 +172,18 @@
           n.x * W, n.y * H, 0,
           n.x * W, n.y * H, n.r * Math.max(W, H)
         );
-        grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.1)`);
-        grad.addColorStop(0.4, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.05)`);
+        grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, ${0.1 * galaxyDimFactor})`);
+        grad.addColorStop(0.4, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, ${0.05 * galaxyDimFactor})`);
         grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
       });
 
+      // Core brightness affected by dim factor
       const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
-      coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
-      coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
-      coreGrad.addColorStop(0.4, 'rgba(230, 200, 255, 0.15)');
+      coreGrad.addColorStop(0, `rgba(255, 255, 250, ${0.6 * galaxyDimFactor})`);
+      coreGrad.addColorStop(0.15, `rgba(255, 245, 220, ${0.4 * galaxyDimFactor})`);
+      coreGrad.addColorStop(0.4, `rgba(230, 200, 255, ${0.15 * galaxyDimFactor})`);
       coreGrad.addColorStop(1, 'transparent');
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
@@ -189,7 +195,7 @@
         const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
         const y = cy + Math.sin(rotatedAngle) * star.radius * 0.3 + star.offsetY;
 
-        ctx.fillStyle = `rgba(${star.colorR}, ${star.colorG}, ${star.colorB}, ${star.brightness})`;
+        ctx.fillStyle = `rgba(${star.colorR}, ${star.colorG}, ${star.colorB}, ${star.brightness * galaxyDimFactor})`;
         ctx.beginPath();
         ctx.arc(x, y, star.size, 0, Math.PI * 2);
         ctx.fill();
@@ -224,25 +230,55 @@
     const AGENT_COUNT = 1000;
     const FORMATION_AGENT_COUNT = 5000;
 
-    // Shape types for final formation
-    const SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon', 'worldtime'];
-    let currentShape = 'circle';
+    // Only worldtime display (no shapes)
+    const DISPLAY_TYPES = ['worldtime'];
+    let currentShape = 'worldtime';
     let shapeRotation = 0;
     let textPoints = [];
     let currentTimeDisplay = '';
     let timeDisplayIndex = 0;
+    let currentNeonColor = '#00aaff';
+    let galaxyDimFactor = 1.0; // 1.0 = normal, 0.3 = dimmed
+    let formationStartTime = 0; // Track when formation started for animation
 
-    // ===== WORLD TIME =====
-    const WORLD_CITIES = [
-      { city: 'TOKYO', tz: 'Asia/Tokyo' },
-      { city: 'NEW YORK', tz: 'America/New_York' },
-      { city: 'LONDON', tz: 'Europe/London' },
-      { city: 'PARIS', tz: 'Europe/Paris' },
-      { city: 'SYDNEY', tz: 'Australia/Sydney' },
-      { city: 'SINGAPORE', tz: 'Asia/Singapore' },
-      { city: 'DUBAI', tz: 'Asia/Dubai' },
-      { city: 'SAO PAULO', tz: 'America/Sao_Paulo' }
+    // Neon colors for visibility
+    const NEON_COLORS = [
+      '#00aaff', // Cyan blue
+      '#00ffaa', // Mint green
+      '#ff00aa', // Pink
+      '#ffaa00', // Orange
+      '#aa00ff', // Purple
+      '#00ffff', // Cyan
+      '#ff6699', // Soft pink
+      '#66ff99', // Light green
     ];
+
+    // ===== WORLD TIME - 8 countries (4x2 layout) =====
+    const WORLD_CITIES = [
+      // Left column
+      { city: 'JAPAN', tz: 'Asia/Tokyo' },
+      { city: 'USA', tz: 'America/New_York' },
+      { city: 'CHINA', tz: 'Asia/Shanghai' },
+      { city: 'THAILAND', tz: 'Asia/Bangkok' },
+      // Right column
+      { city: 'KOREA', tz: 'Asia/Seoul' },
+      { city: 'DUBAI', tz: 'Asia/Dubai' },
+      { city: 'INDIA', tz: 'Asia/Kolkata' },
+      { city: 'INDONESIA', tz: 'Asia/Jakarta' },
+    ];
+
+    function getAllWorldTimes() {
+      const now = new Date();
+      return WORLD_CITIES.map(city => {
+        const time = now.toLocaleTimeString('en-US', {
+          timeZone: city.tz,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        return `${city.city} ${time}`;
+      });
+    }
 
     function getWorldTime(cityIndex) {
       const city = WORLD_CITIES[cityIndex % WORLD_CITIES.length];
@@ -256,18 +292,127 @@
       return `${city.city}  ${time}`;
     }
 
-    // ===== TEXT TO POINTS CONVERSION =====
-    function textToPoints(text, fontSize = 60, spacing = 4) {
+    // ===== ANIMATED DOT CLOCK =====
+    let clockStaticDots = []; // Cached: circle + markers
+    let clockInitialized = false;
+    const CLOCK_FONT_SIZE = 44;
+    const CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
+    const CLOCK_Y = () => H / 2 - CLOCK_LINE_HEIGHT * 2.8;
+    const CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
+
+    function initClockDots() {
+      clockStaticDots = [];
+      const iconY = CLOCK_Y();
+      const spacing = 2;
+
+      // Render circle + markers to offscreen canvas
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+      offCtx.strokeStyle = '#fff';
+      offCtx.fillStyle = '#fff';
+
+      // Circle
+      offCtx.lineWidth = 3;
+      offCtx.beginPath();
+      offCtx.arc(W / 2, iconY, CLOCK_RADIUS, 0, Math.PI * 2);
+      offCtx.stroke();
+
+      // 12 markers
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+        const mx = W / 2 + Math.cos(a) * (CLOCK_RADIUS - 5);
+        const my = iconY + Math.sin(a) * (CLOCK_RADIUS - 5);
+        offCtx.beginPath();
+        offCtx.arc(mx, my, i % 3 === 0 ? 3 : 2, 0, Math.PI * 2);
+        offCtx.fill();
+      }
+
+      // Center dot
+      offCtx.beginPath();
+      offCtx.arc(W / 2, iconY, 3, 0, Math.PI * 2);
+      offCtx.fill();
+
+      // Convert to dots with stable colors
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      for (let y = 0; y < H; y += spacing) {
+        for (let x = 0; x < W; x += spacing) {
+          const i = (y * W + x) * 4;
+          if (imageData.data[i + 3] > 128) {
+            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+            clockStaticDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
+          }
+        }
+      }
+      clockInitialized = true;
+    }
+
+    function drawAnimatedClock() {
+      if (!clockInitialized) initClockDots();
+      const iconY = CLOCK_Y();
+
+      // Draw cached static dots (circle + markers)
+      clockStaticDots.forEach(dot => {
+        ctx.fillStyle = dot.color;
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Draw animated hands as dots (recalculated each frame)
+      const now = new Date();
+      const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
+      const minutes = now.getMinutes() + seconds / 60;
+      const hours = now.getHours() + minutes / 60;
+
+      const hands = [
+        { angle: (hours / 12) * Math.PI * 2 - Math.PI / 2, length: 0.45, dots: 8, size: 1.8 },
+        { angle: (minutes / 60) * Math.PI * 2 - Math.PI / 2, length: 0.7, dots: 12, size: 1.4 },
+        { angle: (seconds / 60) * Math.PI * 2 - Math.PI / 2, length: 0.75, dots: 14, size: 1.0 },
+      ];
+
+      hands.forEach((hand, hi) => {
+        for (let d = 0; d <= hand.dots; d++) {
+          const t = d / hand.dots;
+          const hx = W / 2 + Math.cos(hand.angle) * CLOCK_RADIUS * hand.length * t;
+          const hy = iconY + Math.sin(hand.angle) * CLOCK_RADIUS * hand.length * t;
+          const colorIdx = (Math.floor(hx) * 3 + Math.floor(hy) * 7 + hi) % TEAM_COLORS.length;
+          ctx.fillStyle = TEAM_COLORS[colorIdx].color;
+          ctx.beginPath();
+          ctx.arc(hx, hy, hand.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+
+    // ===== TEXT TO POINTS CONVERSION (2-column layout, text only) =====
+    function textToPoints(times, fontSize = 28, spacing = 2) {
       const offCanvas = document.createElement('canvas');
       const offCtx = offCanvas.getContext('2d');
       offCanvas.width = W;
       offCanvas.height = H;
 
       offCtx.fillStyle = '#fff';
-      offCtx.font = `bold ${fontSize}px system-ui`;
       offCtx.textAlign = 'center';
       offCtx.textBaseline = 'middle';
-      offCtx.fillText(text, W / 2, H / 2);
+
+      const lineHeight = fontSize * 1.3;
+      const columnGap = 60;
+      const leftX = W / 2 - columnGap - 150;
+      const rightX = W / 2 + columnGap + 150;
+
+      // Draw times in 2 columns (4 each) — clock is drawn separately with animation
+      offCtx.font = `bold ${fontSize}px system-ui`;
+      const startY = H / 2 - lineHeight * 1.0;
+
+      times.forEach((time, i) => {
+        const col = i < 4 ? 0 : 1;
+        const row = i % 4;
+        const x = col === 0 ? leftX : rightX;
+        const y = startY + row * lineHeight;
+        offCtx.fillText(time, x, y);
+      });
 
       const imageData = offCtx.getImageData(0, 0, W, H);
       const points = [];
@@ -292,161 +437,17 @@
       ];
     }
 
-    // Generate points for different shapes - FILLED versions
+    // Get position for text display (no shapes)
     function getShapePosition(index, total, shapeType, radius) {
-      switch (shapeType) {
-        case 'circle':
-          const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-          const circleR = radius * Math.sqrt(index / total);
-          const circleTheta = index * goldenAngle + shapeRotation;
-          return { x: cx + circleR * Math.cos(circleTheta), y: cy + circleR * Math.sin(circleTheta) };
-
-        case 'square':
-          const side = radius * 1.8;
-          const gridSize = Math.ceil(Math.sqrt(total));
-          const cellSize = side / gridSize;
-          const row = Math.floor(index / gridSize);
-          const col = index % gridSize;
-          const jitterX = (Math.sin(index * 1.7) * 0.3) * cellSize;
-          const jitterY = (Math.cos(index * 2.3) * 0.3) * cellSize;
-          return {
-            x: cx - side / 2 + col * cellSize + cellSize / 2 + jitterX,
-            y: cy - side / 2 + row * cellSize + cellSize / 2 + jitterY
-          };
-
-        case 'triangle':
-          const triHeight = radius * 1.8;
-          const triWidth = triHeight * 1.15;
-          const triGolden = Math.PI * (3 - Math.sqrt(5));
-          const triT = index * triGolden;
-          const triR = Math.sqrt(index / total);
-          let u = (Math.abs(Math.sin(triT)) * triR);
-          let v = (Math.abs(Math.cos(triT * 1.3)) * triR);
-          if (u + v > 1) { u = 1 - u; v = 1 - v; }
-          const w = 1 - u - v;
-          const v1 = { x: cx, y: cy - triHeight / 2 };
-          const v2 = { x: cx - triWidth / 2, y: cy + triHeight / 2 };
-          const v3 = { x: cx + triWidth / 2, y: cy + triHeight / 2 };
-          return {
-            x: u * v1.x + v * v2.x + w * v3.x,
-            y: u * v1.y + v * v2.y + w * v3.y
-          };
-
-        case 'hexagon':
-          const hexRadius = radius;
-          const hexGolden = Math.PI * (3 - Math.sqrt(5));
-          const hexR = hexRadius * Math.sqrt(index / total);
-          const hexTheta = index * hexGolden + shapeRotation;
-          const hexAngle = hexTheta % (Math.PI / 3);
-          const hexFactor = Math.cos(Math.PI / 6) / Math.cos(hexAngle - Math.PI / 6);
-          const adjustedR = Math.min(hexR, hexRadius * hexFactor * Math.sqrt(index / total));
-          return {
-            x: cx + adjustedR * Math.cos(hexTheta),
-            y: cy + adjustedR * Math.sin(hexTheta)
-          };
-
-        case 'star':
-          const starOuterR = radius;
-          const starInnerR = radius * 0.38;
-          const starGolden = Math.PI * (3 - Math.sqrt(5));
-          const starBaseAngle = index * starGolden + shapeRotation - Math.PI / 2;
-          const starT = Math.sqrt(index / total);
-          const starSection = Math.floor(((starBaseAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 5));
-          const isOuterSection = starSection % 2 === 0;
-          const maxR = isOuterSection ? starOuterR : starInnerR + (starOuterR - starInnerR) * 0.4;
-          const starR = maxR * starT;
-          return {
-            x: cx + starR * Math.cos(starBaseAngle),
-            y: cy + starR * Math.sin(starBaseAngle)
-          };
-
-        case 'diamond':
-          const diamondW = radius * 1.2;
-          const diamondH = radius * 1.6;
-          const diamondGolden = Math.PI * (3 - Math.sqrt(5));
-          const diamondT = Math.sqrt(index / total);
-          const diamondTheta = index * diamondGolden + shapeRotation;
-          const dx = Math.cos(diamondTheta);
-          const dy = Math.sin(diamondTheta);
-          const l1Norm = Math.abs(dx) + Math.abs(dy);
-          const diamondR = diamondT / l1Norm;
-          return {
-            x: cx + dx * diamondR * diamondW,
-            y: cy + dy * diamondR * diamondH
-          };
-
-        case 'heart':
-          const heartT = (index / total) * Math.PI * 2;
-          const heartR = Math.sqrt(index / total) * radius * 0.9;
-          const heartX = 16 * Math.pow(Math.sin(heartT), 3);
-          const heartY = -(13 * Math.cos(heartT) - 5 * Math.cos(2 * heartT) - 2 * Math.cos(3 * heartT) - Math.cos(4 * heartT));
-          const heartScale = heartR / 18;
-          return {
-            x: cx + heartX * heartScale,
-            y: cy + heartY * heartScale
-          };
-
-        case 'spiral':
-          const spiralGolden = Math.PI * (3 - Math.sqrt(5));
-          const spiralR = radius * 0.08 * Math.sqrt(index);
-          const spiralTheta = index * spiralGolden + shapeRotation;
-          return {
-            x: cx + spiralR * Math.cos(spiralTheta),
-            y: cy + spiralR * Math.sin(spiralTheta)
-          };
-
-        case 'ring':
-          const ringOuterR = radius;
-          const ringInnerR = radius * 0.5;
-          const ringGolden = Math.PI * (3 - Math.sqrt(5));
-          const ringTheta = index * ringGolden + shapeRotation;
-          const ringT = index / total;
-          const ringRadius = ringInnerR + (ringOuterR - ringInnerR) * ringT;
-          return {
-            x: cx + ringRadius * Math.cos(ringTheta),
-            y: cy + ringRadius * Math.sin(ringTheta)
-          };
-
-        case 'flower':
-          const petalCount = 5;
-          const flowerGolden = Math.PI * (3 - Math.sqrt(5));
-          const flowerTheta = index * flowerGolden + shapeRotation;
-          const flowerT = Math.sqrt(index / total);
-          const flowerR = radius * Math.cos(petalCount * flowerTheta) * flowerT;
-          return {
-            x: cx + Math.abs(flowerR) * Math.cos(flowerTheta),
-            y: cy + Math.abs(flowerR) * Math.sin(flowerTheta)
-          };
-
-        case 'pentagon':
-          const pentRadius = radius;
-          const pentGolden = Math.PI * (3 - Math.sqrt(5));
-          const pentR = pentRadius * Math.sqrt(index / total);
-          const pentTheta = index * pentGolden + shapeRotation - Math.PI / 2;
-          const pentAngle = ((pentTheta % (Math.PI * 2 / 5)) + Math.PI * 2 / 5) % (Math.PI * 2 / 5);
-          const pentFactor = Math.cos(Math.PI / 5) / Math.cos(pentAngle - Math.PI / 5);
-          const pentAdjustedR = Math.min(pentR, pentRadius * pentFactor * Math.sqrt(index / total));
-          return {
-            x: cx + pentAdjustedR * Math.cos(pentTheta),
-            y: cy + pentAdjustedR * Math.sin(pentTheta)
-          };
-
-        case 'worldtime':
-          // Use pre-computed text points
-          if (index < textPoints.length) {
-            return textPoints[index];
-          }
-          // Scatter remaining agents around the text
-          const scatterAngle = index * 2.399963;
-          const scatterR = Math.sqrt(index / total) * radius * 1.5;
-          return {
-            x: cx + scatterR * Math.cos(scatterAngle) + (Math.random() - 0.5) * 50,
-            y: cy + scatterR * Math.sin(scatterAngle) + (Math.random() - 0.5) * 50
-          };
-
-        default:
-          return { x: cx, y: cy };
+      // Use pre-computed text points
+      if (index < textPoints.length) {
+        return textPoints[index];
       }
+      // Scatter remaining agents randomly around screen
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H
+      };
     }
 
     class Agent {
@@ -514,13 +515,16 @@
       }
 
       draw() {
-        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2.5);
-        grad.addColorStop(0, this.color + '70');
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
-        ctx.fill();
+        // Skip glow effect during formation to avoid horizontal haze
+        if (phase !== 'formation') {
+          const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2.5);
+          grad.addColorStop(0, this.color + '70');
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         ctx.fillStyle = this.color;
         ctx.globalAlpha = this.alpha;
@@ -704,40 +708,59 @@
         phase = 'formation';
         phaseTime = time;
 
-        // Always use worldtime for now (testing)
+        // Worldtime display - show all times at once
         currentShape = 'worldtime';
 
-        // Generate text points for current world time
-        currentTimeDisplay = getWorldTime(timeDisplayIndex);
-        textPoints = textToPoints(currentTimeDisplay, 70, 3);
-        timeDisplayIndex++;
+        // Generate text points for ALL world times (2-column layout)
+        const allTimes = getAllWorldTimes();
+        textPoints = textToPoints(allTimes, 44, 2);
+
+        // Select random neon color for this display
+        currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
 
         shapeRotation = 0;
+        formationStartTime = Date.now();
 
         // Calculate formation radius
         const formationRadius = Math.min(W, H) * 0.3;
 
-        // Create formation agents (5000 total including existing agents)
+        // Create formation agents ONLY for text points (no extra dots)
         formationAgents.length = 0;
-        for (let i = agents.length; i < FORMATION_AGENT_COUNT; i++) {
-          const agent = new Agent(i);
-          agent.formationIndex = i;
+        const neededAgents = Math.max(0, textPoints.length - agents.length);
+        for (let i = 0; i < neededAgents; i++) {
+          const agent = new Agent(agents.length + i);
+          agent.formationIndex = agents.length + i;
           agent.x = Math.random() * W;
           agent.y = Math.random() * H;
-          // Assign random team color from active teams
+          // Use random team color for variety
           const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
-          agent.color = randomTeam.color;
-          agent.team = randomTeam;
+          agent.color = randomTeam ? randomTeam.color : TEAM_COLORS[Math.floor(Math.random() * TEAM_COLORS.length)].color;
+          agent.team = null;
           formationAgents.push(agent);
         }
 
-        // Assign all agents (regular + formation) to formation positions
+        // Apply random team colors to regular agents
         agents.forEach((agent, i) => {
+          const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
+          agent.color = randomTeam ? randomTeam.color : TEAM_COLORS[Math.floor(Math.random() * TEAM_COLORS.length)].color;
           agent.formationIndex = i;
-          agent.assignFormation(currentShape, formationRadius);
+          if (i < textPoints.length) {
+            agent.targetX = textPoints[i].x;
+            agent.targetY = textPoints[i].y;
+          } else {
+            // Hide extra agents off-screen
+            agent.targetX = -100;
+            agent.targetY = -100;
+          }
         });
-        formationAgents.forEach((agent) => {
-          agent.assignFormation(currentShape, formationRadius);
+
+        // Assign formation agents to remaining text points
+        formationAgents.forEach((agent, i) => {
+          const pointIndex = agents.length + i;
+          if (pointIndex < textPoints.length) {
+            agent.targetX = textPoints[pointIndex].x;
+            agent.targetY = textPoints[pointIndex].y;
+          }
         });
 
         activeTeams.forEach(team => {
@@ -804,10 +827,19 @@
 
       agents.forEach(a => a.update());
       formationAgents.forEach(a => a.update());
-      drawConnections();
+      // Skip connections and team labels during formation
+      if (phase !== 'formation') {
+        drawConnections();
+      }
       agents.forEach(a => a.draw());
       formationAgents.forEach(a => a.draw());
-      drawTeamLabels(time);
+      // Draw animated clock on top during formation
+      if (phase === 'formation') {
+        drawAnimatedClock();
+      }
+      if (phase !== 'formation') {
+        drawTeamLabels(time);
+      }
 
       requestAnimationFrame(animate);
     }
