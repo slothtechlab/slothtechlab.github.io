@@ -572,7 +572,7 @@
       galaxyRotation += GALAXY_ROTATION_SPEED;
 
       // Smoothly transition dim factor
-      const targetDim = (phase === 'formation') ? 0.05 : 1.0;
+      const targetDim = (phase === 'formation') ? 0.15 : 1.0;
       galaxyDimFactor += (targetDim - galaxyDimFactor) * 0.08;
 
       // Draw cached nebulae with current dim factor
