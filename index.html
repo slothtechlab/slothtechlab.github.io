@@ -525,6 +525,116 @@
       { city: 'INDONESIA', tz: 'Asia/Jakarta' },
     ];
 
+    // ===== FOREX DATA =====
+    const FOREX_PAIRS = [
+      { label: 'JPY', code: 'JPY' },
+      { label: 'EUR', code: 'EUR' },
+      { label: 'CNY', code: 'CNY' },
+      { label: 'THB', code: 'THB' },
+      { label: 'KRW', code: 'KRW' },
+      { label: 'AED', code: 'AED' },
+      { label: 'INR', code: 'INR' },
+      { label: 'IDR', code: 'IDR' },
+    ];
+
+    let forexRates = null;
+    let forexLastFetch = 0;
+
+    async function fetchForexData() {
+      const now = Date.now();
+      if (forexRates && now - forexLastFetch < 300000) return; // Cache 5 min
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
+        const data = await res.json();
+        if (data.rates) {
+          forexRates = data.rates;
+          forexLastFetch = now;
+        }
+      } catch (e) {
+        console.warn('Forex API error:', e);
+      }
+    }
+
+    function getForexTexts() {
+      if (!forexRates) return FOREX_PAIRS.map(p => `USD/${p.label}  ---`);
+      return FOREX_PAIRS.map(p => {
+        const rate = forexRates[p.code];
+        if (!rate) return `USD/${p.label}  ---`;
+        // Format: short for large numbers, 2 decimals for small
+        let formatted;
+        if (rate >= 1000) formatted = rate.toFixed(0);
+        else if (rate >= 100) formatted = rate.toFixed(1);
+        else formatted = rate.toFixed(2);
+        return `USD/${p.label}  ${formatted}`;
+      });
+    }
+
+    // ===== WEATHER DATA =====
+    const WEATHER_CITIES = [
+      { city: 'TOKYO', lat: 35.6762, lon: 139.6503 },
+      { city: 'NEW YORK', lat: 40.7128, lon: -74.0060 },
+      { city: 'SHANGHAI', lat: 31.2304, lon: 121.4737 },
+      { city: 'BANGKOK', lat: 13.7563, lon: 100.5018 },
+      { city: 'SEOUL', lat: 37.5665, lon: 126.9780 },
+      { city: 'DUBAI', lat: 25.2048, lon: 55.2708 },
+      { city: 'MUMBAI', lat: 19.0760, lon: 72.8777 },
+      { city: 'JAKARTA', lat: -6.2088, lon: 106.8456 },
+    ];
+
+    let weatherData = null;
+    let weatherLastFetch = 0;
+
+    // WMO weather code to symbol
+    function weatherLabel(code) {
+      if (code <= 1) return 'CLEAR';
+      if (code <= 3) return 'CLOUDY';
+      if (code <= 48) return 'FOG';
+      if (code <= 67) return 'RAIN';
+      if (code <= 77) return 'SNOW';
+      if (code <= 82) return 'RAIN';
+      if (code <= 86) return 'SNOW';
+      return 'STORM';
+    }
+
+    async function fetchWeatherData() {
+      const now = Date.now();
+      if (weatherData && now - weatherLastFetch < 600000) return; // Cache 10 min
+      try {
+        const lats = WEATHER_CITIES.map(c => c.lat).join(',');
+        const lons = WEATHER_CITIES.map(c => c.lon).join(',');
+        // Open-Meteo doesn't support multi-location in one call, fetch individually
+        const results = await Promise.all(WEATHER_CITIES.map(async (city) => {
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code`);
+          const data = await res.json();
+          return {
+            city: city.city,
+            temp: Math.round(data.current.temperature_2m),
+            code: data.current.weather_code
+          };
+        }));
+        weatherData = results;
+        weatherLastFetch = now;
+      } catch (e) {
+        console.warn('Weather API error:', e);
+      }
+    }
+
+    function getWeatherTexts() {
+      if (!weatherData) return WEATHER_CITIES.map(c => `${c.city}  ---`);
+      return weatherData.map(w => {
+        const label = weatherLabel(w.code);
+        return `${w.city}  ${w.temp}C  ${label}`;
+      });
+    }
+
+    // ===== FORMATION ROTATION =====
+    const FORMATION_TYPES = ['worldtime', 'forex', 'weather'];
+    let lastFormationType = null;
+
+    // Pre-fetch data on load
+    fetchForexData();
+    fetchWeatherData();
+
     function getAllWorldTimes() {
       const now = new Date();
       return WORLD_CITIES.map(city => {
@@ -777,6 +887,242 @@
       });
     }
 
+    // ===== FOREX DOT ICON (trend line chart) =====
+    let forexIconDots = [];
+    let forexIconInitialized = false;
+
+    function initForexIcon() {
+      forexIconDots = [];
+      const iconY = CLOCK_Y();
+      const spacing = 2;
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+      offCtx.strokeStyle = '#fff';
+      offCtx.fillStyle = '#fff';
+
+      // $ symbol on the left
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.font = `bold ${CLOCK_RADIUS * 1.6}px system-ui`;
+      offCtx.fillText('$', W / 2 - CLOCK_RADIUS * 1.6, iconY);
+
+      const R = CLOCK_RADIUS;
+      const chartLeft = W / 2 - R * 0.5;
+      const chartRight = W / 2 + R * 1.2;
+      const chartTop = iconY - R * 0.7;
+      const chartBottom = iconY + R * 0.7;
+
+      // Axes
+      offCtx.lineWidth = 2.5;
+      offCtx.beginPath();
+      offCtx.moveTo(chartLeft, chartTop);
+      offCtx.lineTo(chartLeft, chartBottom);
+      offCtx.lineTo(chartRight, chartBottom);
+      offCtx.stroke();
+
+      // Trend line (upward zigzag)
+      offCtx.lineWidth = 3;
+      offCtx.beginPath();
+      const points = [
+        [0, 0.6], [0.15, 0.5], [0.3, 0.7], [0.45, 0.35],
+        [0.6, 0.45], [0.75, 0.2], [0.9, 0.15], [1.0, 0.05]
+      ];
+      points.forEach(([px, py], idx) => {
+        const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
+        const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
+        if (idx === 0) offCtx.moveTo(x, y);
+        else offCtx.lineTo(x, y);
+      });
+      offCtx.stroke();
+
+      // Data point dots
+      points.forEach(([px, py]) => {
+        const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
+        const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
+        offCtx.beginPath();
+        offCtx.arc(x, y, 2.5, 0, Math.PI * 2);
+        offCtx.fill();
+      });
+
+      // Axis ticks
+      for (let i = 0; i < 4; i++) {
+        const tx = chartLeft + (i + 1) * (chartRight - chartLeft) / 4;
+        offCtx.lineWidth = 1;
+        offCtx.beginPath();
+        offCtx.moveTo(tx, chartBottom);
+        offCtx.lineTo(tx, chartBottom + 4);
+        offCtx.stroke();
+      }
+
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      for (let y = 0; y < H; y += spacing) {
+        for (let x = 0; x < W; x += spacing) {
+          const i = (y * W + x) * 4;
+          if (imageData.data[i + 3] > 128) {
+            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+            forexIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
+          }
+        }
+      }
+      forexIconInitialized = true;
+    }
+
+    function drawForexIcon() {
+      if (!forexIconInitialized) initForexIcon();
+      // Draw static dots
+      forexIconDots.forEach(dot => {
+        ctx.fillStyle = dot.color;
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Animated: data points light up sequentially along trend line
+      const iconY = CLOCK_Y();
+      const R = CLOCK_RADIUS;
+      const chartLeft = W / 2 - R * 0.5;
+      const chartRight = W / 2 + R * 1.2;
+      const chartTop = iconY - R * 0.7;
+      const chartBottom = iconY + R * 0.7;
+      const trendPoints = [
+        [0, 0.6], [0.15, 0.5], [0.3, 0.7], [0.45, 0.35],
+        [0.6, 0.45], [0.75, 0.2], [0.9, 0.15], [1.0, 0.05]
+      ];
+
+      // Sequential pulse: each point lights up for 250ms, then next (3s total cycle)
+      const cycle = 3000;
+      const t = (Date.now() % cycle) / cycle;
+      const activeIdx = Math.floor(t * trendPoints.length);
+
+      trendPoints.forEach(([px, py], idx) => {
+        const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
+        const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
+
+        // Glow intensity: active point is bright, neighbors dimmer
+        let dist = Math.abs(idx - activeIdx);
+        if (dist > trendPoints.length / 2) dist = trendPoints.length - dist;
+        const intensity = Math.max(0, 1 - dist * 0.35);
+
+        if (intensity > 0) {
+          const radius = 4 + intensity * 6;
+          const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+          // Green for upward movement, red for downward
+          const nextPy = idx < trendPoints.length - 1 ? trendPoints[idx + 1][1] : py;
+          const moveColor = nextPy < py ? '#00FF88' : '#FF4466'; // up=green, down=red
+          grad.addColorStop(0, moveColor);
+          grad.addColorStop(0.5, moveColor + '40');
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.globalAlpha = intensity;
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
+
+    // ===== WEATHER DOT ICON (sun + rain cloud) =====
+    let weatherIconDots = [];
+    let weatherIconInitialized = false;
+
+    function initWeatherIcon() {
+      weatherIconDots = [];
+      const iconY = CLOCK_Y();
+      const spacing = 2;
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+      offCtx.strokeStyle = '#fff';
+      offCtx.fillStyle = '#fff';
+
+      const R = CLOCK_RADIUS * 0.55;
+      const sunX = W / 2 - CLOCK_RADIUS * 0.8;
+
+      // Sun circle (filled)
+      offCtx.lineWidth = 3;
+      offCtx.beginPath();
+      offCtx.arc(sunX, iconY, R, 0, Math.PI * 2);
+      offCtx.fill();
+
+      // Sun rays
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const x1 = sunX + Math.cos(a) * (R + 6);
+        const y1 = iconY + Math.sin(a) * (R + 6);
+        const x2 = sunX + Math.cos(a) * (R + 16);
+        const y2 = iconY + Math.sin(a) * (R + 16);
+        offCtx.lineWidth = i % 2 === 0 ? 3 : 2;
+        offCtx.beginPath();
+        offCtx.moveTo(x1, y1);
+        offCtx.lineTo(x2, y2);
+        offCtx.stroke();
+      }
+
+      // Cloud (filled, offset right)
+      const cx = W / 2 + CLOCK_RADIUS * 1.0;
+      const cy = iconY + CLOCK_RADIUS * 0.15;
+      offCtx.beginPath();
+      offCtx.arc(cx - 12, cy, 11, 0, Math.PI * 2);
+      offCtx.arc(cx + 6, cy - 5, 14, 0, Math.PI * 2);
+      offCtx.arc(cx + 22, cy, 10, 0, Math.PI * 2);
+      offCtx.fill();
+
+      // Separate sun dots and cloud dots by x position
+      const cloudLeftEdge = cx - 24;
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      for (let y = 0; y < H; y += spacing) {
+        for (let x = 0; x < W; x += spacing) {
+          const i = (y * W + x) * 4;
+          if (imageData.data[i + 3] > 128) {
+            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+            const isSun = x < cloudLeftEdge;
+            weatherIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color, isSun });
+          }
+        }
+      }
+      weatherIconInitialized = true;
+    }
+
+    function drawWeatherIcon() {
+      if (!weatherIconInitialized) initWeatherIcon();
+      const iconY = CLOCK_Y();
+      const now = Date.now();
+
+      // Draw static dots with shimmer
+      weatherIconDots.forEach((dot, idx) => {
+        // Subtle shimmer: each dot's brightness varies slightly over time
+        const shimmer = Math.sin(now / 300 + idx * 0.7) * 0.15 + 0.85;
+        ctx.globalAlpha = shimmer;
+        ctx.fillStyle = dot.color;
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // Animated: 3 tiny orbiting particles around the sun
+      const sunX = W / 2 - CLOCK_RADIUS * 0.8;
+      const orbitR = CLOCK_RADIUS * 0.55 + 20;
+      for (let i = 0; i < 3; i++) {
+        const speed = 0.8 + i * 0.3; // Different speeds
+        const a = (now / 1000) * speed + (i * Math.PI * 2 / 3);
+        const ox = sunX + Math.cos(a) * orbitR;
+        const oy = iconY + Math.sin(a) * (orbitR * 0.6); // Elliptical orbit
+        const trail = Math.sin(now / 200 + i) * 0.3 + 0.7;
+
+        ctx.globalAlpha = trail;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(ox, oy, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
     // ===== TEXT TO POINTS CONVERSION (2-column layout, text only) =====
     function textToPoints(times, fontSize = 28, spacing = 2) {
       const offCanvas = document.createElement('canvas');
@@ -789,20 +1135,23 @@
       offCtx.textBaseline = 'middle';
 
       const lineHeight = fontSize * 1.3;
-      const columnGap = 60;
+      const columnGap = 115;
       const leftX = W / 2 - columnGap - 150;
       const rightX = W / 2 + columnGap + 150;
 
-      // Draw times in 2 columns (4 each) — clock is drawn separately with animation
+      // Draw times in 2 columns (4 each)
       offCtx.font = `bold ${fontSize}px system-ui`;
       const startY = H / 2 - lineHeight * 1.0;
 
+      // Store center Y for each line
+      const lineCenters = [];
       times.forEach((time, i) => {
         const col = i < 4 ? 0 : 1;
         const row = i % 4;
         const x = col === 0 ? leftX : rightX;
         const y = startY + row * lineHeight;
         offCtx.fillText(time, x, y);
+        lineCenters.push({ idx: i, x: x, y: y, col: col });
       });
 
       const imageData = offCtx.getImageData(0, 0, W, H);
@@ -810,9 +1159,22 @@
 
       for (let y = 0; y < H; y += spacing) {
         for (let x = 0; x < W; x += spacing) {
-          const i = (y * W + x) * 4;
-          if (imageData.data[i + 3] > 128) {
-            points.push({ x, y });
+          const pi = (y * W + x) * 4;
+          if (imageData.data[pi + 3] > 128) {
+            // Determine lineIdx by closest line center Y (within same column)
+            let lineIdx = 0;
+            let minDist = Infinity;
+            const col = x < W / 2 ? 0 : 1;
+            for (const lc of lineCenters) {
+              if (lc.col === col) {
+                const dist = Math.abs(y - lc.y);
+                if (dist < minDist) {
+                  minDist = dist;
+                  lineIdx = lc.idx;
+                }
+              }
+            }
+            points.push({ x, y, lineIdx });
           }
         }
       }
@@ -1120,12 +1482,24 @@
         phase = 'formation';
         phaseTime = time;
 
-        // Worldtime display - show all times at once
-        currentShape = 'worldtime';
+        // Determine which formation to show (random, avoid repeat)
+        let formationType;
+        do {
+          formationType = FORMATION_TYPES[Math.floor(Math.random() * FORMATION_TYPES.length)];
+        } while (formationType === lastFormationType && FORMATION_TYPES.length > 1);
+        lastFormationType = formationType;
+        currentShape = formationType;
 
-        // Generate text points for ALL world times (2-column layout)
-        const allTimes = getAllWorldTimes();
-        textPoints = textToPoints(allTimes, 44, 2);
+        // Generate text points based on formation type
+        let displayTexts;
+        if (formationType === 'worldtime') {
+          displayTexts = getAllWorldTimes();
+        } else if (formationType === 'forex') {
+          displayTexts = getForexTexts();
+        } else {
+          displayTexts = getWeatherTexts();
+        }
+        textPoints = textToPoints(displayTexts, 44, 2);
 
         // Select random neon color for this display
         currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
@@ -1182,9 +1556,37 @@
           teamLabels[team.name] = { visible: false };
         });
 
-      } else if (phase === 'formation' && elapsed > PHASE_DURATION.formation) {
+        // Weather: color agents by weather condition
+        if (formationType === 'weather' && weatherData) {
+          const weatherColors = (code) => {
+            if (code <= 1) return '#FF8C00'; // Sunny = orange
+            if (code <= 3) return '#E0E8F0'; // Partly cloudy = light gray
+            if (code <= 48) return '#C8D0D8'; // Cloudy/fog = gray-white
+            if (code <= 67) return '#4488FF'; // Rain = blue
+            if (code <= 77) return '#88CCFF'; // Snow = ice blue
+            if (code <= 82) return '#4488FF'; // Shower = blue
+            if (code <= 86) return '#88CCFF'; // Snow shower = ice blue
+            return '#FFD700'; // Thunderstorm = gold
+          };
+          const applyWeatherColor = (agent, pointIdx) => {
+            if (pointIdx < textPoints.length) {
+              const lineIdx = textPoints[pointIdx].lineIdx;
+              if (lineIdx >= 0 && lineIdx < weatherData.length) {
+                agent.color = weatherColors(weatherData[lineIdx].code);
+              }
+            }
+          };
+          agents.forEach((agent, i) => { if (i < textPoints.length) applyWeatherColor(agent, i); });
+          formationAgents.forEach((agent, i) => applyWeatherColor(agent, agents.length + i));
+        }
+
+      } else if (phase === 'formation' && elapsed > (currentShape === 'worldtime' ? PHASE_DURATION.formation : PHASE_DURATION.formation + 1000)) {
         phase = 'scatter';
         phaseTime = time;
+
+        // Re-fetch data for next cycle
+        fetchForexData();
+        fetchWeatherData();
 
         agents.forEach(agent => agent.scatter());
         // Also scatter formation agents instead of removing them instantly
@@ -1218,6 +1620,9 @@
       canvas.height = H;
       initBgStars();
       initGalaxy();
+      clockInitialized = false;
+      forexIconInitialized = false;
+      weatherIconInitialized = false;
     }
 
     window.addEventListener('resize', resize);
@@ -1252,9 +1657,15 @@
       agents.forEach(a => a.draw());
       formationAgents.forEach(a => a.draw());
       aboutFormationAgents.forEach(a => a.draw());
-      // Draw animated clock on top during formation
+      // Draw icon on top during formation based on type
       if (phase === 'formation') {
-        drawAnimatedClock();
+        if (currentShape === 'worldtime') {
+          drawAnimatedClock();
+        } else if (currentShape === 'forex') {
+          drawForexIcon();
+        } else if (currentShape === 'weather') {
+          drawWeatherIcon();
+        }
       }
       if (phase !== 'formation' && phase !== 'about') {
         drawTeamLabels(time);
