@@ -550,19 +550,21 @@
         nctx.fillRect(0, 0, W, H);
       }
 
-      // Pre-render core at full opacity
+      // Pre-render core at full opacity (responsive size)
+      const coreSize = rp.coreSize || 600;
+      const coreHalf = coreSize / 2;
       _coreCanvas = document.createElement('canvas');
-      _coreCanvas.width = 600;
-      _coreCanvas.height = 600;
+      _coreCanvas.width = coreSize;
+      _coreCanvas.height = coreSize;
       const cctx = _coreCanvas.getContext('2d');
-      const coreGrad = cctx.createRadialGradient(300, 300, 0, 300, 300, 300);
+      const coreGrad = cctx.createRadialGradient(coreHalf, coreHalf, 0, coreHalf, coreHalf, coreHalf);
       coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
       coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
       coreGrad.addColorStop(0.4, 'rgba(230, 200, 255, 0.15)');
       coreGrad.addColorStop(1, 'transparent');
       cctx.fillStyle = coreGrad;
       cctx.beginPath();
-      cctx.arc(300, 300, 300, 0, Math.PI * 2);
+      cctx.arc(coreHalf, coreHalf, coreHalf, 0, Math.PI * 2);
       cctx.fill();
     }
 
@@ -579,10 +581,11 @@
         ctx.drawImage(_nebulaCanvas, 0, 0);
       }
 
-      // Draw cached core with current dim factor
+      // Draw cached core with current dim factor (responsive size)
       if (_coreCanvas) {
+        const coreHalf = _coreCanvas.width / 2;
         ctx.globalAlpha = galaxyDimFactor;
-        ctx.drawImage(_coreCanvas, cx - 300, cy - 300);
+        ctx.drawImage(_coreCanvas, cx - coreHalf, cy - coreHalf);
       }
 
       // Stars: draw every frame (rotation needs smooth animation)
@@ -638,7 +641,8 @@
         teamLabelSize: 11, teamLabelOffset: 50,
         teamPosMin: 0.12, teamPosRange: 0.76,
         iconScale: 0.8,
-        galaxyMultiplier: 0.25, bgStarCount: 150
+        galaxyMultiplier: 0.5, bgStarCount: 250,
+        coreSize: 300
       };
       if (w < 1024) return {
         agentCount: 500, formationCount: 2500,
@@ -650,7 +654,8 @@
         teamLabelSize: 11, teamLabelOffset: 60,
         teamPosMin: 0.10, teamPosRange: 0.80,
         iconScale: 0.9,
-        galaxyMultiplier: 0.5, bgStarCount: 250
+        galaxyMultiplier: 0.5, bgStarCount: 250,
+        coreSize: 450
       };
       return {
         agentCount: 1000, formationCount: 5000,
@@ -662,7 +667,8 @@
         teamLabelSize: 11, teamLabelOffset: 70,
         teamPosMin: 0.10, teamPosRange: 0.80,
         iconScale: 1.0,
-        galaxyMultiplier: 1.0, bgStarCount: 400
+        galaxyMultiplier: 1.0, bgStarCount: 400,
+        coreSize: 600
       };
     }
 
@@ -2233,8 +2239,10 @@
         formationColorFn = null; // Reset from previous cycle
 
         const isOnline = navigator.onLine;
+        // SP (singleColumn) always uses offline geometric shapes
+        const useGeometric = rp.singleColumn || !isOnline;
 
-        if (isOnline) {
+        if (!useGeometric) {
           // ===== ONLINE MODE: API-based formations (dev branch code) =====
           const formationType = getNextFormationType();
           currentShape = formationType;
