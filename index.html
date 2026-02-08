@@ -2112,6 +2112,7 @@
             if (i < textPoints.length) {
               agent.targetX = textPoints[i].x;
               agent.targetY = textPoints[i].y;
+              agent.scatterTime = 0; // Reset so update() won't override formation color
             } else {
               agent.targetX = agent.x + (Math.random() - 0.5) * 200;
               agent.targetY = agent.y + (Math.random() - 0.5) * 200;
