@@ -796,51 +796,125 @@
       }).concat(Array(Math.max(0, 8 - earthquakeData.length)).fill(''));
     }
 
-    // ===== FORMATION ROTATION =====
+    // ===== ONLINE: FORMATION ROTATION (dev branch) =====
     const FORMATION_TYPES = ['worldtime', 'forex', 'weather', 'crypto', 'earthquake'];
-    const OFFLINE_SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon'];
     let formationQueue = [];
-    let offlineShapeQueue = [];
-
-    // Check if API data is available for a formation type
-    function isFormationDataAvailable(type) {
-      switch (type) {
-        case 'worldtime': return true; // Always available (local time)
-        case 'forex': return !!forexData;
-        case 'weather': return !!weatherData;
-        case 'crypto': return !!cryptoData && cryptoData.length >= 2;
-        case 'earthquake': return !!earthquakeData && earthquakeData.length > 0;
-        default: return false;
-      }
-    }
 
     function getNextFormationType() {
-      // Try to find an available online formation
       if (formationQueue.length === 0) {
+        // Shuffle: Fisher-Yates
         formationQueue = [...FORMATION_TYPES];
         for (let i = formationQueue.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [formationQueue[i], formationQueue[j]] = [formationQueue[j], formationQueue[i]];
         }
       }
+      return formationQueue.shift();
+    }
 
-      // Find first available type in queue
-      for (let i = 0; i < formationQueue.length; i++) {
-        if (isFormationDataAvailable(formationQueue[i])) {
-          return formationQueue.splice(i, 1)[0];
-        }
-      }
+    // ===== OFFLINE: SHAPE ROTATION (original main branch) =====
+    const OFFLINE_SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon'];
 
-      // All API data unavailable: fall back to offline shapes
-      formationQueue.length = 0; // Reset for next round
-      if (offlineShapeQueue.length === 0) {
-        offlineShapeQueue = [...OFFLINE_SHAPE_TYPES];
-        for (let i = offlineShapeQueue.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [offlineShapeQueue[i], offlineShapeQueue[j]] = [offlineShapeQueue[j], offlineShapeQueue[i]];
+    // Offline: geometric shape position calculator (original main branch code)
+    function getOfflineShapePosition(index, total, shapeType, radius) {
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      switch (shapeType) {
+        case 'circle': {
+          const r = radius * Math.sqrt(index / total);
+          const theta = index * goldenAngle + shapeRotation;
+          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
         }
+        case 'square': {
+          const side = radius * 1.8;
+          const gridSize = Math.ceil(Math.sqrt(total));
+          const cellSize = side / gridSize;
+          const row = Math.floor(index / gridSize);
+          const col = index % gridSize;
+          const jx = (Math.sin(index * 1.7) * 0.3) * cellSize;
+          const jy = (Math.cos(index * 2.3) * 0.3) * cellSize;
+          return {
+            x: cx - side / 2 + col * cellSize + cellSize / 2 + jx,
+            y: cy - side / 2 + row * cellSize + cellSize / 2 + jy
+          };
+        }
+        case 'triangle': {
+          const triHeight = radius * 1.8;
+          const triWidth = triHeight * 1.15;
+          const triT = index * goldenAngle;
+          const triR = Math.sqrt(index / total);
+          let u = Math.abs(Math.sin(triT)) * triR;
+          let v = Math.abs(Math.cos(triT * 1.3)) * triR;
+          if (u + v > 1) { u = 1 - u; v = 1 - v; }
+          const w = 1 - u - v;
+          const v1 = { x: cx, y: cy - triHeight / 2 };
+          const v2 = { x: cx - triWidth / 2, y: cy + triHeight / 2 };
+          const v3 = { x: cx + triWidth / 2, y: cy + triHeight / 2 };
+          return { x: u * v1.x + v * v2.x + w * v3.x, y: u * v1.y + v * v2.y + w * v3.y };
+        }
+        case 'hexagon': {
+          const hexR = radius * Math.sqrt(index / total);
+          const hexTheta = index * goldenAngle + shapeRotation;
+          const hexAngle = hexTheta % (Math.PI / 3);
+          const hexFactor = Math.cos(Math.PI / 6) / Math.cos(hexAngle - Math.PI / 6);
+          const adj = Math.min(hexR, radius * hexFactor * Math.sqrt(index / total));
+          return { x: cx + adj * Math.cos(hexTheta), y: cy + adj * Math.sin(hexTheta) };
+        }
+        case 'star': {
+          const outerR = radius, innerR = radius * 0.38;
+          const angle = index * goldenAngle + shapeRotation - Math.PI / 2;
+          const t = Math.sqrt(index / total);
+          const sec = Math.floor(((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 5));
+          const maxR = sec % 2 === 0 ? outerR : innerR + (outerR - innerR) * 0.4;
+          const r = maxR * t;
+          return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+        }
+        case 'diamond': {
+          const dw = radius * 1.2, dh = radius * 1.6;
+          const t = Math.sqrt(index / total);
+          const theta = index * goldenAngle + shapeRotation;
+          const dx = Math.cos(theta), dy = Math.sin(theta);
+          const l1 = Math.abs(dx) + Math.abs(dy);
+          const r = t / l1;
+          return { x: cx + dx * r * dw, y: cy + dy * r * dh };
+        }
+        case 'heart': {
+          const t = (index / total) * Math.PI * 2;
+          const r = Math.sqrt(index / total) * radius * 0.9;
+          const hx = 16 * Math.pow(Math.sin(t), 3);
+          const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+          const s = r / 18;
+          return { x: cx + hx * s, y: cy + hy * s };
+        }
+        case 'spiral': {
+          const r = radius * 0.08 * Math.sqrt(index);
+          const theta = index * goldenAngle + shapeRotation;
+          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
+        }
+        case 'ring': {
+          const outer = radius, inner = radius * 0.5;
+          const theta = index * goldenAngle + shapeRotation;
+          const t = index / total;
+          const r = inner + (outer - inner) * t;
+          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
+        }
+        case 'flower': {
+          const petals = 5;
+          const theta = index * goldenAngle + shapeRotation;
+          const t = Math.sqrt(index / total);
+          const r = radius * Math.cos(petals * theta) * t;
+          return { x: cx + Math.abs(r) * Math.cos(theta), y: cy + Math.abs(r) * Math.sin(theta) };
+        }
+        case 'pentagon': {
+          const pentR = radius * Math.sqrt(index / total);
+          const pentTheta = index * goldenAngle + shapeRotation - Math.PI / 2;
+          const pentAngle = ((pentTheta % (Math.PI * 2 / 5)) + Math.PI * 2 / 5) % (Math.PI * 2 / 5);
+          const pentFactor = Math.cos(Math.PI / 5) / Math.cos(pentAngle - Math.PI / 5);
+          const adj = Math.min(pentR, radius * pentFactor * Math.sqrt(index / total));
+          return { x: cx + adj * Math.cos(pentTheta), y: cy + adj * Math.sin(pentTheta) };
+        }
+        default:
+          return { x: cx, y: cy };
       }
-      return 'offline:' + offlineShapeQueue.shift();
     }
 
     // Pre-fetch data on load
@@ -1546,119 +1620,15 @@
       ];
     }
 
-    // Get position for display (online: textPoints, offline: geometric shapes)
+    // Online: get position from pre-computed text points (dev branch)
     function getShapePosition(index, total, shapeType, radius) {
-      // For online formations, use pre-computed text points
-      if (!shapeType.startsWith('offline:')) {
-        if (index < textPoints.length) {
-          return textPoints[index];
-        }
-        return {
-          x: Math.random() * W,
-          y: Math.random() * H
-        };
+      if (index < textPoints.length) {
+        return textPoints[index];
       }
-
-      // Offline: geometric shape fallback
-      const shape = shapeType.replace('offline:', '');
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-
-      switch (shape) {
-        case 'circle': {
-          const r = radius * Math.sqrt(index / total);
-          const theta = index * goldenAngle + shapeRotation;
-          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
-        }
-        case 'square': {
-          const side = radius * 1.8;
-          const gridSize = Math.ceil(Math.sqrt(total));
-          const cellSize = side / gridSize;
-          const row = Math.floor(index / gridSize);
-          const col = index % gridSize;
-          const jx = (Math.sin(index * 1.7) * 0.3) * cellSize;
-          const jy = (Math.cos(index * 2.3) * 0.3) * cellSize;
-          return {
-            x: cx - side / 2 + col * cellSize + cellSize / 2 + jx,
-            y: cy - side / 2 + row * cellSize + cellSize / 2 + jy
-          };
-        }
-        case 'triangle': {
-          const h = radius * 1.8, w = h * 1.15;
-          const t = index * goldenAngle;
-          const r = Math.sqrt(index / total);
-          let u = Math.abs(Math.sin(t)) * r;
-          let v = Math.abs(Math.cos(t * 1.3)) * r;
-          if (u + v > 1) { u = 1 - u; v = 1 - v; }
-          const ww = 1 - u - v;
-          return {
-            x: u * cx + v * (cx - w / 2) + ww * (cx + w / 2),
-            y: u * (cy - h / 2) + v * (cy + h / 2) + ww * (cy + h / 2)
-          };
-        }
-        case 'hexagon': {
-          const r = radius * Math.sqrt(index / total);
-          const theta = index * goldenAngle + shapeRotation;
-          const hAngle = theta % (Math.PI / 3);
-          const hFactor = Math.cos(Math.PI / 6) / Math.cos(hAngle - Math.PI / 6);
-          const adj = Math.min(r, radius * hFactor * Math.sqrt(index / total));
-          return { x: cx + adj * Math.cos(theta), y: cy + adj * Math.sin(theta) };
-        }
-        case 'star': {
-          const outerR = radius, innerR = radius * 0.38;
-          const angle = index * goldenAngle + shapeRotation - Math.PI / 2;
-          const t = Math.sqrt(index / total);
-          const sec = Math.floor(((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 5));
-          const maxR = sec % 2 === 0 ? outerR : innerR + (outerR - innerR) * 0.4;
-          const r = maxR * t;
-          return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-        }
-        case 'diamond': {
-          const dw = radius * 1.2, dh = radius * 1.6;
-          const t = Math.sqrt(index / total);
-          const theta = index * goldenAngle + shapeRotation;
-          const dx = Math.cos(theta), dy = Math.sin(theta);
-          const l1 = Math.abs(dx) + Math.abs(dy);
-          const r = t / l1;
-          return { x: cx + dx * r * dw, y: cy + dy * r * dh };
-        }
-        case 'heart': {
-          const t = (index / total) * Math.PI * 2;
-          const r = Math.sqrt(index / total) * radius * 0.9;
-          const hx = 16 * Math.pow(Math.sin(t), 3);
-          const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-          const s = r / 18;
-          return { x: cx + hx * s, y: cy + hy * s };
-        }
-        case 'spiral': {
-          const r = radius * 0.08 * Math.sqrt(index);
-          const theta = index * goldenAngle + shapeRotation;
-          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
-        }
-        case 'ring': {
-          const outer = radius, inner = radius * 0.5;
-          const theta = index * goldenAngle + shapeRotation;
-          const t = index / total;
-          const r = inner + (outer - inner) * t;
-          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
-        }
-        case 'flower': {
-          const petals = 5;
-          const theta = index * goldenAngle + shapeRotation;
-          const t = Math.sqrt(index / total);
-          const r = radius * Math.cos(petals * theta) * t;
-          return { x: cx + Math.abs(r) * Math.cos(theta), y: cy + Math.abs(r) * Math.sin(theta) };
-        }
-        case 'pentagon': {
-          const r = radius * Math.sqrt(index / total);
-          const theta = index * goldenAngle + shapeRotation - Math.PI / 2;
-          const pAngle = ((theta % (Math.PI * 2 / 5)) + Math.PI * 2 / 5) % (Math.PI * 2 / 5);
-          const pFactor = Math.cos(Math.PI / 5) / Math.cos(pAngle - Math.PI / 5);
-          const adj = Math.min(r, radius * pFactor * Math.sqrt(index / total));
-          return { x: cx + adj * Math.cos(theta), y: cy + adj * Math.sin(theta) };
-        }
-        default:
-          return { x: cx, y: cy };
-      }
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H
+      };
     }
 
     class Agent {
@@ -1697,7 +1667,11 @@
       }
 
       assignFormation(shapeType, radius) {
-        const pos = getShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius);
+        // Offline shapes use getOfflineShapePosition, online uses getShapePosition
+        const isOfflineShape = OFFLINE_SHAPE_TYPES.includes(shapeType);
+        const pos = isOfflineShape
+          ? getOfflineShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius)
+          : getShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius);
         this.targetX = pos.x;
         this.targetY = pos.y;
       }
@@ -1940,161 +1914,180 @@
         phase = 'formation';
         phaseTime = time;
 
-        // Determine which formation to show (random, avoid repeat)
-        const formationType = getNextFormationType();
-        currentShape = formationType;
+        const isOnline = navigator.onLine;
 
-        // Generate text points based on formation type
-        let displayTexts;
-        if (formationType === 'worldtime') {
-          displayTexts = getAllWorldTimes();
-          textPoints = textToPoints(displayTexts, 44, 2);
-        } else if (formationType === 'forex') {
-          displayTexts = getForexTexts();
-          textPoints = textToPoints(displayTexts, 44, 2);
-        } else if (formationType === 'weather') {
-          displayTexts = getWeatherTexts();
-          textPoints = textToPoints(displayTexts, 44, 2);
-        } else if (formationType === 'crypto') {
-          textPoints = getCryptoChartPoints();
-        } else if (formationType === 'earthquake') {
-          displayTexts = getEarthquakeTexts();
-          textPoints = textToPoints(displayTexts, 44, 2);
-        } else if (formationType.startsWith('offline:')) {
-          // Offline shape fallback - no textPoints needed, uses getShapePosition directly
-          textPoints = [];
-        }
+        if (isOnline) {
+          // ===== ONLINE MODE: API-based formations (dev branch code) =====
+          const formationType = getNextFormationType();
+          currentShape = formationType;
 
-        // Select random neon color for this display
-        currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
-
-        shapeRotation = 0;
-        formationStartTime = Date.now();
-
-        // Calculate formation radius
-        const formationRadius = Math.min(W, H) * 0.3;
-
-        // Create formation agents ONLY for text points (no extra dots)
-        // Spawn from existing team cluster positions for seamless transition
-        formationAgents.length = 0;
-        const neededAgents = Math.max(0, textPoints.length - agents.length);
-        for (let i = 0; i < neededAgents; i++) {
-          const agent = new Agent(agents.length + i);
-          agent.formationIndex = agents.length + i;
-          // Spawn from a random existing agent's position (team cluster)
-          const sourceAgent = agents[Math.floor(Math.random() * agents.length)];
-          agent.x = sourceAgent.x + (Math.random() - 0.5) * 20;
-          agent.y = sourceAgent.y + (Math.random() - 0.5) * 20;
-          // Inherit color from source agent
-          agent.color = sourceAgent.color;
-          agent.team = null;
-          formationAgents.push(agent);
-        }
-
-        // Keep existing agent colors (don't override) - seamless transition
-        agents.forEach((agent, i) => {
-          agent.formationIndex = i;
-          agent.team = null; // Release from team but keep color
-          if (formationType.startsWith('offline:')) {
-            // Offline shape: position agents directly using geometric shape
-            const pos = getShapePosition(i, agents.length, formationType, Math.min(W, H) * 0.3);
-            agent.targetX = pos.x;
-            agent.targetY = pos.y;
-            agent.scatterTime = 0; // Ensure no fade out
-          } else if (i < textPoints.length) {
-            agent.targetX = textPoints[i].x;
-            agent.targetY = textPoints[i].y;
-          } else {
-            // Fade out extra agents instead of teleporting off-screen
-            agent.targetX = agent.x + (Math.random() - 0.5) * 200;
-            agent.targetY = agent.y + (Math.random() - 0.5) * 200;
-            agent.scatterTime = Date.now();
-            agent.scatterColor = agent.color;
+          // Generate text points based on formation type
+          let displayTexts;
+          if (formationType === 'worldtime') {
+            displayTexts = getAllWorldTimes();
+            textPoints = textToPoints(displayTexts, 44, 2);
+          } else if (formationType === 'forex') {
+            displayTexts = getForexTexts();
+            textPoints = textToPoints(displayTexts, 44, 2);
+          } else if (formationType === 'weather') {
+            displayTexts = getWeatherTexts();
+            textPoints = textToPoints(displayTexts, 44, 2);
+          } else if (formationType === 'crypto') {
+            textPoints = getCryptoChartPoints();
+          } else if (formationType === 'earthquake') {
+            displayTexts = getEarthquakeTexts();
+            textPoints = textToPoints(displayTexts, 44, 2);
           }
-        });
 
-        // Assign formation agents to remaining text points
-        formationAgents.forEach((agent, i) => {
-          const pointIndex = agents.length + i;
-          if (pointIndex < textPoints.length) {
-            agent.targetX = textPoints[pointIndex].x;
-            agent.targetY = textPoints[pointIndex].y;
+          // Select random neon color for this display
+          currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
+
+          shapeRotation = 0;
+          formationStartTime = Date.now();
+
+          // Calculate formation radius
+          const formationRadius = Math.min(W, H) * 0.3;
+
+          // Create formation agents ONLY for text points (no extra dots)
+          formationAgents.length = 0;
+          const neededAgents = Math.max(0, textPoints.length - agents.length);
+          for (let i = 0; i < neededAgents; i++) {
+            const agent = new Agent(agents.length + i);
+            agent.formationIndex = agents.length + i;
+            const sourceAgent = agents[Math.floor(Math.random() * agents.length)];
+            agent.x = sourceAgent.x + (Math.random() - 0.5) * 20;
+            agent.y = sourceAgent.y + (Math.random() - 0.5) * 20;
+            agent.color = sourceAgent.color;
+            agent.team = null;
+            formationAgents.push(agent);
           }
-        });
+
+          // Keep existing agent colors - seamless transition
+          agents.forEach((agent, i) => {
+            agent.formationIndex = i;
+            agent.team = null;
+            if (i < textPoints.length) {
+              agent.targetX = textPoints[i].x;
+              agent.targetY = textPoints[i].y;
+            } else {
+              agent.targetX = agent.x + (Math.random() - 0.5) * 200;
+              agent.targetY = agent.y + (Math.random() - 0.5) * 200;
+              agent.scatterTime = Date.now();
+              agent.scatterColor = agent.color;
+            }
+          });
+
+          // Assign formation agents to remaining text points
+          formationAgents.forEach((agent, i) => {
+            const pointIndex = agents.length + i;
+            if (pointIndex < textPoints.length) {
+              agent.targetX = textPoints[pointIndex].x;
+              agent.targetY = textPoints[pointIndex].y;
+            }
+          });
+
+          // Weather: color agents by weather condition
+          if (formationType === 'weather' && weatherData) {
+            const weatherColors = (code) => {
+              if (code <= 1) return '#FF8C00';
+              if (code <= 3) return '#E0E8F0';
+              if (code <= 48) return '#C8D0D8';
+              if (code <= 67) return '#4488FF';
+              if (code <= 77) return '#88CCFF';
+              if (code <= 82) return '#4488FF';
+              if (code <= 86) return '#88CCFF';
+              return '#FFD700';
+            };
+            const applyWeatherColor = (agent, pointIdx) => {
+              if (pointIdx < textPoints.length) {
+                const lineIdx = textPoints[pointIdx].lineIdx;
+                if (lineIdx >= 0 && lineIdx < weatherData.length) {
+                  agent.color = weatherColors(weatherData[lineIdx].code);
+                }
+              }
+            };
+            agents.forEach((agent, i) => { if (i < textPoints.length) applyWeatherColor(agent, i); });
+            formationAgents.forEach((agent, i) => applyWeatherColor(agent, agents.length + i));
+          }
+
+          // Crypto: gradient from green (top) to gold (bottom)
+          if (formationType === 'crypto') {
+            const chartTop = H / 2 - 40;
+            const chartBottom = H / 2 + 120;
+            const chartRange = chartBottom - chartTop;
+            const applyCryptoColor = (agent, pointIdx) => {
+              if (pointIdx < textPoints.length) {
+                const py = textPoints[pointIdx].y;
+                const t = Math.max(0, Math.min(1, (py - chartTop) / chartRange));
+                const r = Math.round(0 + t * 255);
+                const g = Math.round(200 - t * 20);
+                const b = Math.round(100 - t * 60);
+                const rHex = r.toString(16).padStart(2, '0');
+                const gHex = g.toString(16).padStart(2, '0');
+                const bHex = b.toString(16).padStart(2, '0');
+                agent.color = `#${rHex}${gHex}${bHex}`;
+              }
+            };
+            agents.forEach((agent, i) => { if (i < textPoints.length) applyCryptoColor(agent, i); });
+            formationAgents.forEach((agent, i) => applyCryptoColor(agent, agents.length + i));
+          }
+
+          // Earthquake: color by magnitude
+          if (formationType === 'earthquake') {
+            const quakeColor = (mag) => {
+              if (mag >= 7.0) return '#FF0000';
+              if (mag >= 6.0) return '#FF3322';
+              if (mag >= 5.5) return '#FF6622';
+              if (mag >= 5.0) return '#FF9933';
+              return '#FFCC44';
+            };
+            const applyQuakeColor = (agent, pointIdx) => {
+              if (pointIdx < textPoints.length && earthquakeData) {
+                const lineIdx = textPoints[pointIdx].lineIdx;
+                if (lineIdx >= 0 && lineIdx < earthquakeData.length) {
+                  agent.color = quakeColor(earthquakeData[lineIdx].mag);
+                }
+              }
+            };
+            agents.forEach((agent, i) => { if (i < textPoints.length) applyQuakeColor(agent, i); });
+            formationAgents.forEach((agent, i) => applyQuakeColor(agent, agents.length + i));
+          }
+
+        } else {
+          // ===== OFFLINE MODE: Geometric shapes (original main branch code) =====
+          currentShape = OFFLINE_SHAPE_TYPES[Math.floor(Math.random() * OFFLINE_SHAPE_TYPES.length)];
+          shapeRotation = Math.random() * Math.PI * 2;
+
+          const formationRadius = Math.min(W, H) * 0.3;
+
+          // Create formation agents (5000 total including existing agents)
+          formationAgents.length = 0;
+          for (let i = agents.length; i < FORMATION_AGENT_COUNT; i++) {
+            const agent = new Agent(i);
+            agent.formationIndex = i;
+            agent.x = Math.random() * W;
+            agent.y = Math.random() * H;
+            const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
+            agent.color = randomTeam.color;
+            agent.team = randomTeam;
+            formationAgents.push(agent);
+          }
+
+          // Assign all agents to formation positions
+          agents.forEach((agent, i) => {
+            agent.formationIndex = i;
+            agent.assignFormation(currentShape, formationRadius);
+          });
+          formationAgents.forEach((agent) => {
+            agent.assignFormation(currentShape, formationRadius);
+          });
+        }
 
         activeTeams.forEach(team => {
           teamLabels[team.name] = { visible: false };
         });
 
-        // Weather: color agents by weather condition
-        if (formationType === 'weather' && weatherData) {
-          const weatherColors = (code) => {
-            if (code <= 1) return '#FF8C00'; // Sunny = orange
-            if (code <= 3) return '#E0E8F0'; // Partly cloudy = light gray
-            if (code <= 48) return '#C8D0D8'; // Cloudy/fog = gray-white
-            if (code <= 67) return '#4488FF'; // Rain = blue
-            if (code <= 77) return '#88CCFF'; // Snow = ice blue
-            if (code <= 82) return '#4488FF'; // Shower = blue
-            if (code <= 86) return '#88CCFF'; // Snow shower = ice blue
-            return '#FFD700'; // Thunderstorm = gold
-          };
-          const applyWeatherColor = (agent, pointIdx) => {
-            if (pointIdx < textPoints.length) {
-              const lineIdx = textPoints[pointIdx].lineIdx;
-              if (lineIdx >= 0 && lineIdx < weatherData.length) {
-                agent.color = weatherColors(weatherData[lineIdx].code);
-              }
-            }
-          };
-          agents.forEach((agent, i) => { if (i < textPoints.length) applyWeatherColor(agent, i); });
-          formationAgents.forEach((agent, i) => applyWeatherColor(agent, agents.length + i));
-        }
-
-        // Crypto: gradient from green (top) to gold (bottom)
-        if (formationType === 'crypto') {
-          const chartTop = H / 2 - 120;
-          const chartBottom = H / 2 + 100;
-          const chartRange = chartBottom - chartTop;
-          const applyCryptoColor = (agent, pointIdx) => {
-            if (pointIdx < textPoints.length) {
-              const py = textPoints[pointIdx].y;
-              const t = Math.max(0, Math.min(1, (py - chartTop) / chartRange));
-              // Top of chart = green (price high), bottom = gold
-              const r = Math.round(0 + t * 255);
-              const g = Math.round(200 - t * 20);
-              const b = Math.round(100 - t * 60);
-              const rHex = r.toString(16).padStart(2, '0');
-              const gHex = g.toString(16).padStart(2, '0');
-              const bHex = b.toString(16).padStart(2, '0');
-              agent.color = `#${rHex}${gHex}${bHex}`;
-            }
-          };
-          agents.forEach((agent, i) => { if (i < textPoints.length) applyCryptoColor(agent, i); });
-          formationAgents.forEach((agent, i) => applyCryptoColor(agent, agents.length + i));
-        }
-
-        // Earthquake: color by magnitude
-        if (formationType === 'earthquake') {
-          const quakeColor = (mag) => {
-            if (mag >= 7.0) return '#FF0000'; // M7+ = bright red
-            if (mag >= 6.0) return '#FF3322'; // M6+ = red
-            if (mag >= 5.5) return '#FF6622'; // M5.5+ = dark orange
-            if (mag >= 5.0) return '#FF9933'; // M5+ = orange
-            return '#FFCC44'; // M4.5+ = yellow-orange
-          };
-          const applyQuakeColor = (agent, pointIdx) => {
-            if (pointIdx < textPoints.length && earthquakeData) {
-              const lineIdx = textPoints[pointIdx].lineIdx;
-              if (lineIdx >= 0 && lineIdx < earthquakeData.length) {
-                agent.color = quakeColor(earthquakeData[lineIdx].mag);
-              }
-            }
-          };
-          agents.forEach((agent, i) => { if (i < textPoints.length) applyQuakeColor(agent, i); });
-          formationAgents.forEach((agent, i) => applyQuakeColor(agent, agents.length + i));
-        }
-
-      } else if (phase === 'formation' && elapsed > PHASE_DURATION.formation + (currentShape === 'worldtime' || currentShape.startsWith('offline:') ? 0 : 1000)) {
+      } else if (phase === 'formation' && elapsed > PHASE_DURATION.formation + (currentShape === 'worldtime' ? 1000 : 0)) {
         phase = 'scatter';
         phaseTime = time;
 
