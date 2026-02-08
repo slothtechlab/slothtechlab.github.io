@@ -295,9 +295,8 @@
     /* ===== RESPONSIVE: Mobile ===== */
     @media (max-width: 599px) {
       .brand {
-        bottom: 10px;
+        bottom: 42px;
         left: 10px;
-        max-width: 55%;
       }
 
       .brand h1 {
@@ -307,13 +306,14 @@
 
       .brand p {
         font-size: 8px;
-        margin-top: 3px;
+        margin-top: 2px;
         letter-spacing: 0.15em;
       }
 
       .about-trigger {
         bottom: 10px;
-        right: 10px;
+        left: 10px;
+        right: auto;
         font-size: 10px;
         padding: 6px 14px;
       }
@@ -2125,6 +2125,16 @@
               agent.targetY = textPoints[pointIndex].y;
             }
           });
+
+          // Apply single neon color for worldtime and forex formations
+          if (formationType === 'worldtime' || formationType === 'forex') {
+            agents.forEach((agent, i) => {
+              if (i < textPoints.length) agent.color = currentNeonColor;
+            });
+            formationAgents.forEach((agent, i) => {
+              if (agents.length + i < textPoints.length) agent.color = currentNeonColor;
+            });
+          }
 
           // Weather: color agents by weather condition
           if (formationType === 'weather' && weatherData) {
