@@ -627,13 +627,196 @@
       });
     }
 
+    // ===== CRYPTO DATA (BTC 7-day chart) =====
+    let cryptoData = null;
+    let cryptoLastFetch = 0;
+
+    async function fetchCryptoData() {
+      const now = Date.now();
+      if (cryptoData && now - cryptoLastFetch < 300000) return; // Cache 5 min
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7&interval=daily');
+        const data = await res.json();
+        cryptoData = data.prices; // [[timestamp, price], ...]
+        cryptoLastFetch = now;
+      } catch (e) {
+        console.warn('Crypto API error:', e);
+      }
+    }
+
+    function getCryptoChartPoints() {
+      // Returns points for a dot-based area chart of BTC 7-day price
+      if (!cryptoData || cryptoData.length < 2) return [];
+
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+
+      // Chart area - positioned below icon
+      const chartMargin = 60;
+      const chartLeft = chartMargin + 60;
+      const chartRight = W - chartMargin - 40;
+      const chartTop = H / 2 - 40;
+      const chartBottom = H / 2 + 120;
+      const chartW = chartRight - chartLeft;
+      const chartH = chartBottom - chartTop;
+
+      // Price range
+      const prices = cryptoData.map(p => p[1]);
+      const minP = Math.min(...prices) * 0.995;
+      const maxP = Math.max(...prices) * 1.005;
+      const rangeP = maxP - minP || 1;
+
+      // Draw chart line (thick stroke for visibility)
+      offCtx.strokeStyle = '#fff';
+      offCtx.lineWidth = 8;
+      offCtx.beginPath();
+      cryptoData.forEach((point, i) => {
+        const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
+        const y = chartBottom - ((point[1] - minP) / rangeP) * chartH;
+        if (i === 0) offCtx.moveTo(x, y);
+        else offCtx.lineTo(x, y);
+      });
+      offCtx.stroke();
+
+      // Data point dots on the line
+      offCtx.fillStyle = '#fff';
+      cryptoData.forEach((point, i) => {
+        const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
+        const y = chartBottom - ((point[1] - minP) / rangeP) * chartH;
+        offCtx.beginPath();
+        offCtx.arc(x, y, 8, 0, Math.PI * 2);
+        offCtx.fill();
+      });
+
+      // Chart axes
+      offCtx.strokeStyle = '#fff';
+      offCtx.lineWidth = 2.5;
+      offCtx.beginPath();
+      offCtx.moveTo(chartLeft, chartTop - 5);
+      offCtx.lineTo(chartLeft, chartBottom);
+      offCtx.lineTo(chartRight, chartBottom);
+      offCtx.stroke();
+
+      // Title text: BTC 7D $XX,XXX (above chart)
+      const lastPrice = prices[prices.length - 1];
+      const priceStr = `BTC 7D  $${lastPrice.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+      offCtx.fillStyle = '#fff';
+      offCtx.font = `bold 56px system-ui`;
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.fillText(priceStr, W / 2, chartTop - 50);
+
+      // Price change
+      const firstPrice = prices[0];
+      const change = ((lastPrice - firstPrice) / firstPrice * 100).toFixed(1);
+      const changeStr = `${change > 0 ? '+' : ''}${change}%`;
+      offCtx.font = `bold 36px system-ui`;
+      offCtx.fillText(changeStr, W / 2, chartTop - 15);
+
+      // Axis labels (day labels)
+      offCtx.font = `bold 16px system-ui`;
+      const days = ['7D', '6D', '5D', '4D', '3D', '2D', '1D', 'NOW'];
+      cryptoData.forEach((_, i) => {
+        if (i < days.length) {
+          const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
+          offCtx.fillText(days[i], x, chartBottom + 18);
+        }
+      });
+
+      // Price labels on Y axis
+      offCtx.font = `bold 13px system-ui`;
+      offCtx.textAlign = 'right';
+      for (let i = 0; i <= 4; i++) {
+        const price = minP + (rangeP * i / 4);
+        const y = chartBottom - (i / 4) * chartH;
+        offCtx.fillText(`$${(price / 1000).toFixed(1)}k`, chartLeft - 8, y);
+      }
+
+      const spacing = 2;
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      const points = [];
+      for (let y = 0; y < H; y += spacing) {
+        for (let x = 0; x < W; x += spacing) {
+          const pi = (y * W + x) * 4;
+          if (imageData.data[pi + 3] > 128) {
+            points.push({ x, y, lineIdx: 0 });
+          }
+        }
+      }
+      // Cap points to prevent freeze
+      const MAX_POINTS = 4000;
+      if (points.length > MAX_POINTS) {
+        // Random subsample
+        for (let i = points.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [points[i], points[j]] = [points[j], points[i]];
+        }
+        points.length = MAX_POINTS;
+      }
+      return points;
+    }
+
+    // ===== EARTHQUAKE DATA =====
+    let earthquakeData = null;
+    let earthquakeLastFetch = 0;
+
+    async function fetchEarthquakeData() {
+      const now = Date.now();
+      if (earthquakeData && now - earthquakeLastFetch < 300000) return; // Cache 5 min
+      try {
+        const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson');
+        const data = await res.json();
+        // Sort by magnitude descending, take top 8
+        const sorted = data.features
+          .sort((a, b) => b.properties.mag - a.properties.mag)
+          .slice(0, 8);
+        earthquakeData = sorted.map(f => ({
+          mag: f.properties.mag,
+          place: f.properties.place
+        }));
+        earthquakeLastFetch = now;
+      } catch (e) {
+        console.warn('Earthquake API error:', e);
+      }
+    }
+
+    function getEarthquakeTexts() {
+      if (!earthquakeData || earthquakeData.length === 0) {
+        return ['NO DATA', '', '', '', '', '', '', ''];
+      }
+      return earthquakeData.map(eq => {
+        // Shorten place: take last part after comma, or first word
+        let place = eq.place;
+        const parts = place.split(', ');
+        if (parts.length > 1) place = parts[parts.length - 1];
+        if (place.length > 12) place = place.substring(0, 11) + '.';
+        return `M${eq.mag.toFixed(1)}  ${place.toUpperCase()}`;
+      }).concat(Array(Math.max(0, 8 - earthquakeData.length)).fill(''));
+    }
+
     // ===== FORMATION ROTATION =====
-    const FORMATION_TYPES = ['worldtime', 'forex', 'weather'];
-    let lastFormationType = null;
+    const FORMATION_TYPES = ['worldtime', 'forex', 'weather', 'crypto', 'earthquake'];
+    let formationQueue = [];
+
+    function getNextFormationType() {
+      if (formationQueue.length === 0) {
+        // Shuffle: Fisher-Yates
+        formationQueue = [...FORMATION_TYPES];
+        for (let i = formationQueue.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [formationQueue[i], formationQueue[j]] = [formationQueue[j], formationQueue[i]];
+        }
+      }
+      return formationQueue.shift();
+    }
 
     // Pre-fetch data on load
     fetchForexData();
     fetchWeatherData();
+    fetchCryptoData();
+    fetchEarthquakeData();
 
     function getAllWorldTimes() {
       const now = new Date();
@@ -1123,6 +1306,148 @@
       }
     }
 
+    // ===== CRYPTO DOT ICON (₿ mark) =====
+    let cryptoIconDots = [];
+    let cryptoIconInitialized = false;
+
+    function initCryptoIcon() {
+      cryptoIconDots = [];
+      const iconY = CLOCK_Y();
+      const spacing = 2;
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+
+      // Draw ₿ symbol - higher position to avoid chart overlap
+      const cryptoIconY = iconY - 80;
+      offCtx.fillStyle = '#fff';
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.font = `bold ${CLOCK_RADIUS * 2.4}px system-ui`;
+      offCtx.fillText('₿', W / 2, cryptoIconY);
+
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      for (let y = 0; y < H; y += spacing) {
+        for (let x = 0; x < W; x += spacing) {
+          const i = (y * W + x) * 4;
+          if (imageData.data[i + 3] > 128) {
+            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+            cryptoIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
+          }
+        }
+      }
+      cryptoIconInitialized = true;
+    }
+
+    function drawCryptoIcon() {
+      if (!cryptoIconInitialized) initCryptoIcon();
+      const iconY = CLOCK_Y();
+      const now = Date.now();
+
+      // Draw static dots with shimmer
+      cryptoIconDots.forEach((dot, idx) => {
+        const shimmer = Math.sin(now / 250 + idx * 0.5) * 0.12 + 0.88;
+        ctx.globalAlpha = shimmer;
+        ctx.fillStyle = dot.color;
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // Animated: pulsing golden ring around ₿
+      const cryptoIconY = iconY - 80;
+      const pulseT = (Math.sin(now / 600) + 1) / 2;
+      const ringR = CLOCK_RADIUS * 1.2 + pulseT * 8;
+      ctx.strokeStyle = `rgba(255, 200, 50, ${0.15 + pulseT * 0.15})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(W / 2, cryptoIconY, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // ===== EARTHQUAKE DOT ICON (seismic waves) =====
+    let quakeIconDots = [];
+    let quakeIconInitialized = false;
+
+    function initQuakeIcon() {
+      quakeIconDots = [];
+      const iconY = CLOCK_Y();
+      const spacing = 2;
+      const offCanvas = document.createElement('canvas');
+      const offCtx = offCanvas.getContext('2d');
+      offCanvas.width = W;
+      offCanvas.height = H;
+      offCtx.strokeStyle = '#fff';
+      offCtx.fillStyle = '#fff';
+
+      // Center dot
+      offCtx.beginPath();
+      offCtx.arc(W / 2, iconY, 4, 0, Math.PI * 2);
+      offCtx.fill();
+
+      // Concentric wave rings
+      for (let i = 1; i <= 3; i++) {
+        offCtx.lineWidth = 3 - i * 0.5;
+        offCtx.beginPath();
+        offCtx.arc(W / 2, iconY, CLOCK_RADIUS * 0.3 * i, Math.PI * 0.15, Math.PI * 0.85);
+        offCtx.stroke();
+        offCtx.beginPath();
+        offCtx.arc(W / 2, iconY, CLOCK_RADIUS * 0.3 * i, Math.PI * 1.15, Math.PI * 1.85);
+        offCtx.stroke();
+      }
+
+      const imageData = offCtx.getImageData(0, 0, W, H);
+      for (let y = 0; y < H; y += spacing) {
+        for (let x = 0; x < W; x += spacing) {
+          const i = (y * W + x) * 4;
+          if (imageData.data[i + 3] > 128) {
+            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+            quakeIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
+          }
+        }
+      }
+      quakeIconInitialized = true;
+    }
+
+    function drawQuakeIcon() {
+      if (!quakeIconInitialized) initQuakeIcon();
+      const iconY = CLOCK_Y();
+      const now = Date.now();
+
+      // Draw static dots
+      quakeIconDots.forEach(dot => {
+        ctx.fillStyle = dot.color;
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Animated: expanding wave ring from center
+      const waveCycle = 2000;
+      const waveT = (now % waveCycle) / waveCycle;
+      const waveR = waveT * CLOCK_RADIUS * 1.2;
+      const waveAlpha = 1 - waveT;
+
+      ctx.strokeStyle = `rgba(255, 100, 80, ${waveAlpha * 0.6})`;
+      ctx.lineWidth = 2 - waveT;
+      ctx.beginPath();
+      ctx.arc(W / 2, iconY, waveR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Second wave offset
+      const waveT2 = ((now + 1000) % waveCycle) / waveCycle;
+      const waveR2 = waveT2 * CLOCK_RADIUS * 1.2;
+      const waveAlpha2 = 1 - waveT2;
+
+      ctx.strokeStyle = `rgba(255, 100, 80, ${waveAlpha2 * 0.4})`;
+      ctx.lineWidth = 1.5 - waveT2;
+      ctx.beginPath();
+      ctx.arc(W / 2, iconY, waveR2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     // ===== TEXT TO POINTS CONVERSION (2-column layout, text only) =====
     function textToPoints(times, fontSize = 28, spacing = 2) {
       const offCanvas = document.createElement('canvas');
@@ -1483,23 +1808,26 @@
         phaseTime = time;
 
         // Determine which formation to show (random, avoid repeat)
-        let formationType;
-        do {
-          formationType = FORMATION_TYPES[Math.floor(Math.random() * FORMATION_TYPES.length)];
-        } while (formationType === lastFormationType && FORMATION_TYPES.length > 1);
-        lastFormationType = formationType;
+        const formationType = getNextFormationType();
         currentShape = formationType;
 
         // Generate text points based on formation type
         let displayTexts;
         if (formationType === 'worldtime') {
           displayTexts = getAllWorldTimes();
+          textPoints = textToPoints(displayTexts, 44, 2);
         } else if (formationType === 'forex') {
           displayTexts = getForexTexts();
-        } else {
+          textPoints = textToPoints(displayTexts, 44, 2);
+        } else if (formationType === 'weather') {
           displayTexts = getWeatherTexts();
+          textPoints = textToPoints(displayTexts, 44, 2);
+        } else if (formationType === 'crypto') {
+          textPoints = getCryptoChartPoints();
+        } else if (formationType === 'earthquake') {
+          displayTexts = getEarthquakeTexts();
+          textPoints = textToPoints(displayTexts, 44, 2);
         }
-        textPoints = textToPoints(displayTexts, 44, 2);
 
         // Select random neon color for this display
         currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
@@ -1580,6 +1908,50 @@
           formationAgents.forEach((agent, i) => applyWeatherColor(agent, agents.length + i));
         }
 
+        // Crypto: gradient from green (top) to gold (bottom)
+        if (formationType === 'crypto') {
+          const chartTop = H / 2 - 120;
+          const chartBottom = H / 2 + 100;
+          const chartRange = chartBottom - chartTop;
+          const applyCryptoColor = (agent, pointIdx) => {
+            if (pointIdx < textPoints.length) {
+              const py = textPoints[pointIdx].y;
+              const t = Math.max(0, Math.min(1, (py - chartTop) / chartRange));
+              // Top of chart = green (price high), bottom = gold
+              const r = Math.round(0 + t * 255);
+              const g = Math.round(200 - t * 20);
+              const b = Math.round(100 - t * 60);
+              const rHex = r.toString(16).padStart(2, '0');
+              const gHex = g.toString(16).padStart(2, '0');
+              const bHex = b.toString(16).padStart(2, '0');
+              agent.color = `#${rHex}${gHex}${bHex}`;
+            }
+          };
+          agents.forEach((agent, i) => { if (i < textPoints.length) applyCryptoColor(agent, i); });
+          formationAgents.forEach((agent, i) => applyCryptoColor(agent, agents.length + i));
+        }
+
+        // Earthquake: color by magnitude
+        if (formationType === 'earthquake') {
+          const quakeColor = (mag) => {
+            if (mag >= 7.0) return '#FF0000'; // M7+ = bright red
+            if (mag >= 6.0) return '#FF3322'; // M6+ = red
+            if (mag >= 5.5) return '#FF6622'; // M5.5+ = dark orange
+            if (mag >= 5.0) return '#FF9933'; // M5+ = orange
+            return '#FFCC44'; // M4.5+ = yellow-orange
+          };
+          const applyQuakeColor = (agent, pointIdx) => {
+            if (pointIdx < textPoints.length && earthquakeData) {
+              const lineIdx = textPoints[pointIdx].lineIdx;
+              if (lineIdx >= 0 && lineIdx < earthquakeData.length) {
+                agent.color = quakeColor(earthquakeData[lineIdx].mag);
+              }
+            }
+          };
+          agents.forEach((agent, i) => { if (i < textPoints.length) applyQuakeColor(agent, i); });
+          formationAgents.forEach((agent, i) => applyQuakeColor(agent, agents.length + i));
+        }
+
       } else if (phase === 'formation' && elapsed > (currentShape === 'worldtime' ? PHASE_DURATION.formation : PHASE_DURATION.formation + 1000)) {
         phase = 'scatter';
         phaseTime = time;
@@ -1587,6 +1959,8 @@
         // Re-fetch data for next cycle
         fetchForexData();
         fetchWeatherData();
+        fetchCryptoData();
+        fetchEarthquakeData();
 
         agents.forEach(agent => agent.scatter());
         // Also scatter formation agents instead of removing them instantly
@@ -1623,6 +1997,8 @@
       clockInitialized = false;
       forexIconInitialized = false;
       weatherIconInitialized = false;
+      cryptoIconInitialized = false;
+      quakeIconInitialized = false;
     }
 
     window.addEventListener('resize', resize);
@@ -1665,6 +2041,10 @@
           drawForexIcon();
         } else if (currentShape === 'weather') {
           drawWeatherIcon();
+        } else if (currentShape === 'crypto') {
+          drawCryptoIcon();
+        } else if (currentShape === 'earthquake') {
+          drawQuakeIcon();
         }
       }
       if (phase !== 'formation' && phase !== 'about') {
