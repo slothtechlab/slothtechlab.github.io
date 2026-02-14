@@ -382,6 +382,11 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="css/reset.css?v=2.0">
+  <link rel="stylesheet" href="css/base.css?v=2.0">
+  <link rel="stylesheet" href="css/style.css?v=2.0">
+  <link rel="stylesheet" href="css/sections.css?v=2.0">
+  <link rel="stylesheet" href="css/animations.css?v=2.0">
 </head>
 
 <body>
@@ -423,2218 +428,2224 @@
       </div>
     </div>
     <div class="divider"></div>
-    <div style="display: flex; justify-content: center; gap: 48px;">
-      <div style="text-align: center;">
-        <p class="info-label">Address</p>
-        <p class="info-value dim">&mdash;</p>
-      </div>
-      <div style="text-align: center;">
-        <p class="info-label">Capital</p>
-        <p class="info-value dim">&mdash;</p>
-      </div>
+    <div style="margin-bottom: 20px;">
+      <p class="info-label" style="text-align: center;">ADDRESS</p>
+      <p class="info-value" style="text-align: center;">
+        WARP OMOTESANDO, 4-26-28 Jingumae,<br>Shibuya-ku, Tokyo 150-0001
+      </p>
     </div>
-    <div class="divider" style="margin-top: 24px;"></div>
-    <div style="text-align: center; margin-top: 20px;">
-      <p class="info-label">Contact</p>
-      <p class="info-value"
-        style="font-size: 14px; font-weight: 400; color: rgba(0, 200, 255, 0.85); letter-spacing: 0.1em; text-shadow: 0 0 8px rgba(0, 200, 255, 0.3);">
-        contact@ensemble.[domain]</p>
+    <div class="divider"></div>
+    <div style="text-align: center;">
+      <p class="info-label">CONTACT</p>
+      <a href="mailto:info@ensemble.inc" class="contact-link">info@ensemble.inc</a>
     </div>
   </div>
 
+  <script src="js/gl.js?v=2.0"></script>
+  <script src="js/loader.js?v=2.0"></script>
+  <script src="js/scroll.js?v=2.0"></script>
+  <script src="js/particles.js?v=2.0"></script>
+  <script src="js/app.js?v=2.0"></script>
+  <!-- <script src="js/main.js"></script> -->
   <script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+    // Simple inline script to verify blocking
+    console.log('Index inline script loaded');
+  </script>
+</body>
 
-    let W = window.innerWidth;
-    let H = window.innerHeight;
-    let cx = W / 2;
-    let cy = H / 2;
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
 
-    canvas.width = W;
-    canvas.height = H;
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+  let cx = W / 2;
+  let cy = H / 2;
 
-    // ===== BACKGROUND STARS =====
-    const bgStars = [];
+  canvas.width = W;
+  canvas.height = H;
 
-    function initBgStars() {
-      bgStars.length = 0;
-      const count = rp ? rp.bgStarCount : 400;
-      for (let i = 0; i < count; i++) {
-        bgStars.push({
-          x: Math.random() * W,
-          y: Math.random() * H,
-          size: Math.random() * 1.2 + 0.2,
-          alpha: 0.2 + Math.random() * 0.5
-        });
-      }
+  // ===== BACKGROUND STARS =====
+  const bgStars = [];
+
+  function initBgStars() {
+    bgStars.length = 0;
+    const count = rp ? rp.bgStarCount : 400;
+    for (let i = 0; i < count; i++) {
+      bgStars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: Math.random() * 1.2 + 0.2,
+        alpha: 0.2 + Math.random() * 0.5
+      });
     }
+  }
 
-    // ===== GALAXY (faster, constant rotation) =====
-    const galaxyStars = [];
-    let galaxyRotation = 0;
-    const GALAXY_ROTATION_SPEED = 0.0004;
+  // ===== GALAXY (faster, constant rotation) =====
+  const galaxyStars = [];
+  let galaxyRotation = 0;
+  const GALAXY_ROTATION_SPEED = 0.0004;
 
-    function initGalaxy() {
-      galaxyStars.length = 0;
+  function initGalaxy() {
+    galaxyStars.length = 0;
 
-      const maxRadius = Math.max(W, H) * 0.75;
-      const gm = rp ? rp.galaxyMultiplier : 1.0;
+    const maxRadius = Math.max(W, H) * 0.75;
+    const gm = rp ? rp.galaxyMultiplier : 1.0;
 
-      for (let arm = 0; arm < 4; arm++) {
-        const offset = (arm / 4) * Math.PI * 2;
-        const armStars = Math.floor((arm % 2 === 0 ? 2000 : 1500) * gm);
+    for (let arm = 0; arm < 4; arm++) {
+      const offset = (arm / 4) * Math.PI * 2;
+      const armStars = Math.floor((arm % 2 === 0 ? 2000 : 1500) * gm);
 
-        for (let i = 0; i < armStars; i++) {
-          const t = i / armStars;
-          const angle = t * Math.PI * 4.5 + offset;
-          const radius = 20 + t * maxRadius;
-          const spread = (12 + t * 70) * (rp ? rp.galaxySpreadScale : 1.0);
+      for (let i = 0; i < armStars; i++) {
+        const t = i / armStars;
+        const angle = t * Math.PI * 4.5 + offset;
+        const radius = 20 + t * maxRadius;
+        const spread = (12 + t * 70) * (rp ? rp.galaxySpreadScale : 1.0);
 
-          const brightness = Math.pow(1 - t * 0.5, 1.5);
-
-          galaxyStars.push({
-            angle: angle,
-            radius: radius,
-            offsetX: (Math.random() - 0.5) * spread,
-            offsetY: (Math.random() - 0.5) * spread * 0.25,
-            size: (1 - t * 0.5) * (Math.random() * 1.3 + 0.3),
-            brightness: brightness * (0.4 + Math.random() * 0.6),
-            colorR: Math.floor(255 - t * 30),
-            colorG: Math.floor(248 - t * 50),
-            colorB: Math.floor(225 + t * 30)
-          });
-        }
-      }
-
-      const coreCount = Math.floor(1500 * gm);
-      for (let i = 0; i < coreCount; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const radius = Math.pow(Math.random(), 2) * 150;
+        const brightness = Math.pow(1 - t * 0.5, 1.5);
 
         galaxyStars.push({
           angle: angle,
           radius: radius,
-          offsetX: 0,
-          offsetY: 0,
-          size: Math.random() * 2.2 + 0.4,
-          brightness: 0.6 + Math.random() * 0.4,
-          colorR: 255,
-          colorG: 252,
-          colorB: 245,
-          isCore: true
+          offsetX: (Math.random() - 0.5) * spread,
+          offsetY: (Math.random() - 0.5) * spread * 0.25,
+          size: (1 - t * 0.5) * (Math.random() * 1.3 + 0.3),
+          brightness: brightness * (0.4 + Math.random() * 0.6),
+          colorR: Math.floor(255 - t * 30),
+          colorG: Math.floor(248 - t * 50),
+          colorB: Math.floor(225 + t * 30)
         });
       }
-
-      // Pre-compute color strings for stars to avoid per-frame string allocation
-      for (let i = 0; i < galaxyStars.length; i++) {
-        const s = galaxyStars[i];
-        s.colorStr = `rgb(${s.colorR},${s.colorG},${s.colorB})`;
-      }
     }
 
-    // ===== CACHED BG STARS =====
-    let _bgStarCanvas = null;
-    let _bgStarDimFactor = -1;
+    const coreCount = Math.floor(1500 * gm);
+    for (let i = 0; i < coreCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.pow(Math.random(), 2) * 150;
 
-    function initBgStarCache() {
-      _bgStarCanvas = document.createElement('canvas');
-      _bgStarCanvas.width = W;
-      _bgStarCanvas.height = H;
-      const bctx = _bgStarCanvas.getContext('2d');
-      bctx.fillStyle = '#ffffff';
-
-      for (let i = 0; i < bgStars.length; i++) {
-        const star = bgStars[i];
-        // Pre-draw with max alpha, modulate globalAlpha later
-        bctx.globalAlpha = star.alpha;
-        const s = star.size;
-        if (s < 1.0) {
-          bctx.fillRect(star.x, star.y, s, s);
-        } else {
-          bctx.fillRect(star.x - s * 0.5, star.y - s * 0.5, s, s);
-        }
-      }
-    }
-
-    function drawBgStars() {
-      if (!_bgStarCanvas) initBgStarCache();
-
-      // Background stars always visible (keep space feeling during formation)
-      ctx.globalAlpha = 1;
-      ctx.drawImage(_bgStarCanvas, 0, 0);
-      ctx.globalAlpha = 1;
-    }
-
-    // ===== PRE-RENDERED NEBULA + CORE CACHE =====
-    let _nebulaCanvas = null;
-    let _coreCanvas = null;
-
-    function initNebulaCoreCache() {
-      // Pre-render nebulae at full opacity
-      _nebulaCanvas = document.createElement('canvas');
-      _nebulaCanvas.width = W;
-      _nebulaCanvas.height = H;
-      const nctx = _nebulaCanvas.getContext('2d');
-      const nebulae = [
-        { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
-        { x: 0.7, y: 0.35, r: 0.45, color: [25, 50, 100] },
-        { x: 0.5, y: 0.65, r: 0.55, color: [70, 35, 80] },
-      ];
-      for (let i = 0; i < nebulae.length; i++) {
-        const n = nebulae[i];
-        const grad = nctx.createRadialGradient(
-          n.x * W, n.y * H, 0,
-          n.x * W, n.y * H, n.r * Math.max(W, H)
-        );
-        grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.1)`);
-        grad.addColorStop(0.4, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.05)`);
-        grad.addColorStop(1, 'transparent');
-        nctx.fillStyle = grad;
-        nctx.fillRect(0, 0, W, H);
-      }
-
-      // Pre-render core at full opacity (responsive size)
-      const coreSize = rp.coreSize || 600;
-      const coreHalf = coreSize / 2;
-      _coreCanvas = document.createElement('canvas');
-      _coreCanvas.width = coreSize;
-      _coreCanvas.height = coreSize;
-      const cctx = _coreCanvas.getContext('2d');
-      const coreGrad = cctx.createRadialGradient(coreHalf, coreHalf, 0, coreHalf, coreHalf, coreHalf);
-      coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
-      coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
-      coreGrad.addColorStop(0.4, 'rgba(230, 200, 255, 0.15)');
-      coreGrad.addColorStop(1, 'transparent');
-      cctx.fillStyle = coreGrad;
-      cctx.beginPath();
-      cctx.arc(coreHalf, coreHalf, coreHalf, 0, Math.PI * 2);
-      cctx.fill();
-    }
-
-    function drawGalaxy(time) {
-      galaxyRotation += GALAXY_ROTATION_SPEED;
-
-      // Smoothly transition dim factor
-      const targetDim = (phase === 'formation') ? 0.15 : 1.0;
-      galaxyDimFactor += (targetDim - galaxyDimFactor) * 0.08;
-
-      // Draw cached nebulae with current dim factor
-      if (_nebulaCanvas) {
-        ctx.globalAlpha = galaxyDimFactor;
-        ctx.drawImage(_nebulaCanvas, 0, 0);
-      }
-
-      // Draw cached core with current dim factor (responsive size)
-      if (_coreCanvas) {
-        const coreHalf = _coreCanvas.width / 2;
-        ctx.globalAlpha = galaxyDimFactor;
-        ctx.drawImage(_coreCanvas, cx - coreHalf, cy - coreHalf);
-      }
-
-      // Stars: draw every frame (rotation needs smooth animation)
-      for (let i = 0; i < galaxyStars.length; i++) {
-        const star = galaxyStars[i];
-        const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
-        const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
-        const yScale = rp ? rp.galaxyYScale : 0.3;
-        const y = cy + Math.sin(rotatedAngle) * star.radius * yScale + star.offsetY;
-
-        ctx.globalAlpha = star.brightness * galaxyDimFactor;
-        ctx.fillStyle = star.colorStr;
-        const s = star.size;
-        ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // ===== TEAM COLORS (15 distinct, Greek alphabet) =====
-    const TEAM_COLORS = [
-      { name: 'ALPHA', color: '#00aaff', rgb: [0, 170, 255] },
-      { name: 'BETA', color: '#ff6699', rgb: [255, 102, 153] },
-      { name: 'GAMMA', color: '#44ddaa', rgb: [68, 221, 170] },
-      { name: 'DELTA', color: '#ffaa44', rgb: [255, 170, 68] },
-      { name: 'EPSILON', color: '#aa88ff', rgb: [170, 136, 255] },
-      { name: 'ZETA', color: '#ff88aa', rgb: [255, 136, 170] },
-      { name: 'ETA', color: '#88ffcc', rgb: [136, 255, 204] },
-      { name: 'THETA', color: '#ffcc44', rgb: [255, 204, 68] },
-      { name: 'IOTA', color: '#44aaff', rgb: [68, 170, 255] },
-      { name: 'KAPPA', color: '#cc88ff', rgb: [204, 136, 255] },
-      { name: 'LAMBDA', color: '#88ddff', rgb: [136, 221, 255] },
-      { name: 'MU', color: '#ffaa88', rgb: [255, 170, 136] },
-      { name: 'NU', color: '#88ffaa', rgb: [136, 255, 170] },
-      { name: 'XI', color: '#ff88cc', rgb: [255, 136, 204] },
-      { name: 'OMICRON', color: '#aaffcc', rgb: [170, 255, 204] },
-    ];
-
-    let activeTeams = [];
-    const agents = [];
-    const teamLabels = {};
-    const dataLines = [];
-    const formationAgents = [];
-
-    // ===== RESPONSIVE PARAMETERS =====
-    function getResponsiveParams() {
-      const w = window.innerWidth;
-      if (w < 600) return {
-        agentCount: 300, formationCount: 1500,
-        maxTeams: 7, minTeams: 3,
-        fontSize: 32, spacing: 3,
-        clockFontSize: 36, chartLineWidth: 6,
-        chartMargin: 20, chartDotSize: 6,
-        singleColumn: true, minTeamDist: 0.22,
-        teamLabelSize: 11, teamLabelOffset: 50,
-        teamPosMin: 0.12, teamPosRange: 0.76,
-        iconScale: 0.8,
-        galaxyMultiplier: 0.85, bgStarCount: 250,
-        coreSize: 300, galaxySpreadScale: 0.5, galaxyYScale: 0.45
-      };
-      if (w < 1024) return {
-        agentCount: 500, formationCount: 2500,
-        maxTeams: 8, minTeams: 4,
-        fontSize: 36, spacing: 2,
-        clockFontSize: 38, chartLineWidth: 7,
-        chartMargin: 40, chartDotSize: 7,
-        singleColumn: false, minTeamDist: 0.20,
-        teamLabelSize: 11, teamLabelOffset: 60,
-        teamPosMin: 0.10, teamPosRange: 0.80,
-        iconScale: 0.9,
-        galaxyMultiplier: 0.5, bgStarCount: 250,
-        coreSize: 450, galaxySpreadScale: 0.75, galaxyYScale: 0.35
-      };
-      return {
-        agentCount: 1000, formationCount: 5000,
-        maxTeams: 15, minTeams: 5,
-        fontSize: 44, spacing: 2,
-        clockFontSize: 44, chartLineWidth: 8,
-        chartMargin: 60, chartDotSize: 8,
-        singleColumn: false, minTeamDist: 0.18,
-        teamLabelSize: 11, teamLabelOffset: 70,
-        teamPosMin: 0.10, teamPosRange: 0.80,
-        iconScale: 1.0,
-        galaxyMultiplier: 1.0, bgStarCount: 400,
-        coreSize: 600, galaxySpreadScale: 1.0, galaxyYScale: 0.3
-      };
-    }
-
-    let rp = getResponsiveParams();
-    let AGENT_COUNT = rp.agentCount;
-    let FORMATION_AGENT_COUNT = rp.formationCount;
-
-    // Only worldtime display (no shapes)
-    const DISPLAY_TYPES = ['worldtime'];
-    let currentShape = 'worldtime';
-    let shapeRotation = 0;
-    let textPoints = [];
-    let currentTimeDisplay = '';
-    let timeDisplayIndex = 0;
-    let currentNeonColor = '#00aaff';
-    let galaxyDimFactor = 1.0; // 1.0 = normal, 0.3 = dimmed
-    let formationStartTime = 0; // Track when formation started for animation
-    let formationColorFn = null; // Color function to re-apply every frame during formation
-
-    // Neon colors for visibility
-    const NEON_COLORS = [
-      '#00aaff', // Cyan blue
-      '#00ffaa', // Mint green
-      '#ff00aa', // Pink
-      '#ffaa00', // Orange
-      '#aa00ff', // Purple
-      '#00ffff', // Cyan
-      '#ff6699', // Soft pink
-      '#66ff99', // Light green
-    ];
-
-    // ===== WORLD TIME - 8 countries (4x2 layout) =====
-    const WORLD_CITIES = [
-      // Left column
-      { city: 'JAPAN', tz: 'Asia/Tokyo' },
-      { city: 'USA', tz: 'America/New_York' },
-      { city: 'CHINA', tz: 'Asia/Shanghai' },
-      { city: 'THAILAND', tz: 'Asia/Bangkok' },
-      // Right column
-      { city: 'KOREA', tz: 'Asia/Seoul' },
-      { city: 'DUBAI', tz: 'Asia/Dubai' },
-      { city: 'INDIA', tz: 'Asia/Kolkata' },
-      { city: 'INDONESIA', tz: 'Asia/Jakarta' },
-    ];
-
-    // ===== FOREX DATA =====
-    const FOREX_PAIRS = [
-      { label: 'JPY', code: 'JPY' },
-      { label: 'EUR', code: 'EUR' },
-      { label: 'CNY', code: 'CNY' },
-      { label: 'THB', code: 'THB' },
-      { label: 'KRW', code: 'KRW' },
-      { label: 'AED', code: 'AED' },
-      { label: 'INR', code: 'INR' },
-      { label: 'IDR', code: 'IDR' },
-    ];
-
-    let forexRates = null;
-    let forexLastFetch = 0;
-
-    async function fetchForexData() {
-      const now = Date.now();
-      if (forexRates && now - forexLastFetch < 300000) return; // Cache 5 min
-      try {
-        const res = await fetch('https://open.er-api.com/v6/latest/USD');
-        const data = await res.json();
-        if (data.rates) {
-          forexRates = data.rates;
-          forexLastFetch = now;
-        }
-      } catch (e) {
-        console.warn('Forex API error:', e);
-      }
-    }
-
-    function getForexTexts() {
-      if (!forexRates) return FOREX_PAIRS.map(p => `USD/${p.label}  ---`);
-      return FOREX_PAIRS.map(p => {
-        const rate = forexRates[p.code];
-        if (!rate) return `USD/${p.label}  ---`;
-        // Format: short for large numbers, 2 decimals for small
-        let formatted;
-        if (rate >= 1000) formatted = rate.toFixed(0);
-        else if (rate >= 100) formatted = rate.toFixed(1);
-        else formatted = rate.toFixed(2);
-        return `USD/${p.label}  ${formatted}`;
+      galaxyStars.push({
+        angle: angle,
+        radius: radius,
+        offsetX: 0,
+        offsetY: 0,
+        size: Math.random() * 2.2 + 0.4,
+        brightness: 0.6 + Math.random() * 0.4,
+        colorR: 255,
+        colorG: 252,
+        colorB: 245,
+        isCore: true
       });
     }
 
-    // ===== WEATHER DATA =====
-    const WEATHER_CITIES = [
-      { city: 'TOKYO', lat: 35.6762, lon: 139.6503 },
-      { city: 'NEW YORK', lat: 40.7128, lon: -74.0060 },
-      { city: 'SHANGHAI', lat: 31.2304, lon: 121.4737 },
-      { city: 'BANGKOK', lat: 13.7563, lon: 100.5018 },
-      { city: 'SEOUL', lat: 37.5665, lon: 126.9780 },
-      { city: 'DUBAI', lat: 25.2048, lon: 55.2708 },
-      { city: 'MUMBAI', lat: 19.0760, lon: 72.8777 },
-      { city: 'JAKARTA', lat: -6.2088, lon: 106.8456 },
+    // Pre-compute color strings for stars to avoid per-frame string allocation
+    for (let i = 0; i < galaxyStars.length; i++) {
+      const s = galaxyStars[i];
+      s.colorStr = `rgb(${s.colorR},${s.colorG},${s.colorB})`;
+    }
+  }
+
+  // ===== CACHED BG STARS =====
+  let _bgStarCanvas = null;
+  let _bgStarDimFactor = -1;
+
+  function initBgStarCache() {
+    _bgStarCanvas = document.createElement('canvas');
+    _bgStarCanvas.width = W;
+    _bgStarCanvas.height = H;
+    const bctx = _bgStarCanvas.getContext('2d');
+    bctx.fillStyle = '#ffffff';
+
+    for (let i = 0; i < bgStars.length; i++) {
+      const star = bgStars[i];
+      // Pre-draw with max alpha, modulate globalAlpha later
+      bctx.globalAlpha = star.alpha;
+      const s = star.size;
+      if (s < 1.0) {
+        bctx.fillRect(star.x, star.y, s, s);
+      } else {
+        bctx.fillRect(star.x - s * 0.5, star.y - s * 0.5, s, s);
+      }
+    }
+  }
+
+  function drawBgStars() {
+    if (!_bgStarCanvas) initBgStarCache();
+
+    // Background stars always visible (keep space feeling during formation)
+    ctx.globalAlpha = 1;
+    ctx.drawImage(_bgStarCanvas, 0, 0);
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== PRE-RENDERED NEBULA + CORE CACHE =====
+  let _nebulaCanvas = null;
+  let _coreCanvas = null;
+
+  function initNebulaCoreCache() {
+    // Pre-render nebulae at full opacity
+    _nebulaCanvas = document.createElement('canvas');
+    _nebulaCanvas.width = W;
+    _nebulaCanvas.height = H;
+    const nctx = _nebulaCanvas.getContext('2d');
+    const nebulae = [
+      { x: 0.3, y: 0.4, r: 0.5, color: [50, 25, 90] },
+      { x: 0.7, y: 0.35, r: 0.45, color: [25, 50, 100] },
+      { x: 0.5, y: 0.65, r: 0.55, color: [70, 35, 80] },
     ];
-
-    let weatherData = null;
-    let weatherLastFetch = 0;
-
-    // WMO weather code to symbol
-    function weatherLabel(code) {
-      if (code <= 1) return 'CLEAR';
-      if (code <= 3) return 'CLOUDY';
-      if (code <= 48) return 'FOG';
-      if (code <= 67) return 'RAIN';
-      if (code <= 77) return 'SNOW';
-      if (code <= 82) return 'RAIN';
-      if (code <= 86) return 'SNOW';
-      return 'STORM';
+    for (let i = 0; i < nebulae.length; i++) {
+      const n = nebulae[i];
+      const grad = nctx.createRadialGradient(
+        n.x * W, n.y * H, 0,
+        n.x * W, n.y * H, n.r * Math.max(W, H)
+      );
+      grad.addColorStop(0, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.1)`);
+      grad.addColorStop(0.4, `rgba(${n.color[0]}, ${n.color[1]}, ${n.color[2]}, 0.05)`);
+      grad.addColorStop(1, 'transparent');
+      nctx.fillStyle = grad;
+      nctx.fillRect(0, 0, W, H);
     }
 
-    async function fetchWeatherData() {
-      const now = Date.now();
-      if (weatherData && now - weatherLastFetch < 600000) return; // Cache 10 min
-      try {
-        const lats = WEATHER_CITIES.map(c => c.lat).join(',');
-        const lons = WEATHER_CITIES.map(c => c.lon).join(',');
-        // Open-Meteo doesn't support multi-location in one call, fetch individually
-        const results = await Promise.all(WEATHER_CITIES.map(async (city) => {
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code`);
-          const data = await res.json();
-          return {
-            city: city.city,
-            temp: Math.round(data.current.temperature_2m),
-            code: data.current.weather_code
-          };
-        }));
-        weatherData = results;
-        weatherLastFetch = now;
-      } catch (e) {
-        console.warn('Weather API error:', e);
+    // Pre-render core at full opacity (responsive size)
+    const coreSize = rp.coreSize || 600;
+    const coreHalf = coreSize / 2;
+    _coreCanvas = document.createElement('canvas');
+    _coreCanvas.width = coreSize;
+    _coreCanvas.height = coreSize;
+    const cctx = _coreCanvas.getContext('2d');
+    const coreGrad = cctx.createRadialGradient(coreHalf, coreHalf, 0, coreHalf, coreHalf, coreHalf);
+    coreGrad.addColorStop(0, 'rgba(255, 255, 250, 0.6)');
+    coreGrad.addColorStop(0.15, 'rgba(255, 245, 220, 0.4)');
+    coreGrad.addColorStop(0.4, 'rgba(230, 200, 255, 0.15)');
+    coreGrad.addColorStop(1, 'transparent');
+    cctx.fillStyle = coreGrad;
+    cctx.beginPath();
+    cctx.arc(coreHalf, coreHalf, coreHalf, 0, Math.PI * 2);
+    cctx.fill();
+  }
+
+  function drawGalaxy(time) {
+    galaxyRotation += GALAXY_ROTATION_SPEED;
+
+    // Smoothly transition dim factor
+    const targetDim = (phase === 'formation') ? 0.15 : 1.0;
+    galaxyDimFactor += (targetDim - galaxyDimFactor) * 0.08;
+
+    // Draw cached nebulae with current dim factor
+    if (_nebulaCanvas) {
+      ctx.globalAlpha = galaxyDimFactor;
+      ctx.drawImage(_nebulaCanvas, 0, 0);
+    }
+
+    // Draw cached core with current dim factor (responsive size)
+    if (_coreCanvas) {
+      const coreHalf = _coreCanvas.width / 2;
+      ctx.globalAlpha = galaxyDimFactor;
+      ctx.drawImage(_coreCanvas, cx - coreHalf, cy - coreHalf);
+    }
+
+    // Stars: draw every frame (rotation needs smooth animation)
+    for (let i = 0; i < galaxyStars.length; i++) {
+      const star = galaxyStars[i];
+      const rotatedAngle = star.angle + galaxyRotation * (star.isCore ? 1.5 : 1);
+      const x = cx + Math.cos(rotatedAngle) * star.radius + star.offsetX;
+      const yScale = rp ? rp.galaxyYScale : 0.3;
+      const y = cy + Math.sin(rotatedAngle) * star.radius * yScale + star.offsetY;
+
+      ctx.globalAlpha = star.brightness * galaxyDimFactor;
+      ctx.fillStyle = star.colorStr;
+      const s = star.size;
+      ctx.fillRect(x - s * 0.5, y - s * 0.5, s, s);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ===== TEAM COLORS (15 distinct, Greek alphabet) =====
+  const TEAM_COLORS = [
+    { name: 'ALPHA', color: '#00aaff', rgb: [0, 170, 255] },
+    { name: 'BETA', color: '#ff6699', rgb: [255, 102, 153] },
+    { name: 'GAMMA', color: '#44ddaa', rgb: [68, 221, 170] },
+    { name: 'DELTA', color: '#ffaa44', rgb: [255, 170, 68] },
+    { name: 'EPSILON', color: '#aa88ff', rgb: [170, 136, 255] },
+    { name: 'ZETA', color: '#ff88aa', rgb: [255, 136, 170] },
+    { name: 'ETA', color: '#88ffcc', rgb: [136, 255, 204] },
+    { name: 'THETA', color: '#ffcc44', rgb: [255, 204, 68] },
+    { name: 'IOTA', color: '#44aaff', rgb: [68, 170, 255] },
+    { name: 'KAPPA', color: '#cc88ff', rgb: [204, 136, 255] },
+    { name: 'LAMBDA', color: '#88ddff', rgb: [136, 221, 255] },
+    { name: 'MU', color: '#ffaa88', rgb: [255, 170, 136] },
+    { name: 'NU', color: '#88ffaa', rgb: [136, 255, 170] },
+    { name: 'XI', color: '#ff88cc', rgb: [255, 136, 204] },
+    { name: 'OMICRON', color: '#aaffcc', rgb: [170, 255, 204] },
+  ];
+
+  let activeTeams = [];
+  const agents = [];
+  const teamLabels = {};
+  const dataLines = [];
+  const formationAgents = [];
+
+  // ===== RESPONSIVE PARAMETERS =====
+  function getResponsiveParams() {
+    const w = window.innerWidth;
+    if (w < 600) return {
+      agentCount: 300, formationCount: 1500,
+      maxTeams: 7, minTeams: 3,
+      fontSize: 32, spacing: 3,
+      clockFontSize: 36, chartLineWidth: 6,
+      chartMargin: 20, chartDotSize: 6,
+      singleColumn: true, minTeamDist: 0.22,
+      teamLabelSize: 11, teamLabelOffset: 50,
+      teamPosMin: 0.12, teamPosRange: 0.76,
+      iconScale: 0.8,
+      galaxyMultiplier: 0.85, bgStarCount: 250,
+      coreSize: 300, galaxySpreadScale: 0.5, galaxyYScale: 0.45
+    };
+    if (w < 1024) return {
+      agentCount: 500, formationCount: 2500,
+      maxTeams: 8, minTeams: 4,
+      fontSize: 36, spacing: 2,
+      clockFontSize: 38, chartLineWidth: 7,
+      chartMargin: 40, chartDotSize: 7,
+      singleColumn: false, minTeamDist: 0.20,
+      teamLabelSize: 11, teamLabelOffset: 60,
+      teamPosMin: 0.10, teamPosRange: 0.80,
+      iconScale: 0.9,
+      galaxyMultiplier: 0.5, bgStarCount: 250,
+      coreSize: 450, galaxySpreadScale: 0.75, galaxyYScale: 0.35
+    };
+    return {
+      agentCount: 1000, formationCount: 5000,
+      maxTeams: 15, minTeams: 5,
+      fontSize: 44, spacing: 2,
+      clockFontSize: 44, chartLineWidth: 8,
+      chartMargin: 60, chartDotSize: 8,
+      singleColumn: false, minTeamDist: 0.18,
+      teamLabelSize: 11, teamLabelOffset: 70,
+      teamPosMin: 0.10, teamPosRange: 0.80,
+      iconScale: 1.0,
+      galaxyMultiplier: 1.0, bgStarCount: 400,
+      coreSize: 600, galaxySpreadScale: 1.0, galaxyYScale: 0.3
+    };
+  }
+
+  let rp = getResponsiveParams();
+  let AGENT_COUNT = rp.agentCount;
+  let FORMATION_AGENT_COUNT = rp.formationCount;
+
+  // Only worldtime display (no shapes)
+  const DISPLAY_TYPES = ['worldtime'];
+  let currentShape = 'worldtime';
+  let shapeRotation = 0;
+  let textPoints = [];
+  let currentTimeDisplay = '';
+  let timeDisplayIndex = 0;
+  let currentNeonColor = '#00aaff';
+  let galaxyDimFactor = 1.0; // 1.0 = normal, 0.3 = dimmed
+  let formationStartTime = 0; // Track when formation started for animation
+  let formationColorFn = null; // Color function to re-apply every frame during formation
+
+  // Neon colors for visibility
+  const NEON_COLORS = [
+    '#00aaff', // Cyan blue
+    '#00ffaa', // Mint green
+    '#ff00aa', // Pink
+    '#ffaa00', // Orange
+    '#aa00ff', // Purple
+    '#00ffff', // Cyan
+    '#ff6699', // Soft pink
+    '#66ff99', // Light green
+  ];
+
+  // ===== WORLD TIME - 8 countries (4x2 layout) =====
+  const WORLD_CITIES = [
+    // Left column
+    { city: 'JAPAN', tz: 'Asia/Tokyo' },
+    { city: 'USA', tz: 'America/New_York' },
+    { city: 'CHINA', tz: 'Asia/Shanghai' },
+    { city: 'THAILAND', tz: 'Asia/Bangkok' },
+    // Right column
+    { city: 'KOREA', tz: 'Asia/Seoul' },
+    { city: 'DUBAI', tz: 'Asia/Dubai' },
+    { city: 'INDIA', tz: 'Asia/Kolkata' },
+    { city: 'INDONESIA', tz: 'Asia/Jakarta' },
+  ];
+
+  // ===== FOREX DATA =====
+  const FOREX_PAIRS = [
+    { label: 'JPY', code: 'JPY' },
+    { label: 'EUR', code: 'EUR' },
+    { label: 'CNY', code: 'CNY' },
+    { label: 'THB', code: 'THB' },
+    { label: 'KRW', code: 'KRW' },
+    { label: 'AED', code: 'AED' },
+    { label: 'INR', code: 'INR' },
+    { label: 'IDR', code: 'IDR' },
+  ];
+
+  let forexRates = null;
+  let forexLastFetch = 0;
+
+  async function fetchForexData() {
+    const now = Date.now();
+    if (forexRates && now - forexLastFetch < 300000) return; // Cache 5 min
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/USD');
+      const data = await res.json();
+      if (data.rates) {
+        forexRates = data.rates;
+        forexLastFetch = now;
       }
+    } catch (e) {
+      console.warn('Forex API error:', e);
     }
+  }
 
-    function getWeatherTexts() {
-      if (!weatherData) return WEATHER_CITIES.map(c => `${c.city}  ---`);
-      return weatherData.map(w => {
-        const label = weatherLabel(w.code);
-        return `${w.city}  ${w.temp}C  ${label}`;
-      });
-    }
+  function getForexTexts() {
+    if (!forexRates) return FOREX_PAIRS.map(p => `USD/${p.label}  ---`);
+    return FOREX_PAIRS.map(p => {
+      const rate = forexRates[p.code];
+      if (!rate) return `USD/${p.label}  ---`;
+      // Format: short for large numbers, 2 decimals for small
+      let formatted;
+      if (rate >= 1000) formatted = rate.toFixed(0);
+      else if (rate >= 100) formatted = rate.toFixed(1);
+      else formatted = rate.toFixed(2);
+      return `USD/${p.label}  ${formatted}`;
+    });
+  }
 
-    // ===== CRYPTO DATA (BTC 7-day chart) =====
-    let cryptoData = null;
-    let cryptoLastFetch = 0;
+  // ===== WEATHER DATA =====
+  const WEATHER_CITIES = [
+    { city: 'TOKYO', lat: 35.6762, lon: 139.6503 },
+    { city: 'NEW YORK', lat: 40.7128, lon: -74.0060 },
+    { city: 'SHANGHAI', lat: 31.2304, lon: 121.4737 },
+    { city: 'BANGKOK', lat: 13.7563, lon: 100.5018 },
+    { city: 'SEOUL', lat: 37.5665, lon: 126.9780 },
+    { city: 'DUBAI', lat: 25.2048, lon: 55.2708 },
+    { city: 'MUMBAI', lat: 19.0760, lon: 72.8777 },
+    { city: 'JAKARTA', lat: -6.2088, lon: 106.8456 },
+  ];
 
-    async function fetchCryptoData() {
-      const now = Date.now();
-      if (cryptoData && now - cryptoLastFetch < 300000) return; // Cache 5 min
-      try {
-        const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7&interval=daily');
+  let weatherData = null;
+  let weatherLastFetch = 0;
+
+  // WMO weather code to symbol
+  function weatherLabel(code) {
+    if (code <= 1) return 'CLEAR';
+    if (code <= 3) return 'CLOUDY';
+    if (code <= 48) return 'FOG';
+    if (code <= 67) return 'RAIN';
+    if (code <= 77) return 'SNOW';
+    if (code <= 82) return 'RAIN';
+    if (code <= 86) return 'SNOW';
+    return 'STORM';
+  }
+
+  async function fetchWeatherData() {
+    const now = Date.now();
+    if (weatherData && now - weatherLastFetch < 600000) return; // Cache 10 min
+    try {
+      const lats = WEATHER_CITIES.map(c => c.lat).join(',');
+      const lons = WEATHER_CITIES.map(c => c.lon).join(',');
+      // Open-Meteo doesn't support multi-location in one call, fetch individually
+      const results = await Promise.all(WEATHER_CITIES.map(async (city) => {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code`);
         const data = await res.json();
-        cryptoData = data.prices; // [[timestamp, price], ...]
-        cryptoLastFetch = now;
-      } catch (e) {
-        console.warn('Crypto API error:', e);
-      }
+        return {
+          city: city.city,
+          temp: Math.round(data.current.temperature_2m),
+          code: data.current.weather_code
+        };
+      }));
+      weatherData = results;
+      weatherLastFetch = now;
+    } catch (e) {
+      console.warn('Weather API error:', e);
     }
+  }
 
-    function getCryptoChartPoints() {
-      // Returns points for a dot-based area chart of BTC 7-day price
-      if (!cryptoData || cryptoData.length < 2) return [];
+  function getWeatherTexts() {
+    if (!weatherData) return WEATHER_CITIES.map(c => `${c.city}  ---`);
+    return weatherData.map(w => {
+      const label = weatherLabel(w.code);
+      return `${w.city}  ${w.temp}C  ${label}`;
+    });
+  }
 
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
+  // ===== CRYPTO DATA (BTC 7-day chart) =====
+  let cryptoData = null;
+  let cryptoLastFetch = 0;
 
-      // Chart area - positioned below icon
-      const chartMargin = rp.chartMargin;
-      const chartLeft = chartMargin + (W < 600 ? 20 : 60);
-      const chartRight = W - chartMargin - (W < 600 ? 10 : 40);
-      const chartTop = H / 2 - (W < 600 ? 20 : 40);
-      const chartBottom = H / 2 + (W < 600 ? 80 : 120);
-      const chartW = chartRight - chartLeft;
-      const chartH = chartBottom - chartTop;
+  async function fetchCryptoData() {
+    const now = Date.now();
+    if (cryptoData && now - cryptoLastFetch < 300000) return; // Cache 5 min
+    try {
+      const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7&interval=daily');
+      const data = await res.json();
+      cryptoData = data.prices; // [[timestamp, price], ...]
+      cryptoLastFetch = now;
+    } catch (e) {
+      console.warn('Crypto API error:', e);
+    }
+  }
 
-      // Price range
-      const prices = cryptoData.map(p => p[1]);
-      const minP = Math.min(...prices) * 0.995;
-      const maxP = Math.max(...prices) * 1.005;
-      const rangeP = maxP - minP || 1;
+  function getCryptoChartPoints() {
+    // Returns points for a dot-based area chart of BTC 7-day price
+    if (!cryptoData || cryptoData.length < 2) return [];
 
-      // Draw chart line (thick stroke for visibility)
-      offCtx.strokeStyle = '#fff';
-      offCtx.lineWidth = rp.chartLineWidth;
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+
+    // Chart area - positioned below icon
+    const chartMargin = rp.chartMargin;
+    const chartLeft = chartMargin + (W < 600 ? 20 : 60);
+    const chartRight = W - chartMargin - (W < 600 ? 10 : 40);
+    const chartTop = H / 2 - (W < 600 ? 20 : 40);
+    const chartBottom = H / 2 + (W < 600 ? 80 : 120);
+    const chartW = chartRight - chartLeft;
+    const chartH = chartBottom - chartTop;
+
+    // Price range
+    const prices = cryptoData.map(p => p[1]);
+    const minP = Math.min(...prices) * 0.995;
+    const maxP = Math.max(...prices) * 1.005;
+    const rangeP = maxP - minP || 1;
+
+    // Draw chart line (thick stroke for visibility)
+    offCtx.strokeStyle = '#fff';
+    offCtx.lineWidth = rp.chartLineWidth;
+    offCtx.beginPath();
+    cryptoData.forEach((point, i) => {
+      const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
+      const y = chartBottom - ((point[1] - minP) / rangeP) * chartH;
+      if (i === 0) offCtx.moveTo(x, y);
+      else offCtx.lineTo(x, y);
+    });
+    offCtx.stroke();
+
+    // Data point dots on the line
+    offCtx.fillStyle = '#fff';
+    cryptoData.forEach((point, i) => {
+      const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
+      const y = chartBottom - ((point[1] - minP) / rangeP) * chartH;
       offCtx.beginPath();
-      cryptoData.forEach((point, i) => {
+      offCtx.arc(x, y, rp.chartDotSize, 0, Math.PI * 2);
+      offCtx.fill();
+    });
+
+    // Chart axes
+    offCtx.strokeStyle = '#fff';
+    offCtx.lineWidth = 2.5;
+    offCtx.beginPath();
+    offCtx.moveTo(chartLeft, chartTop - 5);
+    offCtx.lineTo(chartLeft, chartBottom);
+    offCtx.lineTo(chartRight, chartBottom);
+    offCtx.stroke();
+
+    // Title text: BTC 7D $XX,XXX (above chart)
+    const lastPrice = prices[prices.length - 1];
+    const priceStr = `BTC 7D  $${lastPrice.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    offCtx.fillStyle = '#fff';
+    const titleFontSize = W < 600 ? 28 : (W < 1024 ? 40 : 56);
+    offCtx.font = `bold ${titleFontSize}px system-ui`;
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillText(priceStr, W / 2, chartTop - (W < 600 ? 30 : 50));
+
+    // Price change
+    const firstPrice = prices[0];
+    const change = ((lastPrice - firstPrice) / firstPrice * 100).toFixed(1);
+    const changeStr = `${change > 0 ? '+' : ''}${change}%`;
+    const changeFontSize = W < 600 ? 20 : (W < 1024 ? 28 : 36);
+    offCtx.font = `bold ${changeFontSize}px system-ui`;
+    offCtx.fillText(changeStr, W / 2, chartTop - (W < 600 ? 8 : 15));
+
+    // Axis labels (day labels)
+    const labelFontSize = W < 600 ? 10 : (W < 1024 ? 13 : 16);
+    offCtx.font = `bold ${labelFontSize}px system-ui`;
+    const days = ['7D', '6D', '5D', '4D', '3D', '2D', '1D', 'NOW'];
+    cryptoData.forEach((_, i) => {
+      if (i < days.length) {
         const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
-        const y = chartBottom - ((point[1] - minP) / rangeP) * chartH;
-        if (i === 0) offCtx.moveTo(x, y);
-        else offCtx.lineTo(x, y);
-      });
-      offCtx.stroke();
-
-      // Data point dots on the line
-      offCtx.fillStyle = '#fff';
-      cryptoData.forEach((point, i) => {
-        const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
-        const y = chartBottom - ((point[1] - minP) / rangeP) * chartH;
-        offCtx.beginPath();
-        offCtx.arc(x, y, rp.chartDotSize, 0, Math.PI * 2);
-        offCtx.fill();
-      });
-
-      // Chart axes
-      offCtx.strokeStyle = '#fff';
-      offCtx.lineWidth = 2.5;
-      offCtx.beginPath();
-      offCtx.moveTo(chartLeft, chartTop - 5);
-      offCtx.lineTo(chartLeft, chartBottom);
-      offCtx.lineTo(chartRight, chartBottom);
-      offCtx.stroke();
-
-      // Title text: BTC 7D $XX,XXX (above chart)
-      const lastPrice = prices[prices.length - 1];
-      const priceStr = `BTC 7D  $${lastPrice.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-      offCtx.fillStyle = '#fff';
-      const titleFontSize = W < 600 ? 28 : (W < 1024 ? 40 : 56);
-      offCtx.font = `bold ${titleFontSize}px system-ui`;
-      offCtx.textAlign = 'center';
-      offCtx.textBaseline = 'middle';
-      offCtx.fillText(priceStr, W / 2, chartTop - (W < 600 ? 30 : 50));
-
-      // Price change
-      const firstPrice = prices[0];
-      const change = ((lastPrice - firstPrice) / firstPrice * 100).toFixed(1);
-      const changeStr = `${change > 0 ? '+' : ''}${change}%`;
-      const changeFontSize = W < 600 ? 20 : (W < 1024 ? 28 : 36);
-      offCtx.font = `bold ${changeFontSize}px system-ui`;
-      offCtx.fillText(changeStr, W / 2, chartTop - (W < 600 ? 8 : 15));
-
-      // Axis labels (day labels)
-      const labelFontSize = W < 600 ? 10 : (W < 1024 ? 13 : 16);
-      offCtx.font = `bold ${labelFontSize}px system-ui`;
-      const days = ['7D', '6D', '5D', '4D', '3D', '2D', '1D', 'NOW'];
-      cryptoData.forEach((_, i) => {
-        if (i < days.length) {
-          const x = chartLeft + (i / (cryptoData.length - 1)) * chartW;
-          offCtx.fillText(days[i], x, chartBottom + (W < 600 ? 12 : 18));
-        }
-      });
-
-      // Price labels on Y axis
-      offCtx.font = `bold 13px system-ui`;
-      offCtx.textAlign = 'right';
-      for (let i = 0; i <= 4; i++) {
-        const price = minP + (rangeP * i / 4);
-        const y = chartBottom - (i / 4) * chartH;
-        offCtx.fillText(`$${(price / 1000).toFixed(1)}k`, chartLeft - 8, y);
+        offCtx.fillText(days[i], x, chartBottom + (W < 600 ? 12 : 18));
       }
+    });
 
-      const spacing = 2;
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      const points = [];
-      for (let y = 0; y < H; y += spacing) {
-        for (let x = 0; x < W; x += spacing) {
-          const pi = (y * W + x) * 4;
-          if (imageData.data[pi + 3] > 128) {
-            points.push({ x, y, lineIdx: 0 });
-          }
-        }
-      }
-      // Cap points to prevent freeze
-      const MAX_POINTS = 4000;
-      if (points.length > MAX_POINTS) {
-        // Random subsample
-        for (let i = points.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [points[i], points[j]] = [points[j], points[i]];
-        }
-        points.length = MAX_POINTS;
-      }
-      return points;
+    // Price labels on Y axis
+    offCtx.font = `bold 13px system-ui`;
+    offCtx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const price = minP + (rangeP * i / 4);
+      const y = chartBottom - (i / 4) * chartH;
+      offCtx.fillText(`$${(price / 1000).toFixed(1)}k`, chartLeft - 8, y);
     }
 
-    // ===== EARTHQUAKE DATA =====
-    let earthquakeData = null;
-    let earthquakeLastFetch = 0;
-
-    async function fetchEarthquakeData() {
-      const now = Date.now();
-      if (earthquakeData && now - earthquakeLastFetch < 300000) return; // Cache 5 min
-      try {
-        const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson');
-        const data = await res.json();
-        // Sort by magnitude descending, take top 8
-        const sorted = data.features
-          .sort((a, b) => b.properties.mag - a.properties.mag)
-          .slice(0, 8);
-        earthquakeData = sorted.map(f => ({
-          mag: f.properties.mag,
-          place: f.properties.place
-        }));
-        earthquakeLastFetch = now;
-      } catch (e) {
-        console.warn('Earthquake API error:', e);
-      }
-    }
-
-    function getEarthquakeTexts() {
-      if (!earthquakeData || earthquakeData.length === 0) {
-        return ['NO DATA', '', '', '', '', '', '', ''];
-      }
-      return earthquakeData.map(eq => {
-        // Shorten place: take last part after comma, or first word
-        let place = eq.place;
-        const parts = place.split(', ');
-        if (parts.length > 1) place = parts[parts.length - 1];
-        if (place.length > 12) place = place.substring(0, 11) + '.';
-        return `M${eq.mag.toFixed(1)}  ${place.toUpperCase()}`;
-      }).concat(Array(Math.max(0, 8 - earthquakeData.length)).fill(''));
-    }
-
-    // ===== ONLINE: FORMATION ROTATION (dev branch) =====
-    const FORMATION_TYPES = ['worldtime', 'forex', 'weather', 'crypto', 'earthquake'];
-    let formationQueue = [];
-
-    function getNextFormationType() {
-      if (formationQueue.length === 0) {
-        // Shuffle: Fisher-Yates
-        formationQueue = [...FORMATION_TYPES];
-        for (let i = formationQueue.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [formationQueue[i], formationQueue[j]] = [formationQueue[j], formationQueue[i]];
+    const spacing = 2;
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    const points = [];
+    for (let y = 0; y < H; y += spacing) {
+      for (let x = 0; x < W; x += spacing) {
+        const pi = (y * W + x) * 4;
+        if (imageData.data[pi + 3] > 128) {
+          points.push({ x, y, lineIdx: 0 });
         }
       }
-      return formationQueue.shift();
     }
-
-    // ===== OFFLINE: SHAPE ROTATION (original main branch) =====
-    const OFFLINE_SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon'];
-    let offlineShapeQueue = [];
-
-    function getNextOfflineShape() {
-      if (offlineShapeQueue.length === 0) {
-        offlineShapeQueue = [...OFFLINE_SHAPE_TYPES];
-        for (let i = offlineShapeQueue.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [offlineShapeQueue[i], offlineShapeQueue[j]] = [offlineShapeQueue[j], offlineShapeQueue[i]];
-        }
+    // Cap points to prevent freeze
+    const MAX_POINTS = 4000;
+    if (points.length > MAX_POINTS) {
+      // Random subsample
+      for (let i = points.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [points[i], points[j]] = [points[j], points[i]];
       }
-      return offlineShapeQueue.shift();
+      points.length = MAX_POINTS;
     }
+    return points;
+  }
 
-    // Offline: geometric shape position calculator (original main branch code)
-    function getOfflineShapePosition(index, total, shapeType, radius) {
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-      switch (shapeType) {
-        case 'circle': {
-          const r = radius * Math.sqrt(index / total);
-          const theta = index * goldenAngle + shapeRotation;
-          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
-        }
-        case 'square': {
-          const side = radius * 1.8;
-          const gridSize = Math.ceil(Math.sqrt(total));
-          const cellSize = side / gridSize;
-          const row = Math.floor(index / gridSize);
-          const col = index % gridSize;
-          const jx = (Math.sin(index * 1.7 + shapeRotation) * 0.3) * cellSize;
-          const jy = (Math.cos(index * 2.3 + shapeRotation) * 0.3) * cellSize;
-          // Rotate grid position around center
-          const sqX = -side / 2 + col * cellSize + cellSize / 2 + jx;
-          const sqY = -side / 2 + row * cellSize + cellSize / 2 + jy;
-          const cosR = Math.cos(shapeRotation * 0.3);
-          const sinR = Math.sin(shapeRotation * 0.3);
-          return {
-            x: cx + sqX * cosR - sqY * sinR,
-            y: cy + sqX * sinR + sqY * cosR
-          };
-        }
-        case 'triangle': {
-          // Polar approach like hexagon: smooth orbital animation inside triangle boundary
-          const triR = radius * Math.sqrt(index / total);
-          const triTheta = index * goldenAngle + shapeRotation;
-          // Triangle boundary: 3-sided polygon clipping
-          // Vertices at -90°, 30°, 150° (pointing up)
-          const triSector = Math.PI * 2 / 3;
-          const triLocal = ((triTheta - Math.PI * 1.5) % triSector + triSector) % triSector;
-          const triFactor = Math.cos(Math.PI / 3) / Math.cos(triLocal - Math.PI / 3);
-          const triAdj = Math.min(triR, radius * triFactor * Math.sqrt(index / total));
-          return { x: cx + triAdj * Math.cos(triTheta), y: cy + triAdj * Math.sin(triTheta) };
-        }
-        case 'hexagon': {
-          const hexR = radius * Math.sqrt(index / total);
-          const hexTheta = index * goldenAngle + shapeRotation;
-          const hexAngle = hexTheta % (Math.PI / 3);
-          const hexFactor = Math.cos(Math.PI / 6) / Math.cos(hexAngle - Math.PI / 6);
-          const adj = Math.min(hexR, radius * hexFactor * Math.sqrt(index / total));
-          return { x: cx + adj * Math.cos(hexTheta), y: cy + adj * Math.sin(hexTheta) };
-        }
-        case 'star': {
-          const outerR = radius, innerR = radius * 0.38;
-          const angle = index * goldenAngle + shapeRotation - Math.PI / 2;
-          const t = Math.sqrt(index / total);
-          const sec = Math.floor(((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 5));
-          const maxR = sec % 2 === 0 ? outerR : innerR + (outerR - innerR) * 0.4;
-          const r = maxR * t;
-          return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-        }
-        case 'diamond': {
-          const dw = radius * 1.2, dh = radius * 1.6;
-          const t = Math.sqrt(index / total);
-          const theta = index * goldenAngle + shapeRotation;
-          const dx = Math.cos(theta), dy = Math.sin(theta);
-          const l1 = Math.abs(dx) + Math.abs(dy);
-          const r = t / l1;
-          return { x: cx + dx * r * dw, y: cy + dy * r * dh };
-        }
-        case 'heart': {
-          const ht = (index / total) * Math.PI * 2 + shapeRotation;
-          const hr = Math.sqrt(index / total) * radius * 0.9;
-          const hx = 16 * Math.pow(Math.sin(ht), 3);
-          const hy = -(13 * Math.cos(ht) - 5 * Math.cos(2 * ht) - 2 * Math.cos(3 * ht) - Math.cos(4 * ht));
-          const hs = hr / 18;
-          return { x: cx + hx * hs, y: cy + hy * hs };
-        }
-        case 'spiral': {
-          const r = radius * 0.08 * Math.sqrt(index);
-          const theta = index * goldenAngle + shapeRotation;
-          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
-        }
-        case 'ring': {
-          const outer = radius, inner = radius * 0.5;
-          const theta = index * goldenAngle + shapeRotation;
-          const t = index / total;
-          const r = inner + (outer - inner) * t;
-          return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
-        }
-        case 'flower': {
-          const petals = 5;
-          const theta = index * goldenAngle + shapeRotation;
-          const t = Math.sqrt(index / total);
-          const r = radius * Math.cos(petals * theta) * t;
-          return { x: cx + Math.abs(r) * Math.cos(theta), y: cy + Math.abs(r) * Math.sin(theta) };
-        }
-        case 'pentagon': {
-          const pentR = radius * Math.sqrt(index / total);
-          const pentTheta = index * goldenAngle + shapeRotation - Math.PI / 2;
-          const pentAngle = ((pentTheta % (Math.PI * 2 / 5)) + Math.PI * 2 / 5) % (Math.PI * 2 / 5);
-          const pentFactor = Math.cos(Math.PI / 5) / Math.cos(pentAngle - Math.PI / 5);
-          const adj = Math.min(pentR, radius * pentFactor * Math.sqrt(index / total));
-          return { x: cx + adj * Math.cos(pentTheta), y: cy + adj * Math.sin(pentTheta) };
-        }
-        default:
-          return { x: cx, y: cy };
+  // ===== EARTHQUAKE DATA =====
+  let earthquakeData = null;
+  let earthquakeLastFetch = 0;
+
+  async function fetchEarthquakeData() {
+    const now = Date.now();
+    if (earthquakeData && now - earthquakeLastFetch < 300000) return; // Cache 5 min
+    try {
+      const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson');
+      const data = await res.json();
+      // Sort by magnitude descending, take top 8
+      const sorted = data.features
+        .sort((a, b) => b.properties.mag - a.properties.mag)
+        .slice(0, 8);
+      earthquakeData = sorted.map(f => ({
+        mag: f.properties.mag,
+        place: f.properties.place
+      }));
+      earthquakeLastFetch = now;
+    } catch (e) {
+      console.warn('Earthquake API error:', e);
+    }
+  }
+
+  function getEarthquakeTexts() {
+    if (!earthquakeData || earthquakeData.length === 0) {
+      return ['NO DATA', '', '', '', '', '', '', ''];
+    }
+    return earthquakeData.map(eq => {
+      // Shorten place: take last part after comma, or first word
+      let place = eq.place;
+      const parts = place.split(', ');
+      if (parts.length > 1) place = parts[parts.length - 1];
+      if (place.length > 12) place = place.substring(0, 11) + '.';
+      return `M${eq.mag.toFixed(1)}  ${place.toUpperCase()}`;
+    }).concat(Array(Math.max(0, 8 - earthquakeData.length)).fill(''));
+  }
+
+  // ===== ONLINE: FORMATION ROTATION (dev branch) =====
+  const FORMATION_TYPES = ['worldtime', 'forex', 'weather', 'crypto', 'earthquake'];
+  let formationQueue = [];
+
+  function getNextFormationType() {
+    if (formationQueue.length === 0) {
+      // Shuffle: Fisher-Yates
+      formationQueue = [...FORMATION_TYPES];
+      for (let i = formationQueue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [formationQueue[i], formationQueue[j]] = [formationQueue[j], formationQueue[i]];
       }
     }
+    return formationQueue.shift();
+  }
 
-    // Pre-fetch data on load
-    fetchForexData();
-    fetchWeatherData();
-    fetchCryptoData();
-    fetchEarthquakeData();
+  // ===== OFFLINE: SHAPE ROTATION (original main branch) =====
+  const OFFLINE_SHAPE_TYPES = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'heart', 'spiral', 'ring', 'flower', 'pentagon'];
+  let offlineShapeQueue = [];
 
-    function getAllWorldTimes() {
-      const now = new Date();
-      return WORLD_CITIES.map(city => {
-        const time = now.toLocaleTimeString('en-US', {
-          timeZone: city.tz,
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-        return `${city.city} ${time}`;
-      });
+  function getNextOfflineShape() {
+    if (offlineShapeQueue.length === 0) {
+      offlineShapeQueue = [...OFFLINE_SHAPE_TYPES];
+      for (let i = offlineShapeQueue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [offlineShapeQueue[i], offlineShapeQueue[j]] = [offlineShapeQueue[j], offlineShapeQueue[i]];
+      }
     }
+    return offlineShapeQueue.shift();
+  }
 
-    function getWorldTime(cityIndex) {
-      const city = WORLD_CITIES[cityIndex % WORLD_CITIES.length];
-      const now = new Date();
+  // Offline: geometric shape position calculator (original main branch code)
+  function getOfflineShapePosition(index, total, shapeType, radius) {
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    switch (shapeType) {
+      case 'circle': {
+        const r = radius * Math.sqrt(index / total);
+        const theta = index * goldenAngle + shapeRotation;
+        return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
+      }
+      case 'square': {
+        const side = radius * 1.8;
+        const gridSize = Math.ceil(Math.sqrt(total));
+        const cellSize = side / gridSize;
+        const row = Math.floor(index / gridSize);
+        const col = index % gridSize;
+        const jx = (Math.sin(index * 1.7 + shapeRotation) * 0.3) * cellSize;
+        const jy = (Math.cos(index * 2.3 + shapeRotation) * 0.3) * cellSize;
+        // Rotate grid position around center
+        const sqX = -side / 2 + col * cellSize + cellSize / 2 + jx;
+        const sqY = -side / 2 + row * cellSize + cellSize / 2 + jy;
+        const cosR = Math.cos(shapeRotation * 0.3);
+        const sinR = Math.sin(shapeRotation * 0.3);
+        return {
+          x: cx + sqX * cosR - sqY * sinR,
+          y: cy + sqX * sinR + sqY * cosR
+        };
+      }
+      case 'triangle': {
+        // Polar approach like hexagon: smooth orbital animation inside triangle boundary
+        const triR = radius * Math.sqrt(index / total);
+        const triTheta = index * goldenAngle + shapeRotation;
+        // Triangle boundary: 3-sided polygon clipping
+        // Vertices at -90°, 30°, 150° (pointing up)
+        const triSector = Math.PI * 2 / 3;
+        const triLocal = ((triTheta - Math.PI * 1.5) % triSector + triSector) % triSector;
+        const triFactor = Math.cos(Math.PI / 3) / Math.cos(triLocal - Math.PI / 3);
+        const triAdj = Math.min(triR, radius * triFactor * Math.sqrt(index / total));
+        return { x: cx + triAdj * Math.cos(triTheta), y: cy + triAdj * Math.sin(triTheta) };
+      }
+      case 'hexagon': {
+        const hexR = radius * Math.sqrt(index / total);
+        const hexTheta = index * goldenAngle + shapeRotation;
+        const hexAngle = hexTheta % (Math.PI / 3);
+        const hexFactor = Math.cos(Math.PI / 6) / Math.cos(hexAngle - Math.PI / 6);
+        const adj = Math.min(hexR, radius * hexFactor * Math.sqrt(index / total));
+        return { x: cx + adj * Math.cos(hexTheta), y: cy + adj * Math.sin(hexTheta) };
+      }
+      case 'star': {
+        const outerR = radius, innerR = radius * 0.38;
+        const angle = index * goldenAngle + shapeRotation - Math.PI / 2;
+        const t = Math.sqrt(index / total);
+        const sec = Math.floor(((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 5));
+        const maxR = sec % 2 === 0 ? outerR : innerR + (outerR - innerR) * 0.4;
+        const r = maxR * t;
+        return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+      }
+      case 'diamond': {
+        const dw = radius * 1.2, dh = radius * 1.6;
+        const t = Math.sqrt(index / total);
+        const theta = index * goldenAngle + shapeRotation;
+        const dx = Math.cos(theta), dy = Math.sin(theta);
+        const l1 = Math.abs(dx) + Math.abs(dy);
+        const r = t / l1;
+        return { x: cx + dx * r * dw, y: cy + dy * r * dh };
+      }
+      case 'heart': {
+        const ht = (index / total) * Math.PI * 2 + shapeRotation;
+        const hr = Math.sqrt(index / total) * radius * 0.9;
+        const hx = 16 * Math.pow(Math.sin(ht), 3);
+        const hy = -(13 * Math.cos(ht) - 5 * Math.cos(2 * ht) - 2 * Math.cos(3 * ht) - Math.cos(4 * ht));
+        const hs = hr / 18;
+        return { x: cx + hx * hs, y: cy + hy * hs };
+      }
+      case 'spiral': {
+        const r = radius * 0.08 * Math.sqrt(index);
+        const theta = index * goldenAngle + shapeRotation;
+        return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
+      }
+      case 'ring': {
+        const outer = radius, inner = radius * 0.5;
+        const theta = index * goldenAngle + shapeRotation;
+        const t = index / total;
+        const r = inner + (outer - inner) * t;
+        return { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) };
+      }
+      case 'flower': {
+        const petals = 5;
+        const theta = index * goldenAngle + shapeRotation;
+        const t = Math.sqrt(index / total);
+        const r = radius * Math.cos(petals * theta) * t;
+        return { x: cx + Math.abs(r) * Math.cos(theta), y: cy + Math.abs(r) * Math.sin(theta) };
+      }
+      case 'pentagon': {
+        const pentR = radius * Math.sqrt(index / total);
+        const pentTheta = index * goldenAngle + shapeRotation - Math.PI / 2;
+        const pentAngle = ((pentTheta % (Math.PI * 2 / 5)) + Math.PI * 2 / 5) % (Math.PI * 2 / 5);
+        const pentFactor = Math.cos(Math.PI / 5) / Math.cos(pentAngle - Math.PI / 5);
+        const adj = Math.min(pentR, radius * pentFactor * Math.sqrt(index / total));
+        return { x: cx + adj * Math.cos(pentTheta), y: cy + adj * Math.sin(pentTheta) };
+      }
+      default:
+        return { x: cx, y: cy };
+    }
+  }
+
+  // Pre-fetch data on load
+  fetchForexData();
+  fetchWeatherData();
+  fetchCryptoData();
+  fetchEarthquakeData();
+
+  function getAllWorldTimes() {
+    const now = new Date();
+    return WORLD_CITIES.map(city => {
       const time = now.toLocaleTimeString('en-US', {
         timeZone: city.tz,
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
       });
-      return `${city.city}  ${time}`;
+      return `${city.city} ${time}`;
+    });
+  }
+
+  function getWorldTime(cityIndex) {
+    const city = WORLD_CITIES[cityIndex % WORLD_CITIES.length];
+    const now = new Date();
+    const time = now.toLocaleTimeString('en-US', {
+      timeZone: city.tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    return `${city.city}  ${time}`;
+  }
+
+  // ===== ABOUT TEXT TO POINTS =====
+  function aboutTextToPoints(fontSize = 24, spacing = 2) {
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+
+    offCtx.fillStyle = '#fff';
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+
+    const lines = [
+      { text: 'ENSEMBLE INC.', size: fontSize * 1.4, weight: '700' },
+      { text: '', size: fontSize * 0.5, weight: '400' },
+      { text: 'AI AGENT DEVELOPMENT & CONSULTING', size: fontSize * 0.7, weight: '400' },
+      { text: '', size: fontSize * 0.8, weight: '400' },
+      { text: 'CEO    TAKESHI MASUDA', size: fontSize * 0.75, weight: '400' },
+      { text: 'COO    MIKITO MATSUI', size: fontSize * 0.75, weight: '400' },
+    ];
+
+    const totalHeight = lines.reduce((sum, l) => sum + (l.size || fontSize) * 1.5, 0);
+    let y = H / 2 - totalHeight / 2;
+
+    lines.forEach(line => {
+      const s = line.size || fontSize;
+      y += s * 1.5;
+      if (line.text) {
+        offCtx.font = `${line.weight} ${s}px 'Josefin Sans', system-ui`;
+        offCtx.fillText(line.text, W / 2, y);
+      }
+    });
+
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    const points = [];
+    for (let py = 0; py < H; py += spacing) {
+      for (let px = 0; px < W; px += spacing) {
+        const i = (py * W + px) * 4;
+        if (imageData.data[i + 3] > 128) {
+          points.push({ x: px, y: py });
+        }
+      }
+    }
+    return points;
+  }
+
+  // ===== ABOUT STATE =====
+  let aboutActive = false;
+  let aboutFormationAgents = [];
+  let aboutTextPoints = [];
+  let savedPhase = null;
+  let savedPhaseTime = 0;
+
+  function activateAbout() {
+    if (aboutActive) return;
+    aboutActive = true;
+    savedPhase = phase;
+    savedPhaseTime = phaseTime;
+
+    // Generate about text points
+    aboutTextPoints = aboutTextToPoints(26, 2);
+
+    // Pause the normal cycle
+    phase = 'about';
+
+    // Dim galaxy
+    galaxyDimFactor = 0.05;
+
+    // Show HTML panel
+    document.getElementById('aboutOverlay').classList.add('active');
+    document.getElementById('aboutPanel').classList.add('active');
+
+    // Move existing agents to about text positions
+    agents.forEach((agent, i) => {
+      agent.team = null;
+      if (i < aboutTextPoints.length) {
+        agent.targetX = aboutTextPoints[i].x;
+        agent.targetY = aboutTextPoints[i].y;
+      } else {
+        agent.targetX = agent.x + (Math.random() - 0.5) * 200;
+        agent.targetY = agent.y + (Math.random() - 0.5) * 200;
+        agent.scatterTime = Date.now();
+        agent.scatterColor = agent.color;
+      }
+    });
+
+    // Create additional agents from existing positions
+    aboutFormationAgents = [];
+    const needed = Math.max(0, aboutTextPoints.length - agents.length);
+    for (let i = 0; i < needed; i++) {
+      const agent = new Agent(agents.length + i);
+      const source = agents[Math.floor(Math.random() * agents.length)];
+      agent.x = source.x + (Math.random() - 0.5) * 20;
+      agent.y = source.y + (Math.random() - 0.5) * 20;
+      agent.color = source.color;
+      agent.formationIndex = agents.length + i;
+      agent.team = null;
+      const pi = agents.length + i;
+      if (pi < aboutTextPoints.length) {
+        agent.targetX = aboutTextPoints[pi].x;
+        agent.targetY = aboutTextPoints[pi].y;
+      }
+      aboutFormationAgents.push(agent);
+    }
+  }
+
+  function deactivateAbout() {
+    if (!aboutActive) return;
+    aboutActive = false;
+
+    // Restore phase
+    phase = savedPhase || 'scatter';
+    phaseTime = performance.now() - (performance.now() - savedPhaseTime);
+
+    // Restore galaxy
+    galaxyDimFactor = 1.0;
+
+    // Hide HTML panel
+    document.getElementById('aboutOverlay').classList.remove('active');
+    document.getElementById('aboutPanel').classList.remove('active');
+
+    // Scatter agents
+    agents.forEach(agent => {
+      agent.scatterTime = 0;
+      agent.alpha = agent.baseAlpha;
+      agent.size = agent.baseSize;
+      agent.targetX = Math.random() * W;
+      agent.targetY = Math.random() * H;
+    });
+
+    aboutFormationAgents = [];
+    aboutTextPoints = [];
+  }
+
+  // ===== ANIMATED DOT CLOCK =====
+  let clockStaticDots = []; // Cached: circle + markers
+  let clockInitialized = false;
+  let CLOCK_FONT_SIZE = rp.clockFontSize;
+  let CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
+  const CLOCK_Y = () => {
+    // Position icon above text area - using same ratio across all screen sizes
+    return H / 2 - CLOCK_LINE_HEIGHT * 2.8;
+  };
+  let CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
+
+  function initClockDots() {
+    clockStaticDots = [];
+    const iconY = CLOCK_Y();
+    const spacing = 2;
+
+    // Render circle + markers to offscreen canvas
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+    offCtx.strokeStyle = '#fff';
+    offCtx.fillStyle = '#fff';
+
+    // Circle
+    offCtx.lineWidth = 3;
+    offCtx.beginPath();
+    offCtx.arc(W / 2, iconY, CLOCK_RADIUS, 0, Math.PI * 2);
+    offCtx.stroke();
+
+    // 12 markers
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+      const mx = W / 2 + Math.cos(a) * (CLOCK_RADIUS - 5);
+      const my = iconY + Math.sin(a) * (CLOCK_RADIUS - 5);
+      offCtx.beginPath();
+      offCtx.arc(mx, my, i % 3 === 0 ? 3 : 2, 0, Math.PI * 2);
+      offCtx.fill();
     }
 
-    // ===== ABOUT TEXT TO POINTS =====
-    function aboutTextToPoints(fontSize = 24, spacing = 2) {
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
+    // Center dot
+    offCtx.beginPath();
+    offCtx.arc(W / 2, iconY, 3, 0, Math.PI * 2);
+    offCtx.fill();
 
-      offCtx.fillStyle = '#fff';
-      offCtx.textAlign = 'center';
-      offCtx.textBaseline = 'middle';
-
-      const lines = [
-        { text: 'ENSEMBLE INC.', size: fontSize * 1.4, weight: '700' },
-        { text: '', size: fontSize * 0.5, weight: '400' },
-        { text: 'AI AGENT DEVELOPMENT & CONSULTING', size: fontSize * 0.7, weight: '400' },
-        { text: '', size: fontSize * 0.8, weight: '400' },
-        { text: 'CEO    TAKESHI MASUDA', size: fontSize * 0.75, weight: '400' },
-        { text: 'COO    MIKITO MATSUI', size: fontSize * 0.75, weight: '400' },
-      ];
-
-      const totalHeight = lines.reduce((sum, l) => sum + (l.size || fontSize) * 1.5, 0);
-      let y = H / 2 - totalHeight / 2;
-
-      lines.forEach(line => {
-        const s = line.size || fontSize;
-        y += s * 1.5;
-        if (line.text) {
-          offCtx.font = `${line.weight} ${s}px 'Josefin Sans', system-ui`;
-          offCtx.fillText(line.text, W / 2, y);
+    // Convert to dots with stable colors
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    for (let y = 0; y < H; y += spacing) {
+      for (let x = 0; x < W; x += spacing) {
+        const i = (y * W + x) * 4;
+        if (imageData.data[i + 3] > 128) {
+          const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+          clockStaticDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
         }
-      });
+      }
+    }
+    clockInitialized = true;
+  }
 
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      const points = [];
-      for (let py = 0; py < H; py += spacing) {
-        for (let px = 0; px < W; px += spacing) {
-          const i = (py * W + px) * 4;
-          if (imageData.data[i + 3] > 128) {
-            points.push({ x: px, y: py });
+  function drawAnimatedClock() {
+    if (!clockInitialized) initClockDots();
+    const iconY = CLOCK_Y();
+
+    // Draw cached static dots (circle + markers)
+    for (let i = 0; i < clockStaticDots.length; i++) {
+      const dot = clockStaticDots[i];
+      ctx.fillStyle = dot.color;
+      ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+    }
+
+    // Draw animated hands as dots (recalculated each frame)
+    const now = new Date();
+    const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
+    const minutes = now.getMinutes() + seconds / 60;
+    const hours = now.getHours() + minutes / 60;
+
+    const hands = [
+      { angle: (hours / 12) * Math.PI * 2 - Math.PI / 2, length: 0.45, dots: 8, size: 1.8 },
+      { angle: (minutes / 60) * Math.PI * 2 - Math.PI / 2, length: 0.7, dots: 12, size: 1.4 },
+      { angle: (seconds / 60) * Math.PI * 2 - Math.PI / 2, length: 0.75, dots: 14, size: 1.0 },
+    ];
+
+    for (let hi = 0; hi < hands.length; hi++) {
+      const hand = hands[hi];
+      for (let d = 0; d <= hand.dots; d++) {
+        const t = d / hand.dots;
+        const hx = W / 2 + Math.cos(hand.angle) * CLOCK_RADIUS * hand.length * t;
+        const hy = iconY + Math.sin(hand.angle) * CLOCK_RADIUS * hand.length * t;
+        const colorIdx = (Math.floor(hx) * 3 + Math.floor(hy) * 7 + hi) % TEAM_COLORS.length;
+        ctx.fillStyle = TEAM_COLORS[colorIdx].color;
+        const hs = hand.size;
+        ctx.fillRect(hx - hs, hy - hs, hs * 2, hs * 2);
+      }
+    }
+  }
+
+  // ===== FOREX DOT ICON (trend line chart) =====
+  let forexIconDots = [];
+  let forexIconInitialized = false;
+
+  function initForexIcon() {
+    forexIconDots = [];
+    const iconY = CLOCK_Y();
+    const spacing = 2;
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+    offCtx.strokeStyle = '#fff';
+    offCtx.fillStyle = '#fff';
+
+    // $ symbol on the left
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.font = `bold ${CLOCK_RADIUS * 1.6}px system-ui`;
+    offCtx.fillText('$', W / 2 - CLOCK_RADIUS * 1.6, iconY);
+
+    const R = CLOCK_RADIUS;
+    const chartLeft = W / 2 - R * 0.5;
+    const chartRight = W / 2 + R * 1.2;
+    const chartTop = iconY - R * 0.7;
+    const chartBottom = iconY + R * 0.7;
+
+    // Axes
+    offCtx.lineWidth = 2.5;
+    offCtx.beginPath();
+    offCtx.moveTo(chartLeft, chartTop);
+    offCtx.lineTo(chartLeft, chartBottom);
+    offCtx.lineTo(chartRight, chartBottom);
+    offCtx.stroke();
+
+    // Trend line (upward zigzag)
+    offCtx.lineWidth = 3;
+    offCtx.beginPath();
+    const points = [
+      [0, 0.6], [0.15, 0.5], [0.3, 0.7], [0.45, 0.35],
+      [0.6, 0.45], [0.75, 0.2], [0.9, 0.15], [1.0, 0.05]
+    ];
+    points.forEach(([px, py], idx) => {
+      const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
+      const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
+      if (idx === 0) offCtx.moveTo(x, y);
+      else offCtx.lineTo(x, y);
+    });
+    offCtx.stroke();
+
+    // Data point dots
+    points.forEach(([px, py]) => {
+      const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
+      const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
+      offCtx.beginPath();
+      offCtx.arc(x, y, 2.5, 0, Math.PI * 2);
+      offCtx.fill();
+    });
+
+    // Axis ticks
+    for (let i = 0; i < 4; i++) {
+      const tx = chartLeft + (i + 1) * (chartRight - chartLeft) / 4;
+      offCtx.lineWidth = 1;
+      offCtx.beginPath();
+      offCtx.moveTo(tx, chartBottom);
+      offCtx.lineTo(tx, chartBottom + 4);
+      offCtx.stroke();
+    }
+
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    for (let y = 0; y < H; y += spacing) {
+      for (let x = 0; x < W; x += spacing) {
+        const i = (y * W + x) * 4;
+        if (imageData.data[i + 3] > 128) {
+          const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+          forexIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
+        }
+      }
+    }
+    forexIconInitialized = true;
+  }
+
+  function drawForexIcon() {
+    if (!forexIconInitialized) initForexIcon();
+    // Draw static dots
+    for (let i = 0; i < forexIconDots.length; i++) {
+      const dot = forexIconDots[i];
+      ctx.fillStyle = dot.color;
+      ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+    }
+
+    // Animated: data points light up sequentially along trend line
+    const iconY = CLOCK_Y();
+    const R = CLOCK_RADIUS;
+    const chartLeft = W / 2 - R * 0.5;
+    const chartRight = W / 2 + R * 1.2;
+    const chartTop = iconY - R * 0.7;
+    const chartBottom = iconY + R * 0.7;
+    const trendPoints = [
+      [0, 0.6], [0.15, 0.5], [0.3, 0.7], [0.45, 0.35],
+      [0.6, 0.45], [0.75, 0.2], [0.9, 0.15], [1.0, 0.05]
+    ];
+
+    // Sequential pulse: each point lights up for 250ms, then next (3s total cycle)
+    const cycle = 3000;
+    const t = (Date.now() % cycle) / cycle;
+    const activeIdx = Math.floor(t * trendPoints.length);
+
+    trendPoints.forEach(([px, py], idx) => {
+      const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
+      const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
+
+      // Glow intensity: active point is bright, neighbors dimmer
+      let dist = Math.abs(idx - activeIdx);
+      if (dist > trendPoints.length / 2) dist = trendPoints.length - dist;
+      const intensity = Math.max(0, 1 - dist * 0.35);
+
+      if (intensity > 0) {
+        const radius = 4 + intensity * 6;
+        // Green for upward movement, red for downward
+        const nextPy = idx < trendPoints.length - 1 ? trendPoints[idx + 1][1] : py;
+        const moveColor = nextPy < py ? '#00FF88' : '#FF4466'; // up=green, down=red
+
+        const sprite = getForexSprite(moveColor, 10); // Standardize radius for cache hits (max size ~10)
+        const size = radius * 2;
+
+        ctx.globalAlpha = intensity;
+        ctx.drawImage(sprite, x - radius, y - radius, size, size);
+        ctx.globalAlpha = 1;
+      }
+    });
+  }
+
+  // Forex Glow Sprites Cache
+  const _forexSpriteCache = {};
+  function getForexSprite(color, radius) {
+    const key = `${color}-${radius}`;
+    if (_forexSpriteCache[key]) return _forexSpriteCache[key];
+
+    const canvas = document.createElement('canvas');
+    const size = Math.ceil(radius * 2);
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const center = size / 2;
+
+    const grad = ctx.createRadialGradient(center, center, 0, center, center, radius);
+    grad.addColorStop(0, color);
+    grad.addColorStop(0.5, color + '40'); // Hex alpha 40 = ~25%
+    grad.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(center, center, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    _forexSpriteCache[key] = canvas;
+    return canvas;
+  }
+
+  // ===== WEATHER DOT ICON (sun + rain cloud) =====
+  let weatherIconDots = [];
+  let weatherIconInitialized = false;
+
+  function initWeatherIcon() {
+    weatherIconDots = [];
+    const iconY = CLOCK_Y();
+    const spacing = 2;
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+    offCtx.strokeStyle = '#fff';
+    offCtx.fillStyle = '#fff';
+
+    const R = CLOCK_RADIUS * 0.55;
+    const sunX = W / 2 - CLOCK_RADIUS * 0.8;
+
+    // Sun circle (filled)
+    offCtx.lineWidth = 3;
+    offCtx.beginPath();
+    offCtx.arc(sunX, iconY, R, 0, Math.PI * 2);
+    offCtx.fill();
+
+    // Sun rays
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const x1 = sunX + Math.cos(a) * (R + 6);
+      const y1 = iconY + Math.sin(a) * (R + 6);
+      const x2 = sunX + Math.cos(a) * (R + 16);
+      const y2 = iconY + Math.sin(a) * (R + 16);
+      offCtx.lineWidth = i % 2 === 0 ? 3 : 2;
+      offCtx.beginPath();
+      offCtx.moveTo(x1, y1);
+      offCtx.lineTo(x2, y2);
+      offCtx.stroke();
+    }
+
+    // Cloud (filled, offset right)
+    const cx = W / 2 + CLOCK_RADIUS * 1.0;
+    const cy = iconY + CLOCK_RADIUS * 0.15;
+    offCtx.beginPath();
+    offCtx.arc(cx - 12, cy, 11, 0, Math.PI * 2);
+    offCtx.arc(cx + 6, cy - 5, 14, 0, Math.PI * 2);
+    offCtx.arc(cx + 22, cy, 10, 0, Math.PI * 2);
+    offCtx.fill();
+
+    // Separate sun dots and cloud dots by x position
+    const cloudLeftEdge = cx - 24;
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    for (let y = 0; y < H; y += spacing) {
+      for (let x = 0; x < W; x += spacing) {
+        const i = (y * W + x) * 4;
+        if (imageData.data[i + 3] > 128) {
+          const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+          const isSun = x < cloudLeftEdge;
+          weatherIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color, isSun });
+        }
+      }
+    }
+    weatherIconInitialized = true;
+  }
+
+  function drawWeatherIcon() {
+    if (!weatherIconInitialized) initWeatherIcon();
+    const iconY = CLOCK_Y();
+    const now = Date.now();
+
+    // Draw static dots (skip per-dot shimmer for perf, use batch alpha)
+    const shimmerBase = Math.sin(now / 300) * 0.15 + 0.85;
+    ctx.globalAlpha = shimmerBase;
+    for (let i = 0; i < weatherIconDots.length; i++) {
+      const dot = weatherIconDots[i];
+      ctx.fillStyle = dot.color;
+      ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+    }
+    ctx.globalAlpha = 1;
+
+    // Animated: 3 tiny orbiting particles around the sun
+    const sunX = W / 2 - CLOCK_RADIUS * 0.8;
+    const orbitR = CLOCK_RADIUS * 0.55 + 20;
+    for (let i = 0; i < 3; i++) {
+      const speed = 0.8 + i * 0.3; // Different speeds
+      const a = (now / 1000) * speed + (i * Math.PI * 2 / 3);
+      const ox = sunX + Math.cos(a) * orbitR;
+      const oy = iconY + Math.sin(a) * (orbitR * 0.6); // Elliptical orbit
+      const trail = Math.sin(now / 200 + i) * 0.3 + 0.7;
+
+      ctx.globalAlpha = trail;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ===== CRYPTO DOT ICON (₿ mark) =====
+  let cryptoIconDots = [];
+  let cryptoIconInitialized = false;
+
+  function initCryptoIcon() {
+    cryptoIconDots = [];
+    const iconY = CLOCK_Y();
+    const spacing = 2;
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+
+    // Draw ₿ symbol - higher position to avoid chart overlap
+    const cryptoIconY = iconY - 80;
+    offCtx.fillStyle = '#fff';
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.font = `bold ${CLOCK_RADIUS * 2.4}px system-ui`;
+    offCtx.fillText('₿', W / 2, cryptoIconY);
+
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    for (let y = 0; y < H; y += spacing) {
+      for (let x = 0; x < W; x += spacing) {
+        const i = (y * W + x) * 4;
+        if (imageData.data[i + 3] > 128) {
+          const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+          cryptoIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
+        }
+      }
+    }
+    cryptoIconInitialized = true;
+  }
+
+  function drawCryptoIcon() {
+    if (!cryptoIconInitialized) initCryptoIcon();
+    const iconY = CLOCK_Y();
+    const now = Date.now();
+
+    // Draw static dots
+    const cryptoShimmer = Math.sin(now / 250) * 0.12 + 0.88;
+    ctx.globalAlpha = cryptoShimmer;
+    for (let i = 0; i < cryptoIconDots.length; i++) {
+      const dot = cryptoIconDots[i];
+      ctx.fillStyle = dot.color;
+      ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+    }
+    ctx.globalAlpha = 1;
+
+    // Animated: pulsing golden ring around ₿
+    const cryptoIconY = iconY - 80;
+    const pulseT = (Math.sin(now / 600) + 1) / 2;
+    const ringR = CLOCK_RADIUS * 1.2 + pulseT * 8;
+    ctx.strokeStyle = `rgba(255, 200, 50, ${0.15 + pulseT * 0.15})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(W / 2, cryptoIconY, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // ===== EARTHQUAKE DOT ICON (seismic waves) =====
+  let quakeIconDots = [];
+  let quakeIconInitialized = false;
+
+  function initQuakeIcon() {
+    quakeIconDots = [];
+    const iconY = CLOCK_Y();
+    const spacing = 2;
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+    offCtx.strokeStyle = '#fff';
+    offCtx.fillStyle = '#fff';
+
+    // Center dot
+    offCtx.beginPath();
+    offCtx.arc(W / 2, iconY, 4, 0, Math.PI * 2);
+    offCtx.fill();
+
+    // Concentric wave rings
+    for (let i = 1; i <= 3; i++) {
+      offCtx.lineWidth = 3 - i * 0.5;
+      offCtx.beginPath();
+      offCtx.arc(W / 2, iconY, CLOCK_RADIUS * 0.3 * i, Math.PI * 0.15, Math.PI * 0.85);
+      offCtx.stroke();
+      offCtx.beginPath();
+      offCtx.arc(W / 2, iconY, CLOCK_RADIUS * 0.3 * i, Math.PI * 1.15, Math.PI * 1.85);
+      offCtx.stroke();
+    }
+
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    for (let y = 0; y < H; y += spacing) {
+      for (let x = 0; x < W; x += spacing) {
+        const i = (y * W + x) * 4;
+        if (imageData.data[i + 3] > 128) {
+          const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
+          quakeIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
+        }
+      }
+    }
+    quakeIconInitialized = true;
+  }
+
+  function drawQuakeIcon() {
+    if (!quakeIconInitialized) initQuakeIcon();
+    const iconY = CLOCK_Y();
+    const now = Date.now();
+
+    // Draw static dots
+    for (let i = 0; i < quakeIconDots.length; i++) {
+      const dot = quakeIconDots[i];
+      ctx.fillStyle = dot.color;
+      ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+    }
+
+    // Animated: expanding wave ring from center
+    const waveCycle = 2000;
+    const waveT = (now % waveCycle) / waveCycle;
+    const waveR = waveT * CLOCK_RADIUS * 1.2;
+    const waveAlpha = 1 - waveT;
+
+    ctx.strokeStyle = `rgba(255, 100, 80, ${waveAlpha * 0.6})`;
+    ctx.lineWidth = 2 - waveT;
+    ctx.beginPath();
+    ctx.arc(W / 2, iconY, waveR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Second wave offset
+    const waveT2 = ((now + 1000) % waveCycle) / waveCycle;
+    const waveR2 = waveT2 * CLOCK_RADIUS * 1.2;
+    const waveAlpha2 = 1 - waveT2;
+
+    ctx.strokeStyle = `rgba(255, 100, 80, ${waveAlpha2 * 0.4})`;
+    ctx.lineWidth = 1.5 - waveT2;
+    ctx.beginPath();
+    ctx.arc(W / 2, iconY, waveR2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // ===== TEXT TO POINTS CONVERSION (responsive layout) =====
+  function textToPoints(times, fontSize, spacing) {
+    fontSize = fontSize || rp.fontSize;
+    spacing = spacing || rp.spacing;
+    const offCanvas = document.createElement('canvas');
+    const offCtx = offCanvas.getContext('2d');
+    offCanvas.width = W;
+    offCanvas.height = H;
+
+    offCtx.fillStyle = '#fff';
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+
+    const lineHeight = fontSize * 1.3;
+
+    // Responsive layout: single column on mobile, 2 columns on tablet/desktop
+    offCtx.font = `bold ${fontSize}px system-ui`;
+
+    const lineCenters = [];
+    if (rp.singleColumn) {
+      // Mobile: single column, show 6 items, positioned below icon
+      const displayTimes = times.slice(0, 6);
+      const totalLines = displayTimes.length;
+      // Position text block so it starts below the icon area
+      // CLOCK_Y ≈ H/2 - CLOCK_LINE_HEIGHT*2.8, icon bottom ≈ CLOCK_Y + CLOCK_RADIUS
+      // We want startY to be well below that
+      const startY = H * 0.45;
+      displayTimes.forEach((time, i) => {
+        const x = W / 2;
+        const y = startY + i * lineHeight;
+        offCtx.fillText(time, x, y);
+        lineCenters.push({ idx: i, x: x, y: y, col: 0 });
+      });
+    } else {
+      // Desktop/Tablet: 2 columns
+      const columnGap = W < 1024 ? 80 : 115;
+      const colOffset = W < 1024 ? 100 : 150;
+      const leftX = W / 2 - columnGap - colOffset;
+      const rightX = W / 2 + columnGap + colOffset;
+      const startY = H / 2 - lineHeight * 1.0;
+      times.forEach((time, i) => {
+        const col = i < 4 ? 0 : 1;
+        const row = i % 4;
+        const x = col === 0 ? leftX : rightX;
+        const y = startY + row * lineHeight;
+        offCtx.fillText(time, x, y);
+        lineCenters.push({ idx: i, x: x, y: y, col: col });
+      });
+    }
+
+    const imageData = offCtx.getImageData(0, 0, W, H);
+    const points = [];
+
+    for (let y = 0; y < H; y += spacing) {
+      for (let x = 0; x < W; x += spacing) {
+        const pi = (y * W + x) * 4;
+        if (imageData.data[pi + 3] > 128) {
+          // Determine lineIdx by closest line center Y (within same column)
+          let lineIdx = 0;
+          let minDist = Infinity;
+          // In single column mode, everything is column 0 regardless of x position
+          const col = rp.singleColumn ? 0 : (x < W / 2 ? 0 : 1);
+          for (const lc of lineCenters) {
+            if (lc.col === col) {
+              const dist = Math.abs(y - lc.y);
+              if (dist < minDist) {
+                minDist = dist;
+                lineIdx = lc.idx;
+              }
+            }
           }
+          points.push({ x, y, lineIdx });
         }
       }
-      return points;
     }
 
-    // ===== ABOUT STATE =====
-    let aboutActive = false;
-    let aboutFormationAgents = [];
-    let aboutTextPoints = [];
-    let savedPhase = null;
-    let savedPhaseTime = 0;
-
-    function activateAbout() {
-      if (aboutActive) return;
-      aboutActive = true;
-      savedPhase = phase;
-      savedPhaseTime = phaseTime;
-
-      // Generate about text points
-      aboutTextPoints = aboutTextToPoints(26, 2);
-
-      // Pause the normal cycle
-      phase = 'about';
-
-      // Dim galaxy
-      galaxyDimFactor = 0.05;
-
-      // Show HTML panel
-      document.getElementById('aboutOverlay').classList.add('active');
-      document.getElementById('aboutPanel').classList.add('active');
-
-      // Move existing agents to about text positions
-      agents.forEach((agent, i) => {
-        agent.team = null;
-        if (i < aboutTextPoints.length) {
-          agent.targetX = aboutTextPoints[i].x;
-          agent.targetY = aboutTextPoints[i].y;
-        } else {
-          agent.targetX = agent.x + (Math.random() - 0.5) * 200;
-          agent.targetY = agent.y + (Math.random() - 0.5) * 200;
-          agent.scatterTime = Date.now();
-          agent.scatterColor = agent.color;
-        }
-      });
-
-      // Create additional agents from existing positions
-      aboutFormationAgents = [];
-      const needed = Math.max(0, aboutTextPoints.length - agents.length);
-      for (let i = 0; i < needed; i++) {
-        const agent = new Agent(agents.length + i);
-        const source = agents[Math.floor(Math.random() * agents.length)];
-        agent.x = source.x + (Math.random() - 0.5) * 20;
-        agent.y = source.y + (Math.random() - 0.5) * 20;
-        agent.color = source.color;
-        agent.formationIndex = agents.length + i;
-        agent.team = null;
-        const pi = agents.length + i;
-        if (pi < aboutTextPoints.length) {
-          agent.targetX = aboutTextPoints[pi].x;
-          agent.targetY = aboutTextPoints[pi].y;
-        }
-        aboutFormationAgents.push(agent);
+    // Cap points to FORMATION_AGENT_COUNT to prevent creating too many agents
+    // Weather/earthquake text can produce 20,000-50,000 points at spacing=2
+    if (points.length > FORMATION_AGENT_COUNT) {
+      const step = points.length / FORMATION_AGENT_COUNT;
+      const sampled = [];
+      for (let i = 0; i < FORMATION_AGENT_COUNT; i++) {
+        sampled.push(points[Math.floor(i * step)]);
       }
+      return sampled;
     }
 
-    function deactivateAbout() {
-      if (!aboutActive) return;
-      aboutActive = false;
+    return points;
+  }
 
-      // Restore phase
-      phase = savedPhase || 'scatter';
-      phaseTime = performance.now() - (performance.now() - savedPhaseTime);
+  function blendColors(rgb1, rgb2) {
+    return [
+      Math.floor((rgb1[0] + rgb2[0]) / 2),
+      Math.floor((rgb1[1] + rgb2[1]) / 2),
+      Math.floor((rgb1[2] + rgb2[2]) / 2)
+    ];
+  }
 
-      // Restore galaxy
-      galaxyDimFactor = 1.0;
-
-      // Hide HTML panel
-      document.getElementById('aboutOverlay').classList.remove('active');
-      document.getElementById('aboutPanel').classList.remove('active');
-
-      // Scatter agents
-      agents.forEach(agent => {
-        agent.scatterTime = 0;
-        agent.alpha = agent.baseAlpha;
-        agent.size = agent.baseSize;
-        agent.targetX = Math.random() * W;
-        agent.targetY = Math.random() * H;
-      });
-
-      aboutFormationAgents = [];
-      aboutTextPoints = [];
+  // Online: get position from pre-computed text points (dev branch)
+  function getShapePosition(index, total, shapeType, radius) {
+    if (index < textPoints.length) {
+      return textPoints[index];
     }
-
-    // ===== ANIMATED DOT CLOCK =====
-    let clockStaticDots = []; // Cached: circle + markers
-    let clockInitialized = false;
-    let CLOCK_FONT_SIZE = rp.clockFontSize;
-    let CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
-    const CLOCK_Y = () => {
-      // Position icon above text area - using same ratio across all screen sizes
-      return H / 2 - CLOCK_LINE_HEIGHT * 2.8;
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H
     };
-    let CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
+  }
 
-    function initClockDots() {
-      clockStaticDots = [];
-      const iconY = CLOCK_Y();
-      const spacing = 2;
+  // ===== GLOW SPRITE CACHE =====
+  const _glowSpriteCache = {};
+  const GLOW_SPRITE_SIZE = 32;
+  function getGlowSprite(color) {
+    if (_glowSpriteCache[color]) return _glowSpriteCache[color];
+    const s = GLOW_SPRITE_SIZE;
+    const c = document.createElement('canvas');
+    c.width = s; c.height = s;
+    const g = c.getContext('2d');
+    const half = s / 2;
+    const grad = g.createRadialGradient(half, half, 0, half, half, half);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, 'transparent');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, s, s);
+    _glowSpriteCache[color] = c;
+    return c;
+  }
 
-      // Render circle + markers to offscreen canvas
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
-      offCtx.strokeStyle = '#fff';
-      offCtx.fillStyle = '#fff';
-
-      // Circle
-      offCtx.lineWidth = 3;
-      offCtx.beginPath();
-      offCtx.arc(W / 2, iconY, CLOCK_RADIUS, 0, Math.PI * 2);
-      offCtx.stroke();
-
-      // 12 markers
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
-        const mx = W / 2 + Math.cos(a) * (CLOCK_RADIUS - 5);
-        const my = iconY + Math.sin(a) * (CLOCK_RADIUS - 5);
-        offCtx.beginPath();
-        offCtx.arc(mx, my, i % 3 === 0 ? 3 : 2, 0, Math.PI * 2);
-        offCtx.fill();
-      }
-
-      // Center dot
-      offCtx.beginPath();
-      offCtx.arc(W / 2, iconY, 3, 0, Math.PI * 2);
-      offCtx.fill();
-
-      // Convert to dots with stable colors
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      for (let y = 0; y < H; y += spacing) {
-        for (let x = 0; x < W; x += spacing) {
-          const i = (y * W + x) * 4;
-          if (imageData.data[i + 3] > 128) {
-            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
-            clockStaticDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
-          }
-        }
-      }
-      clockInitialized = true;
+  class Agent {
+    constructor(id) {
+      this.id = id;
+      this.x = Math.random() * W;
+      this.y = Math.random() * H;
+      this.targetX = this.x;
+      this.targetY = this.y;
+      this.vx = 0;
+      this.vy = 0;
+      this.size = Math.random() * 1.2 + 0.4;
+      this.team = null;
+      this.color = '#ffffff';
+      this.alpha = 0.5 + Math.random() * 0.5;
+      this.formationIndex = id;
+      this.scatterTime = 0;
+      this.baseSize = this.size;
+      this.baseAlpha = this.alpha;
     }
 
-    function drawAnimatedClock() {
-      if (!clockInitialized) initClockDots();
-      const iconY = CLOCK_Y();
+    assignTeam(team) {
+      this.team = team;
+      this.color = team ? team.color : '#ffffff';
 
-      // Draw cached static dots (circle + markers)
-      for (let i = 0; i < clockStaticDots.length; i++) {
-        const dot = clockStaticDots[i];
-        ctx.fillStyle = dot.color;
-        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
+      if (team) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 55 + 10;
+        this.targetX = team.x * W + Math.cos(angle) * dist;
+        this.targetY = team.y * H + Math.sin(angle) * dist;
       }
-
-      // Draw animated hands as dots (recalculated each frame)
-      const now = new Date();
-      const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
-      const minutes = now.getMinutes() + seconds / 60;
-      const hours = now.getHours() + minutes / 60;
-
-      const hands = [
-        { angle: (hours / 12) * Math.PI * 2 - Math.PI / 2, length: 0.45, dots: 8, size: 1.8 },
-        { angle: (minutes / 60) * Math.PI * 2 - Math.PI / 2, length: 0.7, dots: 12, size: 1.4 },
-        { angle: (seconds / 60) * Math.PI * 2 - Math.PI / 2, length: 0.75, dots: 14, size: 1.0 },
-      ];
-
-      for (let hi = 0; hi < hands.length; hi++) {
-        const hand = hands[hi];
-        for (let d = 0; d <= hand.dots; d++) {
-          const t = d / hand.dots;
-          const hx = W / 2 + Math.cos(hand.angle) * CLOCK_RADIUS * hand.length * t;
-          const hy = iconY + Math.sin(hand.angle) * CLOCK_RADIUS * hand.length * t;
-          const colorIdx = (Math.floor(hx) * 3 + Math.floor(hy) * 7 + hi) % TEAM_COLORS.length;
-          ctx.fillStyle = TEAM_COLORS[colorIdx].color;
-          const hs = hand.size;
-          ctx.fillRect(hx - hs, hy - hs, hs * 2, hs * 2);
-        }
-      }
+      // Reset fade when joining team
+      this.scatterTime = 0;
+      this.alpha = this.baseAlpha;
+      this.size = this.baseSize;
     }
 
-    // ===== FOREX DOT ICON (trend line chart) =====
-    let forexIconDots = [];
-    let forexIconInitialized = false;
-
-    function initForexIcon() {
-      forexIconDots = [];
-      const iconY = CLOCK_Y();
-      const spacing = 2;
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
-      offCtx.strokeStyle = '#fff';
-      offCtx.fillStyle = '#fff';
-
-      // $ symbol on the left
-      offCtx.textAlign = 'center';
-      offCtx.textBaseline = 'middle';
-      offCtx.font = `bold ${CLOCK_RADIUS * 1.6}px system-ui`;
-      offCtx.fillText('$', W / 2 - CLOCK_RADIUS * 1.6, iconY);
-
-      const R = CLOCK_RADIUS;
-      const chartLeft = W / 2 - R * 0.5;
-      const chartRight = W / 2 + R * 1.2;
-      const chartTop = iconY - R * 0.7;
-      const chartBottom = iconY + R * 0.7;
-
-      // Axes
-      offCtx.lineWidth = 2.5;
-      offCtx.beginPath();
-      offCtx.moveTo(chartLeft, chartTop);
-      offCtx.lineTo(chartLeft, chartBottom);
-      offCtx.lineTo(chartRight, chartBottom);
-      offCtx.stroke();
-
-      // Trend line (upward zigzag)
-      offCtx.lineWidth = 3;
-      offCtx.beginPath();
-      const points = [
-        [0, 0.6], [0.15, 0.5], [0.3, 0.7], [0.45, 0.35],
-        [0.6, 0.45], [0.75, 0.2], [0.9, 0.15], [1.0, 0.05]
-      ];
-      points.forEach(([px, py], idx) => {
-        const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
-        const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
-        if (idx === 0) offCtx.moveTo(x, y);
-        else offCtx.lineTo(x, y);
-      });
-      offCtx.stroke();
-
-      // Data point dots
-      points.forEach(([px, py]) => {
-        const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
-        const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
-        offCtx.beginPath();
-        offCtx.arc(x, y, 2.5, 0, Math.PI * 2);
-        offCtx.fill();
-      });
-
-      // Axis ticks
-      for (let i = 0; i < 4; i++) {
-        const tx = chartLeft + (i + 1) * (chartRight - chartLeft) / 4;
-        offCtx.lineWidth = 1;
-        offCtx.beginPath();
-        offCtx.moveTo(tx, chartBottom);
-        offCtx.lineTo(tx, chartBottom + 4);
-        offCtx.stroke();
-      }
-
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      for (let y = 0; y < H; y += spacing) {
-        for (let x = 0; x < W; x += spacing) {
-          const i = (y * W + x) * 4;
-          if (imageData.data[i + 3] > 128) {
-            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
-            forexIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
-          }
-        }
-      }
-      forexIconInitialized = true;
+    assignFormation(shapeType, radius) {
+      // Offline shapes use getOfflineShapePosition, online uses getShapePosition
+      const isOfflineShape = OFFLINE_SHAPE_TYPES.includes(shapeType);
+      const pos = isOfflineShape
+        ? getOfflineShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius)
+        : getShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius);
+      this.targetX = pos.x;
+      this.targetY = pos.y;
     }
 
-    function drawForexIcon() {
-      if (!forexIconInitialized) initForexIcon();
-      // Draw static dots
-      for (let i = 0; i < forexIconDots.length; i++) {
-        const dot = forexIconDots[i];
-        ctx.fillStyle = dot.color;
-        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
-      }
-
-      // Animated: data points light up sequentially along trend line
-      const iconY = CLOCK_Y();
-      const R = CLOCK_RADIUS;
-      const chartLeft = W / 2 - R * 0.5;
-      const chartRight = W / 2 + R * 1.2;
-      const chartTop = iconY - R * 0.7;
-      const chartBottom = iconY + R * 0.7;
-      const trendPoints = [
-        [0, 0.6], [0.15, 0.5], [0.3, 0.7], [0.45, 0.35],
-        [0.6, 0.45], [0.75, 0.2], [0.9, 0.15], [1.0, 0.05]
-      ];
-
-      // Sequential pulse: each point lights up for 250ms, then next (3s total cycle)
-      const cycle = 3000;
-      const t = (Date.now() % cycle) / cycle;
-      const activeIdx = Math.floor(t * trendPoints.length);
-
-      trendPoints.forEach(([px, py], idx) => {
-        const x = chartLeft + 6 + px * (chartRight - chartLeft - 12);
-        const y = chartBottom - 6 - (1 - py) * (chartBottom - chartTop - 12);
-
-        // Glow intensity: active point is bright, neighbors dimmer
-        let dist = Math.abs(idx - activeIdx);
-        if (dist > trendPoints.length / 2) dist = trendPoints.length - dist;
-        const intensity = Math.max(0, 1 - dist * 0.35);
-
-        if (intensity > 0) {
-          const radius = 4 + intensity * 6;
-          // Green for upward movement, red for downward
-          const nextPy = idx < trendPoints.length - 1 ? trendPoints[idx + 1][1] : py;
-          const moveColor = nextPy < py ? '#00FF88' : '#FF4466'; // up=green, down=red
-
-          const sprite = getForexSprite(moveColor, 10); // Standardize radius for cache hits (max size ~10)
-          const size = radius * 2;
-
-          ctx.globalAlpha = intensity;
-          ctx.drawImage(sprite, x - radius, y - radius, size, size);
-          ctx.globalAlpha = 1;
-        }
-      });
+    scatter() {
+      this.team = null;
+      // Keep current color, don't reset to white immediately
+      this.scatterColor = this.color;
+      this.targetX = Math.random() * W;
+      this.targetY = Math.random() * H;
+      this.scatterTime = Date.now();
     }
 
-    // Forex Glow Sprites Cache
-    const _forexSpriteCache = {};
-    function getForexSprite(color, radius) {
-      const key = `${color}-${radius}`;
-      if (_forexSpriteCache[key]) return _forexSpriteCache[key];
+    update() {
+      // Faster gathering speed
+      const lerpFactor = 0.06;
+      this.x += (this.targetX - this.x) * lerpFactor;
+      this.y += (this.targetY - this.y) * lerpFactor;
 
-      const canvas = document.createElement('canvas');
-      const size = Math.ceil(radius * 2);
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      const center = size / 2;
-
-      const grad = ctx.createRadialGradient(center, center, 0, center, center, radius);
-      grad.addColorStop(0, color);
-      grad.addColorStop(0.5, color + '40'); // Hex alpha 40 = ~25%
-      grad.addColorStop(1, 'transparent');
-
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(center, center, radius, 0, Math.PI * 2);
-      ctx.fill();
-
-      _forexSpriteCache[key] = canvas;
-      return canvas;
-    }
-
-    // ===== WEATHER DOT ICON (sun + rain cloud) =====
-    let weatherIconDots = [];
-    let weatherIconInitialized = false;
-
-    function initWeatherIcon() {
-      weatherIconDots = [];
-      const iconY = CLOCK_Y();
-      const spacing = 2;
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
-      offCtx.strokeStyle = '#fff';
-      offCtx.fillStyle = '#fff';
-
-      const R = CLOCK_RADIUS * 0.55;
-      const sunX = W / 2 - CLOCK_RADIUS * 0.8;
-
-      // Sun circle (filled)
-      offCtx.lineWidth = 3;
-      offCtx.beginPath();
-      offCtx.arc(sunX, iconY, R, 0, Math.PI * 2);
-      offCtx.fill();
-
-      // Sun rays
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2;
-        const x1 = sunX + Math.cos(a) * (R + 6);
-        const y1 = iconY + Math.sin(a) * (R + 6);
-        const x2 = sunX + Math.cos(a) * (R + 16);
-        const y2 = iconY + Math.sin(a) * (R + 16);
-        offCtx.lineWidth = i % 2 === 0 ? 3 : 2;
-        offCtx.beginPath();
-        offCtx.moveTo(x1, y1);
-        offCtx.lineTo(x2, y2);
-        offCtx.stroke();
-      }
-
-      // Cloud (filled, offset right)
-      const cx = W / 2 + CLOCK_RADIUS * 1.0;
-      const cy = iconY + CLOCK_RADIUS * 0.15;
-      offCtx.beginPath();
-      offCtx.arc(cx - 12, cy, 11, 0, Math.PI * 2);
-      offCtx.arc(cx + 6, cy - 5, 14, 0, Math.PI * 2);
-      offCtx.arc(cx + 22, cy, 10, 0, Math.PI * 2);
-      offCtx.fill();
-
-      // Separate sun dots and cloud dots by x position
-      const cloudLeftEdge = cx - 24;
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      for (let y = 0; y < H; y += spacing) {
-        for (let x = 0; x < W; x += spacing) {
-          const i = (y * W + x) * 4;
-          if (imageData.data[i + 3] > 128) {
-            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
-            const isSun = x < cloudLeftEdge;
-            weatherIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color, isSun });
-          }
-        }
-      }
-      weatherIconInitialized = true;
-    }
-
-    function drawWeatherIcon() {
-      if (!weatherIconInitialized) initWeatherIcon();
-      const iconY = CLOCK_Y();
-      const now = Date.now();
-
-      // Draw static dots (skip per-dot shimmer for perf, use batch alpha)
-      const shimmerBase = Math.sin(now / 300) * 0.15 + 0.85;
-      ctx.globalAlpha = shimmerBase;
-      for (let i = 0; i < weatherIconDots.length; i++) {
-        const dot = weatherIconDots[i];
-        ctx.fillStyle = dot.color;
-        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
-      }
-      ctx.globalAlpha = 1;
-
-      // Animated: 3 tiny orbiting particles around the sun
-      const sunX = W / 2 - CLOCK_RADIUS * 0.8;
-      const orbitR = CLOCK_RADIUS * 0.55 + 20;
-      for (let i = 0; i < 3; i++) {
-        const speed = 0.8 + i * 0.3; // Different speeds
-        const a = (now / 1000) * speed + (i * Math.PI * 2 / 3);
-        const ox = sunX + Math.cos(a) * orbitR;
-        const oy = iconY + Math.sin(a) * (orbitR * 0.6); // Elliptical orbit
-        const trail = Math.sin(now / 200 + i) * 0.3 + 0.7;
-
-        ctx.globalAlpha = trail;
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
-        ctx.globalAlpha = 1;
-      }
-    }
-
-    // ===== CRYPTO DOT ICON (₿ mark) =====
-    let cryptoIconDots = [];
-    let cryptoIconInitialized = false;
-
-    function initCryptoIcon() {
-      cryptoIconDots = [];
-      const iconY = CLOCK_Y();
-      const spacing = 2;
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
-
-      // Draw ₿ symbol - higher position to avoid chart overlap
-      const cryptoIconY = iconY - 80;
-      offCtx.fillStyle = '#fff';
-      offCtx.textAlign = 'center';
-      offCtx.textBaseline = 'middle';
-      offCtx.font = `bold ${CLOCK_RADIUS * 2.4}px system-ui`;
-      offCtx.fillText('₿', W / 2, cryptoIconY);
-
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      for (let y = 0; y < H; y += spacing) {
-        for (let x = 0; x < W; x += spacing) {
-          const i = (y * W + x) * 4;
-          if (imageData.data[i + 3] > 128) {
-            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
-            cryptoIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
-          }
-        }
-      }
-      cryptoIconInitialized = true;
-    }
-
-    function drawCryptoIcon() {
-      if (!cryptoIconInitialized) initCryptoIcon();
-      const iconY = CLOCK_Y();
-      const now = Date.now();
-
-      // Draw static dots
-      const cryptoShimmer = Math.sin(now / 250) * 0.12 + 0.88;
-      ctx.globalAlpha = cryptoShimmer;
-      for (let i = 0; i < cryptoIconDots.length; i++) {
-        const dot = cryptoIconDots[i];
-        ctx.fillStyle = dot.color;
-        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
-      }
-      ctx.globalAlpha = 1;
-
-      // Animated: pulsing golden ring around ₿
-      const cryptoIconY = iconY - 80;
-      const pulseT = (Math.sin(now / 600) + 1) / 2;
-      const ringR = CLOCK_RADIUS * 1.2 + pulseT * 8;
-      ctx.strokeStyle = `rgba(255, 200, 50, ${0.15 + pulseT * 0.15})`;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(W / 2, cryptoIconY, ringR, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // ===== EARTHQUAKE DOT ICON (seismic waves) =====
-    let quakeIconDots = [];
-    let quakeIconInitialized = false;
-
-    function initQuakeIcon() {
-      quakeIconDots = [];
-      const iconY = CLOCK_Y();
-      const spacing = 2;
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
-      offCtx.strokeStyle = '#fff';
-      offCtx.fillStyle = '#fff';
-
-      // Center dot
-      offCtx.beginPath();
-      offCtx.arc(W / 2, iconY, 4, 0, Math.PI * 2);
-      offCtx.fill();
-
-      // Concentric wave rings
-      for (let i = 1; i <= 3; i++) {
-        offCtx.lineWidth = 3 - i * 0.5;
-        offCtx.beginPath();
-        offCtx.arc(W / 2, iconY, CLOCK_RADIUS * 0.3 * i, Math.PI * 0.15, Math.PI * 0.85);
-        offCtx.stroke();
-        offCtx.beginPath();
-        offCtx.arc(W / 2, iconY, CLOCK_RADIUS * 0.3 * i, Math.PI * 1.15, Math.PI * 1.85);
-        offCtx.stroke();
-      }
-
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      for (let y = 0; y < H; y += spacing) {
-        for (let x = 0; x < W; x += spacing) {
-          const i = (y * W + x) * 4;
-          if (imageData.data[i + 3] > 128) {
-            const colorIdx = (x * 7 + y * 13) % TEAM_COLORS.length;
-            quakeIconDots.push({ x, y, color: TEAM_COLORS[colorIdx].color });
-          }
-        }
-      }
-      quakeIconInitialized = true;
-    }
-
-    function drawQuakeIcon() {
-      if (!quakeIconInitialized) initQuakeIcon();
-      const iconY = CLOCK_Y();
-      const now = Date.now();
-
-      // Draw static dots
-      for (let i = 0; i < quakeIconDots.length; i++) {
-        const dot = quakeIconDots[i];
-        ctx.fillStyle = dot.color;
-        ctx.fillRect(dot.x - 0.6, dot.y - 0.6, 1.2, 1.2);
-      }
-
-      // Animated: expanding wave ring from center
-      const waveCycle = 2000;
-      const waveT = (now % waveCycle) / waveCycle;
-      const waveR = waveT * CLOCK_RADIUS * 1.2;
-      const waveAlpha = 1 - waveT;
-
-      ctx.strokeStyle = `rgba(255, 100, 80, ${waveAlpha * 0.6})`;
-      ctx.lineWidth = 2 - waveT;
-      ctx.beginPath();
-      ctx.arc(W / 2, iconY, waveR, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Second wave offset
-      const waveT2 = ((now + 1000) % waveCycle) / waveCycle;
-      const waveR2 = waveT2 * CLOCK_RADIUS * 1.2;
-      const waveAlpha2 = 1 - waveT2;
-
-      ctx.strokeStyle = `rgba(255, 100, 80, ${waveAlpha2 * 0.4})`;
-      ctx.lineWidth = 1.5 - waveT2;
-      ctx.beginPath();
-      ctx.arc(W / 2, iconY, waveR2, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // ===== TEXT TO POINTS CONVERSION (responsive layout) =====
-    function textToPoints(times, fontSize, spacing) {
-      fontSize = fontSize || rp.fontSize;
-      spacing = spacing || rp.spacing;
-      const offCanvas = document.createElement('canvas');
-      const offCtx = offCanvas.getContext('2d');
-      offCanvas.width = W;
-      offCanvas.height = H;
-
-      offCtx.fillStyle = '#fff';
-      offCtx.textAlign = 'center';
-      offCtx.textBaseline = 'middle';
-
-      const lineHeight = fontSize * 1.3;
-
-      // Responsive layout: single column on mobile, 2 columns on tablet/desktop
-      offCtx.font = `bold ${fontSize}px system-ui`;
-
-      const lineCenters = [];
-      if (rp.singleColumn) {
-        // Mobile: single column, show 6 items, positioned below icon
-        const displayTimes = times.slice(0, 6);
-        const totalLines = displayTimes.length;
-        // Position text block so it starts below the icon area
-        // CLOCK_Y ≈ H/2 - CLOCK_LINE_HEIGHT*2.8, icon bottom ≈ CLOCK_Y + CLOCK_RADIUS
-        // We want startY to be well below that
-        const startY = H * 0.45;
-        displayTimes.forEach((time, i) => {
-          const x = W / 2;
-          const y = startY + i * lineHeight;
-          offCtx.fillText(time, x, y);
-          lineCenters.push({ idx: i, x: x, y: y, col: 0 });
-        });
-      } else {
-        // Desktop/Tablet: 2 columns
-        const columnGap = W < 1024 ? 80 : 115;
-        const colOffset = W < 1024 ? 100 : 150;
-        const leftX = W / 2 - columnGap - colOffset;
-        const rightX = W / 2 + columnGap + colOffset;
-        const startY = H / 2 - lineHeight * 1.0;
-        times.forEach((time, i) => {
-          const col = i < 4 ? 0 : 1;
-          const row = i % 4;
-          const x = col === 0 ? leftX : rightX;
-          const y = startY + row * lineHeight;
-          offCtx.fillText(time, x, y);
-          lineCenters.push({ idx: i, x: x, y: y, col: col });
-        });
-      }
-
-      const imageData = offCtx.getImageData(0, 0, W, H);
-      const points = [];
-
-      for (let y = 0; y < H; y += spacing) {
-        for (let x = 0; x < W; x += spacing) {
-          const pi = (y * W + x) * 4;
-          if (imageData.data[pi + 3] > 128) {
-            // Determine lineIdx by closest line center Y (within same column)
-            let lineIdx = 0;
-            let minDist = Infinity;
-            // In single column mode, everything is column 0 regardless of x position
-            const col = rp.singleColumn ? 0 : (x < W / 2 ? 0 : 1);
-            for (const lc of lineCenters) {
-              if (lc.col === col) {
-                const dist = Math.abs(y - lc.y);
-                if (dist < minDist) {
-                  minDist = dist;
-                  lineIdx = lc.idx;
-                }
-              }
-            }
-            points.push({ x, y, lineIdx });
-          }
-        }
-      }
-
-      // Cap points to FORMATION_AGENT_COUNT to prevent creating too many agents
-      // Weather/earthquake text can produce 20,000-50,000 points at spacing=2
-      if (points.length > FORMATION_AGENT_COUNT) {
-        const step = points.length / FORMATION_AGENT_COUNT;
-        const sampled = [];
-        for (let i = 0; i < FORMATION_AGENT_COUNT; i++) {
-          sampled.push(points[Math.floor(i * step)]);
-        }
-        return sampled;
-      }
-
-      return points;
-    }
-
-    function blendColors(rgb1, rgb2) {
-      return [
-        Math.floor((rgb1[0] + rgb2[0]) / 2),
-        Math.floor((rgb1[1] + rgb2[1]) / 2),
-        Math.floor((rgb1[2] + rgb2[2]) / 2)
-      ];
-    }
-
-    // Online: get position from pre-computed text points (dev branch)
-    function getShapePosition(index, total, shapeType, radius) {
-      if (index < textPoints.length) {
-        return textPoints[index];
-      }
-      return {
-        x: Math.random() * W,
-        y: Math.random() * H
-      };
-    }
-
-    // ===== GLOW SPRITE CACHE =====
-    const _glowSpriteCache = {};
-    const GLOW_SPRITE_SIZE = 32;
-    function getGlowSprite(color) {
-      if (_glowSpriteCache[color]) return _glowSpriteCache[color];
-      const s = GLOW_SPRITE_SIZE;
-      const c = document.createElement('canvas');
-      c.width = s; c.height = s;
-      const g = c.getContext('2d');
-      const half = s / 2;
-      const grad = g.createRadialGradient(half, half, 0, half, half, half);
-      grad.addColorStop(0, color);
-      grad.addColorStop(1, 'transparent');
-      g.fillStyle = grad;
-      g.fillRect(0, 0, s, s);
-      _glowSpriteCache[color] = c;
-      return c;
-    }
-
-    class Agent {
-      constructor(id) {
-        this.id = id;
-        this.x = Math.random() * W;
-        this.y = Math.random() * H;
-        this.targetX = this.x;
-        this.targetY = this.y;
-        this.vx = 0;
-        this.vy = 0;
-        this.size = Math.random() * 1.2 + 0.4;
-        this.team = null;
-        this.color = '#ffffff';
-        this.alpha = 0.5 + Math.random() * 0.5;
-        this.formationIndex = id;
-        this.scatterTime = 0;
-        this.baseSize = this.size;
-        this.baseAlpha = this.alpha;
-      }
-
-      assignTeam(team) {
-        this.team = team;
-        this.color = team ? team.color : '#ffffff';
-
-        if (team) {
-          const angle = Math.random() * Math.PI * 2;
-          const dist = Math.random() * 55 + 10;
-          this.targetX = team.x * W + Math.cos(angle) * dist;
-          this.targetY = team.y * H + Math.sin(angle) * dist;
-        }
-        // Reset fade when joining team
-        this.scatterTime = 0;
-        this.alpha = this.baseAlpha;
-        this.size = this.baseSize;
-      }
-
-      assignFormation(shapeType, radius) {
-        // Offline shapes use getOfflineShapePosition, online uses getShapePosition
-        const isOfflineShape = OFFLINE_SHAPE_TYPES.includes(shapeType);
-        const pos = isOfflineShape
-          ? getOfflineShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius)
-          : getShapePosition(this.formationIndex, FORMATION_AGENT_COUNT, shapeType, radius);
-        this.targetX = pos.x;
-        this.targetY = pos.y;
-      }
-
-      scatter() {
-        this.team = null;
-        // Keep current color, don't reset to white immediately
-        this.scatterColor = this.color;
-        this.targetX = Math.random() * W;
-        this.targetY = Math.random() * H;
-        this.scatterTime = Date.now();
-      }
-
-      update() {
-        // Faster gathering speed
-        const lerpFactor = 0.06;
-        this.x += (this.targetX - this.x) * lerpFactor;
-        this.y += (this.targetY - this.y) * lerpFactor;
-
-        // Fade out during scatter phase: color transitions from team color to white, then fades
-        // Skip color override during formation - formation sets its own colors
-        if (this.scatterTime > 0 && phase !== 'formation') {
-          const elapsed = (Date.now() - this.scatterTime) / 1000;
-          if (elapsed < 1.5) {
-            this.color = this.scatterColor || '#ffffff';
-            this.alpha = this.baseAlpha;
-            this.size = this.baseSize;
-          } else {
-            const fadeProgress = Math.min(1, (elapsed - 1.5) / 2.5);
-            this.color = this.scatterColor || '#ffffff';
-            this.alpha = this.baseAlpha * (1 - fadeProgress * 0.9);
-            this.size = this.baseSize * (1 - fadeProgress * 0.5);
-          }
-        }
-      }
-
-      draw() {
-        // Use pre-rendered glow sprite instead of per-frame RadialGradient
-        const sprite = getGlowSprite(this.color);
-        if (phase === 'formation') {
-          const r = this.size * 3;
-          ctx.globalAlpha = 0.25;
-          ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
+      // Fade out during scatter phase: color transitions from team color to white, then fades
+      // Skip color override during formation - formation sets its own colors
+      if (this.scatterTime > 0 && phase !== 'formation') {
+        const elapsed = (Date.now() - this.scatterTime) / 1000;
+        if (elapsed < 1.5) {
+          this.color = this.scatterColor || '#ffffff';
+          this.alpha = this.baseAlpha;
+          this.size = this.baseSize;
         } else {
-          const r = this.size * 2.5;
-          ctx.globalAlpha = 0.44;
-          ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
-        }
-
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
-        ctx.globalAlpha = 1;
-      }
-    }
-
-    class DataLine {
-      constructor(from, to) {
-        this.fromAgent = from;
-        this.toAgent = to;
-        this.life = 1;
-        this.decay = 0.03 + Math.random() * 0.02;
-
-        const rgb1 = from.team ? from.team.rgb : [255, 255, 255];
-        const rgb2 = to.team ? to.team.rgb : [255, 255, 255];
-        this.blendedColor = blendColors(rgb1, rgb2);
-      }
-
-      update() {
-        this.life -= this.decay;
-        return this.life > 0;
-      }
-
-      draw() {
-        const [r, g, b] = this.blendedColor;
-        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${this.life * 0.25})`;
-        ctx.lineWidth = 0.8;
-        ctx.beginPath();
-        ctx.moveTo(this.fromAgent.x, this.fromAgent.y);
-        ctx.lineTo(this.toAgent.x, this.toAgent.y);
-        ctx.stroke();
-      }
-    }
-
-    for (let i = 0; i < AGENT_COUNT; i++) {
-      agents.push(new Agent(i));
-    }
-
-    // ===== PHASE =====
-    let phase = 'init';
-    let phaseTime = 0;
-    let startTime = null;
-
-    const PHASE_DURATION = { scatter: 8000, gather: 8000, formation: 7000 };
-
-    // Grid reuse to reduce GC
-    let _gridCells = [];
-    let _gridCols = 0;
-    const GRID_CELL_SIZE = 50;
-
-    function drawConnections() {
-      const cols = Math.ceil(W / GRID_CELL_SIZE) + 1;
-      const rows = Math.ceil(H / GRID_CELL_SIZE) + 1;
-      const totalCells = cols * rows;
-
-      // Reallocate grid if screen size changed
-      if (_gridCells.length < totalCells || _gridCols !== cols) {
-        _gridCells = new Array(totalCells).fill(null).map(() => []);
-        _gridCols = cols;
-      }
-
-      // Clear grid
-      for (let i = 0; i < totalCells; i++) {
-        _gridCells[i].length = 0;
-      }
-
-      // Populate grid
-      for (let i = 0; i < agents.length; i++) {
-        const a = agents[i];
-        if (!a.team) continue;
-        const gx = Math.floor(a.x / GRID_CELL_SIZE);
-        const gy = Math.floor(a.y / GRID_CELL_SIZE);
-        // Bounds check
-        if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) {
-          const key = gx + gy * cols;
-          _gridCells[key].push(i);
+          const fadeProgress = Math.min(1, (elapsed - 1.5) / 2.5);
+          this.color = this.scatterColor || '#ffffff';
+          this.alpha = this.baseAlpha * (1 - fadeProgress * 0.9);
+          this.size = this.baseSize * (1 - fadeProgress * 0.5);
         }
       }
+    }
 
-      ctx.lineWidth = 0.3;
+    draw() {
+      // Use pre-rendered glow sprite instead of per-frame RadialGradient
+      const sprite = getGlowSprite(this.color);
+      if (phase === 'formation') {
+        const r = this.size * 3;
+        ctx.globalAlpha = 0.25;
+        ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
+      } else {
+        const r = this.size * 2.5;
+        ctx.globalAlpha = 0.44;
+        ctx.drawImage(sprite, this.x - r, this.y - r, r * 2, r * 2);
+      }
 
-      // Iterate valid cells
-      for (let k = 0; k < totalCells; k++) {
-        const cell = _gridCells[k];
-        if (cell.length === 0) continue;
+      ctx.globalAlpha = this.alpha;
+      ctx.fillStyle = this.color;
+      ctx.fillRect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
+      ctx.globalAlpha = 1;
+    }
+  }
 
-        // Check neighbors (right, below, below-left, below-right)
-        // Note: k + 1 is right, k + cols is below
-        const neighbors = [k, k + 1, k + cols, k + cols - 1, k + cols + 1];
+  class DataLine {
+    constructor(from, to) {
+      this.fromAgent = from;
+      this.toAgent = to;
+      this.life = 1;
+      this.decay = 0.03 + Math.random() * 0.02;
 
-        for (let ni = 0; ni < neighbors.length; ni++) {
-          const nk = neighbors[ni];
-          if (nk < 0 || nk >= totalCells) continue;
+      const rgb1 = from.team ? from.team.rgb : [255, 255, 255];
+      const rgb2 = to.team ? to.team.rgb : [255, 255, 255];
+      this.blendedColor = blendColors(rgb1, rgb2);
+    }
 
-          const ncell = _gridCells[nk];
-          if (ncell.length === 0) continue;
+    update() {
+      this.life -= this.decay;
+      return this.life > 0;
+    }
 
-          // Check if same cell to avoid double processing within cell
-          const isSameCell = (nk === k);
+    draw() {
+      const [r, g, b] = this.blendedColor;
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${this.life * 0.25})`;
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(this.fromAgent.x, this.fromAgent.y);
+      ctx.lineTo(this.toAgent.x, this.toAgent.y);
+      ctx.stroke();
+    }
+  }
 
-          for (let ci = 0; ci < cell.length; ci++) {
-            const idx1 = cell[ci];
-            const a1 = agents[idx1];
+  for (let i = 0; i < AGENT_COUNT; i++) {
+    agents.push(new Agent(i));
+  }
 
-            // If same cell, start from next index to optimize
-            const startJ = isSameCell ? ci + 1 : 0;
+  // ===== PHASE =====
+  let phase = 'init';
+  let phaseTime = 0;
+  let startTime = null;
 
-            for (let cj = startJ; cj < ncell.length; cj++) {
-              const idx2 = ncell[cj];
-              const a2 = agents[idx2];
+  const PHASE_DURATION = { scatter: 8000, gather: 8000, formation: 7000 };
 
-              if (a1.team !== a2.team) continue;
+  // Grid reuse to reduce GC
+  let _gridCells = [];
+  let _gridCols = 0;
+  const GRID_CELL_SIZE = 50;
 
-              const dx = a2.x - a1.x;
-              const dy = a2.y - a1.y;
-              // Simple box check first for speed
-              if (Math.abs(dx) > 50 || Math.abs(dy) > 50) continue;
+  function drawConnections() {
+    const cols = Math.ceil(W / GRID_CELL_SIZE) + 1;
+    const rows = Math.ceil(H / GRID_CELL_SIZE) + 1;
+    const totalCells = cols * rows;
 
-              const distSq = dx * dx + dy * dy;
-              if (distSq < 2500) { // 50*50
-                const dist = Math.sqrt(distSq);
-                const alpha = (1 - dist / 50) * 0.2;
-                ctx.globalAlpha = alpha;
-                ctx.strokeStyle = a1.color;
-                ctx.beginPath();
-                ctx.moveTo(a1.x, a1.y);
-                ctx.lineTo(a2.x, a2.y);
-                ctx.stroke();
-              }
+    // Reallocate grid if screen size changed
+    if (_gridCells.length < totalCells || _gridCols !== cols) {
+      _gridCells = new Array(totalCells).fill(null).map(() => []);
+      _gridCols = cols;
+    }
+
+    // Clear grid
+    for (let i = 0; i < totalCells; i++) {
+      _gridCells[i].length = 0;
+    }
+
+    // Populate grid
+    for (let i = 0; i < agents.length; i++) {
+      const a = agents[i];
+      if (!a.team) continue;
+      const gx = Math.floor(a.x / GRID_CELL_SIZE);
+      const gy = Math.floor(a.y / GRID_CELL_SIZE);
+      // Bounds check
+      if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) {
+        const key = gx + gy * cols;
+        _gridCells[key].push(i);
+      }
+    }
+
+    ctx.lineWidth = 0.3;
+
+    // Iterate valid cells
+    for (let k = 0; k < totalCells; k++) {
+      const cell = _gridCells[k];
+      if (cell.length === 0) continue;
+
+      // Check neighbors (right, below, below-left, below-right)
+      // Note: k + 1 is right, k + cols is below
+      const neighbors = [k, k + 1, k + cols, k + cols - 1, k + cols + 1];
+
+      for (let ni = 0; ni < neighbors.length; ni++) {
+        const nk = neighbors[ni];
+        if (nk < 0 || nk >= totalCells) continue;
+
+        const ncell = _gridCells[nk];
+        if (ncell.length === 0) continue;
+
+        // Check if same cell to avoid double processing within cell
+        const isSameCell = (nk === k);
+
+        for (let ci = 0; ci < cell.length; ci++) {
+          const idx1 = cell[ci];
+          const a1 = agents[idx1];
+
+          // If same cell, start from next index to optimize
+          const startJ = isSameCell ? ci + 1 : 0;
+
+          for (let cj = startJ; cj < ncell.length; cj++) {
+            const idx2 = ncell[cj];
+            const a2 = agents[idx2];
+
+            if (a1.team !== a2.team) continue;
+
+            const dx = a2.x - a1.x;
+            const dy = a2.y - a1.y;
+            // Simple box check first for speed
+            if (Math.abs(dx) > 50 || Math.abs(dy) > 50) continue;
+
+            const distSq = dx * dx + dy * dy;
+            if (distSq < 2500) { // 50*50
+              const dist = Math.sqrt(distSq);
+              const alpha = (1 - dist / 50) * 0.2;
+              ctx.globalAlpha = alpha;
+              ctx.strokeStyle = a1.color;
+              ctx.beginPath();
+              ctx.moveTo(a1.x, a1.y);
+              ctx.lineTo(a2.x, a2.y);
+              ctx.stroke();
             }
           }
         }
       }
-      ctx.globalAlpha = 1;
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawTeamLabels(time) {
+    activeTeams.forEach(team => {
+      const label = teamLabels[team.name];
+      if (!label || !label.visible) return;
+
+      const elapsed = time - label.startTime;
+      const fadeIn = Math.min(1, elapsed / 400);
+
+      ctx.save();
+      ctx.globalAlpha = fadeIn * 0.9;
+      const labelSize = rp.teamLabelSize;
+      ctx.font = `600 ${labelSize}px system-ui`;
+      ctx.textAlign = 'center';
+      ctx.shadowColor = team.color;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = team.color;
+      // Clamp label position to stay within visible screen area
+      const labelX = Math.max(60, Math.min(W - 60, team.x * W));
+      const labelY = Math.max(rp.teamLabelOffset + 10, Math.min(H - 80, team.y * H - rp.teamLabelOffset));
+      ctx.fillText('AGENT TEAM ' + team.name, labelX, labelY);
+      ctx.restore();
+    });
+  }
+
+  function spawnDataLines() {
+    const teamAgents = agents.filter(a => a.team);
+    if (teamAgents.length < 2) return;
+
+    const lineCount = rp.agentCount < 500 ? 5 : 15;
+    for (let i = 0; i < lineCount; i++) {
+      const from = teamAgents[Math.floor(Math.random() * teamAgents.length)];
+      const to = teamAgents[Math.floor(Math.random() * teamAgents.length)];
+      if (from !== to) {
+        dataLines.push(new DataLine(from, to));
+      }
+    }
+  }
+
+  function generateNonOverlappingPositions(count) {
+    const positions = [];
+    const minDist = rp.minTeamDist;
+
+    for (let i = 0; i < count; i++) {
+      let valid = false;
+      let attempts = 0;
+      let x, y;
+
+      while (!valid && attempts < 100) {
+        x = rp.teamPosMin + Math.random() * rp.teamPosRange;
+        y = rp.teamPosMin + Math.random() * rp.teamPosRange;
+
+        valid = true;
+        for (const pos of positions) {
+          const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+          if (dist < minDist) {
+            valid = false;
+            break;
+          }
+        }
+        attempts++;
+      }
+
+      positions.push({ x, y });
     }
 
-    function drawTeamLabels(time) {
+    return positions;
+  }
+
+  function createRandomTeams() {
+    const teamCount = rp.minTeams + Math.floor(Math.random() * (rp.maxTeams - rp.minTeams + 1));
+    const positions = generateNonOverlappingPositions(teamCount);
+
+    activeTeams = TEAM_COLORS.slice(0, teamCount).map((t, i) => ({
+      ...t,
+      x: positions[i].x,
+      y: positions[i].y
+    }));
+  }
+
+  function updatePhase(time) {
+    const elapsed = time - phaseTime;
+
+    // Immediately begin gathering (no initial bounce)
+    if (phase === 'init' && elapsed > 3000) {
+      phase = 'gather';
+      phaseTime = time;
+
+      createRandomTeams();
+
+      agents.forEach((agent, i) => {
+        agent.assignTeam(activeTeams[i % activeTeams.length]);
+      });
+
       activeTeams.forEach(team => {
-        const label = teamLabels[team.name];
-        if (!label || !label.visible) return;
-
-        const elapsed = time - label.startTime;
-        const fadeIn = Math.min(1, elapsed / 400);
-
-        ctx.save();
-        ctx.globalAlpha = fadeIn * 0.9;
-        const labelSize = rp.teamLabelSize;
-        ctx.font = `600 ${labelSize}px system-ui`;
-        ctx.textAlign = 'center';
-        ctx.shadowColor = team.color;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = team.color;
-        // Clamp label position to stay within visible screen area
-        const labelX = Math.max(60, Math.min(W - 60, team.x * W));
-        const labelY = Math.max(rp.teamLabelOffset + 10, Math.min(H - 80, team.y * H - rp.teamLabelOffset));
-        ctx.fillText('AGENT TEAM ' + team.name, labelX, labelY);
-        ctx.restore();
+        teamLabels[team.name] = { visible: true, startTime: time };
       });
-    }
 
-    function spawnDataLines() {
-      const teamAgents = agents.filter(a => a.team);
-      if (teamAgents.length < 2) return;
+    } else if (phase === 'scatter' && elapsed > PHASE_DURATION.scatter) {
+      phase = 'gather';
+      phaseTime = time;
 
-      const lineCount = rp.agentCount < 500 ? 5 : 15;
-      for (let i = 0; i < lineCount; i++) {
-        const from = teamAgents[Math.floor(Math.random() * teamAgents.length)];
-        const to = teamAgents[Math.floor(Math.random() * teamAgents.length)];
-        if (from !== to) {
-          dataLines.push(new DataLine(from, to));
+      // Clear formation agents from previous cycle
+      formationAgents.length = 0;
+
+      createRandomTeams();
+
+      agents.forEach((agent, i) => {
+        agent.assignTeam(activeTeams[i % activeTeams.length]);
+      });
+
+      activeTeams.forEach(team => {
+        teamLabels[team.name] = { visible: true, startTime: time };
+      });
+
+    } else if (phase === 'gather' && elapsed > PHASE_DURATION.gather) {
+      phase = 'formation';
+      phaseTime = time;
+      formationColorFn = null; // Reset from previous cycle
+
+      const isOnline = navigator.onLine;
+      // SP (singleColumn) always uses offline geometric shapes
+      // PC online: API formations are temporarily disabled (commented out below)
+      // const useGeometric = rp.singleColumn || !isOnline;
+      const useGeometric = true; // Always use geometric shapes for now
+
+      /* [API_FORMATION_START] — Commented out: API-based formations (restore by setting useGeometric = rp.singleColumn || !isOnline)
+      if (!useGeometric) {
+        // ===== ONLINE MODE: API-based formations (dev branch code) =====
+        const formationType = getNextFormationType();
+        currentShape = formationType;
+
+        // Generate text points based on formation type
+        let displayTexts;
+        if (formationType === 'worldtime') {
+          displayTexts = getAllWorldTimes();
+          textPoints = textToPoints(displayTexts);
+        } else if (formationType === 'forex') {
+          displayTexts = getForexTexts();
+          textPoints = textToPoints(displayTexts);
+        } else if (formationType === 'weather') {
+          displayTexts = getWeatherTexts();
+          textPoints = textToPoints(displayTexts);
+        } else if (formationType === 'crypto') {
+          textPoints = getCryptoChartPoints();
+        } else if (formationType === 'earthquake') {
+          displayTexts = getEarthquakeTexts();
+          textPoints = textToPoints(displayTexts);
         }
-      }
-    }
 
-    function generateNonOverlappingPositions(count) {
-      const positions = [];
-      const minDist = rp.minTeamDist;
+        // Select random neon color for this display
+        currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
 
-      for (let i = 0; i < count; i++) {
-        let valid = false;
-        let attempts = 0;
-        let x, y;
+        shapeRotation = 0;
+        formationStartTime = Date.now();
 
-        while (!valid && attempts < 100) {
-          x = rp.teamPosMin + Math.random() * rp.teamPosRange;
-          y = rp.teamPosMin + Math.random() * rp.teamPosRange;
+        // Calculate formation radius
+        const formationRadius = Math.min(W, H) * 0.3;
 
-          valid = true;
-          for (const pos of positions) {
-            const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
-            if (dist < minDist) {
-              valid = false;
-              break;
-            }
-          }
-          attempts++;
-        }
-
-        positions.push({ x, y });
-      }
-
-      return positions;
-    }
-
-    function createRandomTeams() {
-      const teamCount = rp.minTeams + Math.floor(Math.random() * (rp.maxTeams - rp.minTeams + 1));
-      const positions = generateNonOverlappingPositions(teamCount);
-
-      activeTeams = TEAM_COLORS.slice(0, teamCount).map((t, i) => ({
-        ...t,
-        x: positions[i].x,
-        y: positions[i].y
-      }));
-    }
-
-    function updatePhase(time) {
-      const elapsed = time - phaseTime;
-
-      // Immediately begin gathering (no initial bounce)
-      if (phase === 'init' && elapsed > 3000) {
-        phase = 'gather';
-        phaseTime = time;
-
-        createRandomTeams();
-
-        agents.forEach((agent, i) => {
-          agent.assignTeam(activeTeams[i % activeTeams.length]);
-        });
-
-        activeTeams.forEach(team => {
-          teamLabels[team.name] = { visible: true, startTime: time };
-        });
-
-      } else if (phase === 'scatter' && elapsed > PHASE_DURATION.scatter) {
-        phase = 'gather';
-        phaseTime = time;
-
-        // Clear formation agents from previous cycle
+        // Create formation agents ONLY for text points (no extra dots)
         formationAgents.length = 0;
+        const neededAgents = Math.max(0, textPoints.length - agents.length);
+        for (let i = 0; i < neededAgents; i++) {
+          const agent = new Agent(agents.length + i);
+          agent.formationIndex = agents.length + i;
+          const sourceAgent = agents[Math.floor(Math.random() * agents.length)];
+          agent.x = sourceAgent.x + (Math.random() - 0.5) * 20;
+          agent.y = sourceAgent.y + (Math.random() - 0.5) * 20;
+          agent.color = sourceAgent.color;
+          agent.team = null;
+          formationAgents.push(agent);
+        }
 
-        createRandomTeams();
-
+        // Keep existing agent colors - seamless transition
         agents.forEach((agent, i) => {
-          agent.assignTeam(activeTeams[i % activeTeams.length]);
+          agent.formationIndex = i;
+          agent.team = null;
+          if (i < textPoints.length) {
+            agent.targetX = textPoints[i].x;
+            agent.targetY = textPoints[i].y;
+            agent.scatterTime = 0; // Reset so update() won't override formation color
+          } else {
+            agent.targetX = agent.x + (Math.random() - 0.5) * 200;
+            agent.targetY = agent.y + (Math.random() - 0.5) * 200;
+            agent.scatterTime = Date.now();
+            agent.scatterColor = agent.color;
+          }
         });
 
-        activeTeams.forEach(team => {
-          teamLabels[team.name] = { visible: true, startTime: time };
+        // Assign formation agents to remaining text points
+        formationAgents.forEach((agent, i) => {
+          const pointIndex = agents.length + i;
+          if (pointIndex < textPoints.length) {
+            agent.targetX = textPoints[pointIndex].x;
+            agent.targetY = textPoints[pointIndex].y;
+          }
         });
 
-      } else if (phase === 'gather' && elapsed > PHASE_DURATION.gather) {
-        phase = 'formation';
-        phaseTime = time;
-        formationColorFn = null; // Reset from previous cycle
-
-        const isOnline = navigator.onLine;
-        // SP (singleColumn) always uses offline geometric shapes
-        // PC online: API formations are temporarily disabled (commented out below)
-        // const useGeometric = rp.singleColumn || !isOnline;
-        const useGeometric = true; // Always use geometric shapes for now
-
-        /* [API_FORMATION_START] — Commented out: API-based formations (restore by setting useGeometric = rp.singleColumn || !isOnline)
-        if (!useGeometric) {
-          // ===== ONLINE MODE: API-based formations (dev branch code) =====
-          const formationType = getNextFormationType();
-          currentShape = formationType;
-
-          // Generate text points based on formation type
-          let displayTexts;
-          if (formationType === 'worldtime') {
-            displayTexts = getAllWorldTimes();
-            textPoints = textToPoints(displayTexts);
-          } else if (formationType === 'forex') {
-            displayTexts = getForexTexts();
-            textPoints = textToPoints(displayTexts);
-          } else if (formationType === 'weather') {
-            displayTexts = getWeatherTexts();
-            textPoints = textToPoints(displayTexts);
-          } else if (formationType === 'crypto') {
-            textPoints = getCryptoChartPoints();
-          } else if (formationType === 'earthquake') {
-            displayTexts = getEarthquakeTexts();
-            textPoints = textToPoints(displayTexts);
-          }
-
-          // Select random neon color for this display
-          currentNeonColor = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
-
-          shapeRotation = 0;
-          formationStartTime = Date.now();
-
-          // Calculate formation radius
-          const formationRadius = Math.min(W, H) * 0.3;
-
-          // Create formation agents ONLY for text points (no extra dots)
-          formationAgents.length = 0;
-          const neededAgents = Math.max(0, textPoints.length - agents.length);
-          for (let i = 0; i < neededAgents; i++) {
-            const agent = new Agent(agents.length + i);
-            agent.formationIndex = agents.length + i;
-            const sourceAgent = agents[Math.floor(Math.random() * agents.length)];
-            agent.x = sourceAgent.x + (Math.random() - 0.5) * 20;
-            agent.y = sourceAgent.y + (Math.random() - 0.5) * 20;
-            agent.color = sourceAgent.color;
-            agent.team = null;
-            formationAgents.push(agent);
-          }
-
-          // Keep existing agent colors - seamless transition
-          agents.forEach((agent, i) => {
-            agent.formationIndex = i;
-            agent.team = null;
-            if (i < textPoints.length) {
-              agent.targetX = textPoints[i].x;
-              agent.targetY = textPoints[i].y;
-              agent.scatterTime = 0; // Reset so update() won't override formation color
-            } else {
-              agent.targetX = agent.x + (Math.random() - 0.5) * 200;
-              agent.targetY = agent.y + (Math.random() - 0.5) * 200;
-              agent.scatterTime = Date.now();
-              agent.scatterColor = agent.color;
+        // Weather: color agents by weather condition
+        if (formationType === 'weather' && weatherData) {
+          const weatherColors = (code) => {
+            if (code <= 1) return '#FF8C00';
+            if (code <= 3) return '#E0E8F0';
+            if (code <= 48) return '#C8D0D8';
+            if (code <= 67) return '#4488FF';
+            if (code <= 77) return '#88CCFF';
+            if (code <= 82) return '#4488FF';
+            if (code <= 86) return '#88CCFF';
+            return '#FFD700';
+          };
+          formationColorFn = (agent, pointIdx) => {
+            if (pointIdx < textPoints.length) {
+              const lineIdx = textPoints[pointIdx].lineIdx;
+              if (lineIdx >= 0 && lineIdx < weatherData.length) {
+                agent.color = weatherColors(weatherData[lineIdx].code);
+              }
             }
-          });
-
-          // Assign formation agents to remaining text points
-          formationAgents.forEach((agent, i) => {
-            const pointIndex = agents.length + i;
-            if (pointIndex < textPoints.length) {
-              agent.targetX = textPoints[pointIndex].x;
-              agent.targetY = textPoints[pointIndex].y;
-            }
-          });
-
-          // Weather: color agents by weather condition
-          if (formationType === 'weather' && weatherData) {
-            const weatherColors = (code) => {
-              if (code <= 1) return '#FF8C00';
-              if (code <= 3) return '#E0E8F0';
-              if (code <= 48) return '#C8D0D8';
-              if (code <= 67) return '#4488FF';
-              if (code <= 77) return '#88CCFF';
-              if (code <= 82) return '#4488FF';
-              if (code <= 86) return '#88CCFF';
-              return '#FFD700';
-            };
-            formationColorFn = (agent, pointIdx) => {
-              if (pointIdx < textPoints.length) {
-                const lineIdx = textPoints[pointIdx].lineIdx;
-                if (lineIdx >= 0 && lineIdx < weatherData.length) {
-                  agent.color = weatherColors(weatherData[lineIdx].code);
-                }
-              }
-            };
-            agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
-            formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
-          }
-
-          // Crypto: gradient from green (top) to gold (bottom)
-          if (formationType === 'crypto') {
-            const chartTop = H / 2 - 40;
-            const chartBottom = H / 2 + 120;
-            const chartRange = chartBottom - chartTop;
-            formationColorFn = (agent, pointIdx) => {
-              if (pointIdx < textPoints.length) {
-                const py = textPoints[pointIdx].y;
-                const t = Math.max(0, Math.min(1, (py - chartTop) / chartRange));
-                const r = Math.round(0 + t * 255);
-                const g = Math.round(200 - t * 20);
-                const b = Math.round(100 - t * 60);
-                const rHex = r.toString(16).padStart(2, '0');
-                const gHex = g.toString(16).padStart(2, '0');
-                const bHex = b.toString(16).padStart(2, '0');
-                agent.color = `#${rHex}${gHex}${bHex}`;
-              }
-            };
-            agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
-            formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
-          }
-
-          // Earthquake: color by magnitude
-          if (formationType === 'earthquake') {
-            const quakeColor = (mag) => {
-              if (mag >= 7.0) return '#FF0000';
-              if (mag >= 6.0) return '#FF3322';
-              if (mag >= 5.5) return '#FF6622';
-              if (mag >= 5.0) return '#FF9933';
-              return '#FFCC44';
-            };
-            formationColorFn = (agent, pointIdx) => {
-              if (pointIdx < textPoints.length && earthquakeData) {
-                const lineIdx = textPoints[pointIdx].lineIdx;
-                if (lineIdx >= 0 && lineIdx < earthquakeData.length) {
-                  agent.color = quakeColor(earthquakeData[lineIdx].mag);
-                }
-              }
-            };
-            agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
-            formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
-          }
-
-        } else {
-        [API_FORMATION_END] */
-
-        // ===== GEOMETRIC SHAPES MODE (used for both PC and SP) =====
-        {
-          currentShape = getNextOfflineShape();
-          shapeRotation = Math.random() * Math.PI * 2;
-
-          // PC: use larger radius for wider screens
-          const formationRadius = rp.singleColumn
-            ? Math.min(W, H) * 0.3
-            : Math.min(W, H) * 0.35;
-
-          // Create formation agents (5000 total including existing agents)
-          formationAgents.length = 0;
-          for (let i = agents.length; i < FORMATION_AGENT_COUNT; i++) {
-            const agent = new Agent(i);
-            agent.formationIndex = i;
-            agent.x = Math.random() * W;
-            agent.y = Math.random() * H;
-            const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
-            agent.color = randomTeam.color;
-            agent.team = randomTeam;
-            formationAgents.push(agent);
-          }
-
-          // Assign all agents to formation positions
-          agents.forEach((agent, i) => {
-            agent.formationIndex = i;
-            agent.assignFormation(currentShape, formationRadius);
-          });
-          formationAgents.forEach((agent) => {
-            agent.assignFormation(currentShape, formationRadius);
-          });
+          };
+          agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
+          formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
         }
 
-        activeTeams.forEach(team => {
-          teamLabels[team.name] = { visible: false };
-        });
-
-      } else if (phase === 'formation' && elapsed > PHASE_DURATION.formation + (currentShape === 'worldtime' ? 1000 : 0)) {
-        phase = 'scatter';
-        phaseTime = time;
-        formationColorFn = null; // Clear color function
-
-        // Re-fetch data for next cycle (commented out while API formations disabled)
-        /* [API_FETCH_START]
-        fetchForexData();
-        fetchWeatherData();
-        fetchCryptoData();
-        fetchEarthquakeData();
-        [API_FETCH_END] */
-
-        agents.forEach(agent => agent.scatter());
-        // Also scatter formation agents instead of removing them instantly
-        formationAgents.forEach(agent => agent.scatter());
-        dataLines.length = 0;
-      }
-
-      if (phase === 'gather') {
-        spawnDataLines();
-      }
-
-      // Slowly rotate shape during formation
-      if (phase === 'formation') {
-        const isOfflineShape = OFFLINE_SHAPE_TYPES.includes(currentShape);
-        if (isOfflineShape) {
-          // Only offline geometric shapes need per-frame rotation recalculation
-          shapeRotation += 0.002;
-          const formationRadius = Math.min(W, H) * 0.3;
-          agents.forEach((agent) => {
-            agent.assignFormation(currentShape, formationRadius);
-          });
-          formationAgents.forEach((agent) => {
-            agent.assignFormation(currentShape, formationRadius);
-          });
+        // Crypto: gradient from green (top) to gold (bottom)
+        if (formationType === 'crypto') {
+          const chartTop = H / 2 - 40;
+          const chartBottom = H / 2 + 120;
+          const chartRange = chartBottom - chartTop;
+          formationColorFn = (agent, pointIdx) => {
+            if (pointIdx < textPoints.length) {
+              const py = textPoints[pointIdx].y;
+              const t = Math.max(0, Math.min(1, (py - chartTop) / chartRange));
+              const r = Math.round(0 + t * 255);
+              const g = Math.round(200 - t * 20);
+              const b = Math.round(100 - t * 60);
+              const rHex = r.toString(16).padStart(2, '0');
+              const gHex = g.toString(16).padStart(2, '0');
+              const bHex = b.toString(16).padStart(2, '0');
+              agent.color = `#${rHex}${gHex}${bHex}`;
+            }
+          };
+          agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
+          formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
         }
-        // Online text formations: positions are fixed, no per-frame recalc needed
-      }
-    }
 
-    function resize() {
-      W = window.innerWidth;
-      H = window.innerHeight;
-      cx = W / 2;
-      cy = H / 2;
-      canvas.width = W;
-      canvas.height = H;
+        // Earthquake: color by magnitude
+        if (formationType === 'earthquake') {
+          const quakeColor = (mag) => {
+            if (mag >= 7.0) return '#FF0000';
+            if (mag >= 6.0) return '#FF3322';
+            if (mag >= 5.5) return '#FF6622';
+            if (mag >= 5.0) return '#FF9933';
+            return '#FFCC44';
+          };
+          formationColorFn = (agent, pointIdx) => {
+            if (pointIdx < textPoints.length && earthquakeData) {
+              const lineIdx = textPoints[pointIdx].lineIdx;
+              if (lineIdx >= 0 && lineIdx < earthquakeData.length) {
+                agent.color = quakeColor(earthquakeData[lineIdx].mag);
+              }
+            }
+          };
+          agents.forEach((agent, i) => { if (i < textPoints.length) formationColorFn(agent, i); });
+          formationAgents.forEach((agent, i) => formationColorFn(agent, agents.length + i));
+        }
 
-      // Update responsive parameters
-      rp = getResponsiveParams();
-      AGENT_COUNT = rp.agentCount;
-      FORMATION_AGENT_COUNT = rp.formationCount;
-      CLOCK_FONT_SIZE = rp.clockFontSize;
-      CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
-      CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
-
-      // Adjust agent count if needed
-      if (agents.length > AGENT_COUNT) {
-        agents.length = AGENT_COUNT;
       } else {
-        while (agents.length < AGENT_COUNT) {
-          agents.push(new Agent(agents.length));
+      [API_FORMATION_END] */
+
+      // ===== GEOMETRIC SHAPES MODE (used for both PC and SP) =====
+      {
+        currentShape = getNextOfflineShape();
+        shapeRotation = Math.random() * Math.PI * 2;
+
+        // PC: use larger radius for wider screens
+        const formationRadius = rp.singleColumn
+          ? Math.min(W, H) * 0.3
+          : Math.min(W, H) * 0.35;
+
+        // Create formation agents (5000 total including existing agents)
+        formationAgents.length = 0;
+        for (let i = agents.length; i < FORMATION_AGENT_COUNT; i++) {
+          const agent = new Agent(i);
+          agent.formationIndex = i;
+          agent.x = Math.random() * W;
+          agent.y = Math.random() * H;
+          const randomTeam = activeTeams[Math.floor(Math.random() * activeTeams.length)];
+          agent.color = randomTeam.color;
+          agent.team = randomTeam;
+          formationAgents.push(agent);
         }
+
+        // Assign all agents to formation positions
+        agents.forEach((agent, i) => {
+          agent.formationIndex = i;
+          agent.assignFormation(currentShape, formationRadius);
+        });
+        formationAgents.forEach((agent) => {
+          agent.assignFormation(currentShape, formationRadius);
+        });
       }
 
-      initBgStars();
-      initGalaxy();
-      initNebulaCoreCache();
-      initBgStarCache();
-      clockInitialized = false;
-      forexIconInitialized = false;
-      weatherIconInitialized = false;
-      cryptoIconInitialized = false;
-      quakeIconInitialized = false;
+      activeTeams.forEach(team => {
+        teamLabels[team.name] = { visible: false };
+      });
 
-      // Reset offscreen caches
-      _bgStarCanvas = null;
-      _bgStarDimFactor = -1;
-      _nebulaCanvas = null;
-      _coreCanvas = null;
+    } else if (phase === 'formation' && elapsed > PHASE_DURATION.formation + (currentShape === 'worldtime' ? 1000 : 0)) {
+      phase = 'scatter';
+      phaseTime = time;
+      formationColorFn = null; // Clear color function
+
+      // Re-fetch data for next cycle (commented out while API formations disabled)
+      /* [API_FETCH_START]
+      fetchForexData();
+      fetchWeatherData();
+      fetchCryptoData();
+      fetchEarthquakeData();
+      [API_FETCH_END] */
+
+      agents.forEach(agent => agent.scatter());
+      // Also scatter formation agents instead of removing them instantly
+      formationAgents.forEach(agent => agent.scatter());
+      dataLines.length = 0;
     }
 
-    window.addEventListener('resize', resize);
+    if (phase === 'gather') {
+      spawnDataLines();
+    }
 
-    function animate(timestamp) {
-      if (startTime === null) startTime = timestamp;
-      const time = timestamp - startTime;
-
-      ctx.fillStyle = '#010104';
-      ctx.fillRect(0, 0, W, H);
-
-      drawBgStars();
-      drawGalaxy(time);
-      updatePhase(time);
-
-      for (let i = dataLines.length - 1; i >= 0; i--) {
-        if (!dataLines[i].update()) {
-          dataLines.splice(i, 1);
-        } else {
-          dataLines[i].draw();
-        }
+    // Slowly rotate shape during formation
+    if (phase === 'formation') {
+      const isOfflineShape = OFFLINE_SHAPE_TYPES.includes(currentShape);
+      if (isOfflineShape) {
+        // Only offline geometric shapes need per-frame rotation recalculation
+        shapeRotation += 0.002;
+        const formationRadius = Math.min(W, H) * 0.3;
+        agents.forEach((agent) => {
+          agent.assignFormation(currentShape, formationRadius);
+        });
+        formationAgents.forEach((agent) => {
+          agent.assignFormation(currentShape, formationRadius);
+        });
       }
+      // Online text formations: positions are fixed, no per-frame recalc needed
+    }
+  }
 
-      agents.forEach(a => a.update());
-      formationAgents.forEach(a => a.update());
-      // Update about agents
-      aboutFormationAgents.forEach(a => a.update());
-      // Skip connections and team labels during formation or about
-      if (phase !== 'formation' && phase !== 'about') {
-        drawConnections();
-      }
-      agents.forEach(a => a.draw());
-      formationAgents.forEach(a => a.draw());
-      aboutFormationAgents.forEach(a => a.draw());
-      // Draw icon on top during formation based on type
-      if (phase === 'formation') {
-        if (currentShape === 'worldtime') {
-          drawAnimatedClock();
-        } else if (currentShape === 'forex') {
-          drawForexIcon();
-        } else if (currentShape === 'weather') {
-          drawWeatherIcon();
-        } else if (currentShape === 'crypto') {
-          drawCryptoIcon();
-        } else if (currentShape === 'earthquake') {
-          drawQuakeIcon();
-        }
-      }
-      if (phase !== 'formation' && phase !== 'about') {
-        drawTeamLabels(time);
-      }
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    cx = W / 2;
+    cy = H / 2;
+    canvas.width = W;
+    canvas.height = H;
 
-      requestAnimationFrame(animate);
+    // Update responsive parameters
+    rp = getResponsiveParams();
+    AGENT_COUNT = rp.agentCount;
+    FORMATION_AGENT_COUNT = rp.formationCount;
+    CLOCK_FONT_SIZE = rp.clockFontSize;
+    CLOCK_LINE_HEIGHT = CLOCK_FONT_SIZE * 1.3;
+    CLOCK_RADIUS = CLOCK_FONT_SIZE * 0.8;
+
+    // Adjust agent count if needed
+    if (agents.length > AGENT_COUNT) {
+      agents.length = AGENT_COUNT;
+    } else {
+      while (agents.length < AGENT_COUNT) {
+        agents.push(new Agent(agents.length));
+      }
     }
 
     initBgStars();
     initGalaxy();
     initNebulaCoreCache();
     initBgStarCache();
-    requestAnimationFrame(animate);
+    clockInitialized = false;
+    forexIconInitialized = false;
+    weatherIconInitialized = false;
+    cryptoIconInitialized = false;
+    quakeIconInitialized = false;
 
-    // About trigger events - click to toggle
-    const aboutTrigger = document.getElementById('aboutTrigger');
-    const aboutOverlay = document.getElementById('aboutOverlay');
-    aboutTrigger.addEventListener('click', () => {
-      if (aboutActive) deactivateAbout();
-      else activateAbout();
-    });
-    aboutOverlay.addEventListener('click', deactivateAbout);
-    document.getElementById('aboutClose').addEventListener('click', deactivateAbout);
-  </script>
+    // Reset offscreen caches
+    _bgStarCanvas = null;
+    _bgStarDimFactor = -1;
+    _nebulaCanvas = null;
+    _coreCanvas = null;
+  }
+
+  window.addEventListener('resize', resize);
+
+  function animate(timestamp) {
+    if (startTime === null) startTime = timestamp;
+    const time = timestamp - startTime;
+
+    ctx.fillStyle = '#010104';
+    ctx.fillRect(0, 0, W, H);
+
+    drawBgStars();
+    drawGalaxy(time);
+    updatePhase(time);
+
+    for (let i = dataLines.length - 1; i >= 0; i--) {
+      if (!dataLines[i].update()) {
+        dataLines.splice(i, 1);
+      } else {
+        dataLines[i].draw();
+      }
+    }
+
+    agents.forEach(a => a.update());
+    formationAgents.forEach(a => a.update());
+    // Update about agents
+    aboutFormationAgents.forEach(a => a.update());
+    // Skip connections and team labels during formation or about
+    if (phase !== 'formation' && phase !== 'about') {
+      drawConnections();
+    }
+    agents.forEach(a => a.draw());
+    formationAgents.forEach(a => a.draw());
+    aboutFormationAgents.forEach(a => a.draw());
+    // Draw icon on top during formation based on type
+    if (phase === 'formation') {
+      if (currentShape === 'worldtime') {
+        drawAnimatedClock();
+      } else if (currentShape === 'forex') {
+        drawForexIcon();
+      } else if (currentShape === 'weather') {
+        drawWeatherIcon();
+      } else if (currentShape === 'crypto') {
+        drawCryptoIcon();
+      } else if (currentShape === 'earthquake') {
+        drawQuakeIcon();
+      }
+    }
+    if (phase !== 'formation' && phase !== 'about') {
+      drawTeamLabels(time);
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  initBgStars();
+  initGalaxy();
+  initNebulaCoreCache();
+  initBgStarCache();
+  requestAnimationFrame(animate);
+
+  // About trigger events - click to toggle
+  const aboutTrigger = document.getElementById('aboutTrigger');
+  const aboutOverlay = document.getElementById('aboutOverlay');
+  aboutTrigger.addEventListener('click', () => {
+    if (aboutActive) deactivateAbout();
+    else activateAbout();
+  });
+  aboutOverlay.addEventListener('click', deactivateAbout);
+  document.getElementById('aboutClose').addEventListener('click', deactivateAbout);
+</script>
 </body>
 
 </html>
