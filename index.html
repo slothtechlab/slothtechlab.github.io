@@ -43,12 +43,14 @@
       left: 30px;
       z-index: 100;
       pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1.5vw, 16px);
     }
 
     .brand-logo {
       width: clamp(28px, 4vw, 48px);
       height: auto;
-      margin-bottom: 8px;
       opacity: 0.9;
       filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
     }
@@ -243,9 +245,10 @@
     }
 
     .about-logo {
+      display: block;
+      margin: 0 auto 10px auto;
       width: 36px;
       height: auto;
-      margin-bottom: 10px;
       opacity: 0.85;
       filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
     }
@@ -341,6 +344,12 @@
         transform: translateX(-50%);
         text-align: center;
         white-space: nowrap;
+        flex-direction: column;
+      }
+
+      .brand-logo {
+        order: -1;
+        margin-bottom: 4px;
       }
 
       .brand h1 {
@@ -395,8 +404,10 @@
 
   <div class="brand">
     <img src="assets/logo-icon.png" alt="Ensemble Logo" class="brand-logo">
-    <h1>ENSEMBLE INC.</h1>
-    <p>AI Agent Development &amp; Consulting</p>
+    <div class="brand-text">
+      <h1>ENSEMBLE INC.</h1>
+      <p>AI Agent Development &amp; Consulting</p>
+    </div>
   </div>
 
   <div class="about-trigger" id="aboutTrigger">COMPANY INFO</div>
