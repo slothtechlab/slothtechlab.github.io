@@ -252,31 +252,32 @@
     }
 
     .about-logo {
-      width: 32px;
+      width: 36px;
       height: auto;
-      opacity: 0.9;
+      margin-bottom: 10px;
+      opacity: 0.85;
       filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
     }
 
     .about-panel h2 {
       font-family: 'Josefin Sans', sans-serif;
-      font-size: 20px;
+      font-size: 26px;
       font-weight: 300;
       color: #fff;
       letter-spacing: 0.25em;
-      margin: 0;
+      margin: 0 0 6px 0;
       text-transform: uppercase;
       text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     }
 
     .about-panel .tagline {
       font-family: 'Josefin Sans', sans-serif;
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 300;
       color: rgba(0, 200, 255, 0.6);
       letter-spacing: 0.35em;
       text-transform: uppercase;
-      margin: 4px 0 0 2px;
+      margin: 0 0 28px 0;
     }
 
     .about-panel .divider {
@@ -417,13 +418,9 @@
       style="position:absolute;top:14px;right:18px;cursor:pointer;color:rgba(255,255,255,0.3);font-size:18px;line-height:1;transition:color 0.3s;z-index:10;"
       onmouseover="this.style.color='rgba(255,255,255,0.8)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
       &times;</div>
-    <div class="about-title">
-      <img src="assets/logo-icon.png" alt="Ensemble Logo" class="about-logo">
-      <div style="text-align: left;">
-        <h2>ENSEMBLE INC.</h2>
-        <p class="tagline">AI Agent Development & Consulting</p>
-      </div>
-    </div>
+    <img src="assets/logo-icon.png" alt="Ensemble Logo" class="about-logo">
+    <h2>ENSEMBLE INC.</h2>
+    <p class="tagline">AI Agent Development & Consulting</p>
     <div class="divider"></div>
     <div style="display: flex; justify-content: center; gap: 48px; margin-bottom: 20px;">
       <div style="text-align: center;">
@@ -436,16 +433,22 @@
       </div>
     </div>
     <div class="divider"></div>
-    <div style="margin-bottom: 20px;">
-      <p class="info-label" style="text-align: center;">ADDRESS</p>
-      <p class="info-value" style="text-align: center;">
-        WARP OMOTESANDO, 4-26-28 Jingumae,<br>Shibuya-ku, Tokyo 150-0001
-      </p>
+    <div style="display: flex; justify-content: center; gap: 48px;">
+      <div style="text-align: center;">
+        <p class="info-label">Address</p>
+        <p class="info-value dim">&mdash;</p>
+      </div>
+      <div style="text-align: center;">
+        <p class="info-label">Capital</p>
+        <p class="info-value dim">&mdash;</p>
+      </div>
     </div>
-    <div style="text-align: center;">
-      <p class="info-label">CONTACT</p>
-      <a href="mailto:info@ensemble.inc" class="contact-link"
-        style="font-size: 14px; font-weight: 400; color: rgba(0, 200, 255, 0.85); letter-spacing: 0.1em; text-shadow: 0 0 8px rgba(0, 200, 255, 0.3);">info@ensemble.inc</a>
+    <div class="divider" style="margin-top: 24px;"></div>
+    <div style="text-align: center; margin-top: 20px;">
+      <p class="info-label">Contact</p>
+      <p class="info-value"
+        style="font-size: 14px; font-weight: 400; color: rgba(0, 200, 255, 0.85); letter-spacing: 0.1em; text-shadow: 0 0 8px rgba(0, 200, 255, 0.3);">
+        contact@ensemble.[domain]</p>
     </div>
   </div>
 
