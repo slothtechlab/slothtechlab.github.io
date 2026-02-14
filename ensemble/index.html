@@ -5,8 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ensemble Inc.</title>
-  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,10 +40,15 @@
       pointer-events: none;
     }
 
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 1.2vw, 14px);
+    }
+
     .brand-logo {
-      width: clamp(28px, 4vw, 48px);
+      width: clamp(26px, 3.5vw, 42px);
       height: auto;
-      margin-bottom: 8px;
       opacity: 0.9;
       filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
     }
@@ -238,10 +242,16 @@
       margin: 0 0 6px 0;
     }
 
+    .about-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
     .about-logo {
-      width: 36px;
+      width: 28px;
       height: auto;
-      margin-bottom: 10px;
       opacity: 0.85;
       filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
     }
@@ -377,8 +387,10 @@
   <canvas id="canvas"></canvas>
 
   <div class="brand">
-    <img src="assets/logo-icon.png" alt="Ensemble Logo" class="brand-logo">
-    <h1>ENSEMBLE INC.</h1>
+    <div class="brand-title">
+      <img src="assets/logo-icon.png" alt="Ensemble Logo" class="brand-logo">
+      <h1>ENSEMBLE INC.</h1>
+    </div>
     <p>AI Agent Development & Consulting</p>
   </div>
 
@@ -391,8 +403,10 @@
       style="position:absolute;top:14px;right:18px;cursor:pointer;color:rgba(255,255,255,0.3);font-size:18px;line-height:1;transition:color 0.3s;z-index:10;"
       onmouseover="this.style.color='rgba(255,255,255,0.8)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
       &times;</div>
-    <img src="assets/logo-icon.png" alt="Ensemble Logo" class="about-logo">
-    <h2>ENSEMBLE INC.</h2>
+    <div class="about-title">
+      <img src="assets/logo-icon.png" alt="Ensemble Logo" class="about-logo">
+      <h2>ENSEMBLE INC.</h2>
+    </div>
     <p class="tagline">AI Agent Development & Consulting</p>
     <div class="divider"></div>
     <div style="display: flex; justify-content: center; gap: 48px; margin-bottom: 20px;">
