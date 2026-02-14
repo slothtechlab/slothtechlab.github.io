@@ -5,6 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ensemble Inc.</title>
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -18,7 +24,7 @@
       height: 100%;
       overflow: hidden;
       background: #010104;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     canvas {
@@ -35,20 +41,30 @@
       pointer-events: none;
     }
 
+    .brand-logo {
+      width: clamp(28px, 4vw, 48px);
+      height: auto;
+      margin-bottom: 8px;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
+    }
+
     .brand h1 {
-      font-size: clamp(24px, 4vw, 48px);
-      font-weight: 600;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: clamp(22px, 3.5vw, 42px);
+      font-weight: 300;
       color: #fff;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.25em;
       margin: 0;
     }
 
     .brand p {
-      font-size: clamp(10px, 1.2vw, 14px);
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: clamp(9px, 1.1vw, 13px);
       font-weight: 300;
-      color: rgba(255, 255, 255, 0.5);
-      letter-spacing: 0.3em;
-      margin: 8px 0 0 0;
+      color: rgba(255, 255, 255, 0.45);
+      letter-spacing: 0.35em;
+      margin: 6px 0 0 2px;
       text-transform: uppercase;
     }
 
@@ -58,7 +74,7 @@
       right: 30px;
       z-index: 100;
       cursor: pointer;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 11px;
       font-weight: 500;
       color: rgba(0, 200, 255, 0.7);
@@ -214,11 +230,20 @@
     }
 
     .about-panel h2 {
+      font-family: 'Josefin Sans', sans-serif;
       font-size: 26px;
-      font-weight: 600;
+      font-weight: 300;
       color: #fff;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.25em;
       margin: 0 0 6px 0;
+    }
+
+    .about-logo {
+      width: 36px;
+      height: auto;
+      margin-bottom: 10px;
+      opacity: 0.85;
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.15));
     }
 
     .about-panel .tagline {
@@ -352,6 +377,7 @@
   <canvas id="canvas"></canvas>
 
   <div class="brand">
+    <img src="assets/logo-icon.png" alt="Ensemble Logo" class="brand-logo">
     <h1>ENSEMBLE INC.</h1>
     <p>AI Agent Development & Consulting</p>
   </div>
@@ -365,6 +391,7 @@
       style="position:absolute;top:14px;right:18px;cursor:pointer;color:rgba(255,255,255,0.3);font-size:18px;line-height:1;transition:color 0.3s;z-index:10;"
       onmouseover="this.style.color='rgba(255,255,255,0.8)'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
       &times;</div>
+    <img src="assets/logo-icon.png" alt="Ensemble Logo" class="about-logo">
     <h2>ENSEMBLE INC.</h2>
     <p class="tagline">AI Agent Development & Consulting</p>
     <div class="divider"></div>
@@ -1183,7 +1210,7 @@
         const s = line.size || fontSize;
         y += s * 1.5;
         if (line.text) {
-          offCtx.font = `${line.weight} ${s}px system-ui`;
+          offCtx.font = `${line.weight} ${s}px 'Josefin Sans', system-ui`;
           offCtx.fillText(line.text, W / 2, y);
         }
       });
