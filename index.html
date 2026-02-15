@@ -191,20 +191,17 @@
       pointer-events: none;
     }
 
-    .team-bracket-bottom {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 16px;
-    }
-
-    .team-bracket-bottom::after {
+    .team-panel::after {
       content: '';
-      display: block;
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
       width: 16px;
       height: 16px;
       border-color: rgba(0, 180, 255, 0.3);
       border-style: solid;
       border-width: 0 1px 1px 0;
+      pointer-events: none;
     }
 
     .team-panel.active {
@@ -244,12 +241,7 @@
       margin: 0 0 8px 0;
     }
 
-    .team-panel .divider {
-      width: 100%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(0, 150, 255, 0.2), transparent);
-      margin: 0 0 16px 0;
-    }
+
 
     .team-member {
       text-align: left;
@@ -658,7 +650,6 @@
     <img src="assets/logo-icon.png" alt="Ensemble Logo" class="about-logo">
     <h2>ABOUT US</h2>
     <p class="tagline">Our Team</p>
-    <div class="divider"></div>
 
     <div class="team-member">
       <div class="team-member-header">
@@ -688,8 +679,6 @@
         <p>At Ensemble, he leads the design and development of practical AI solutions for organizations.</p>
       </div>
     </div>
-
-    <div class="team-bracket-bottom"></div>
   </div>
 
   <div class="about-overlay" id="aboutOverlay"></div>
