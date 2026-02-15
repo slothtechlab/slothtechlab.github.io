@@ -174,34 +174,36 @@
       min-width: min(560px, 90vw);
       max-width: 90vw;
       max-height: 85vh;
-      overflow: hidden;
-    }
-
-    .team-panel-content {
-      max-height: calc(85vh - 96px);
       overflow-y: auto;
       overflow-x: hidden;
     }
 
-    .team-panel::before,
-    .team-panel::after {
+    .team-panel::before {
       content: '';
       position: absolute;
+      top: 8px;
+      left: 8px;
       width: 16px;
       height: 16px;
       border-color: rgba(0, 180, 255, 0.3);
       border-style: solid;
-    }
-
-    .team-panel::before {
-      top: 8px;
-      left: 8px;
       border-width: 1px 0 0 1px;
+      pointer-events: none;
     }
 
-    .team-panel::after {
-      bottom: 8px;
-      right: 8px;
+    .team-bracket-bottom {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    .team-bracket-bottom::after {
+      content: '';
+      display: block;
+      width: 16px;
+      height: 16px;
+      border-color: rgba(0, 180, 255, 0.3);
+      border-style: solid;
       border-width: 0 1px 1px 0;
     }
 
@@ -239,7 +241,14 @@
       color: white;
       letter-spacing: 0.35em;
       text-transform: uppercase;
-      margin: 0 0 14px 0;
+      margin: 0 0 8px 0;
+    }
+
+    .team-panel .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 150, 255, 0.2), transparent);
+      margin: 0 0 16px 0;
     }
 
     .team-member {
@@ -580,10 +589,6 @@
         max-height: 80vh;
       }
 
-      .team-panel-content {
-        max-height: calc(80vh - 48px);
-      }
-
       .team-panel h2 {
         font-size: 16px;
       }
@@ -653,40 +658,38 @@
     <img src="assets/logo-icon.png" alt="Ensemble Logo" class="about-logo">
     <h2>ABOUT US</h2>
     <p class="tagline">Our Team</p>
-    <div class="team-panel-content">
-      <div class="divider"></div>
+    <div class="divider"></div>
 
-      <div class="team-member">
-        <div class="team-member-header">
-          <span class="team-member-name">TAKESHI MASUDA</span>
-          <span class="team-member-role">CEO / Strategist</span>
-        </div>
-        <div class="team-member-bio">
-          <p>Takeshi brings nearly 20 years of experience in marketing and design. He was an early pioneer of influencer
-            advertising in Japan, gaining hands-on expertise across sales, media operations, and campaign planning.</p>
-          <p>He later served as an external advisor for a construction-tech startup, leading PR, marketing, and team
-            building&mdash;including international hiring&mdash;to drive growth with a lean team.</p>
-          <p>At Ensemble, he oversees business strategy and marketing, while continuing to work as a designer
-            specializing
-            in poker table designs for tournaments and venues nationwide.</p>
-        </div>
+    <div class="team-member">
+      <div class="team-member-header">
+        <span class="team-member-name">TAKESHI MASUDA</span>
+        <span class="team-member-role">CEO / Strategist</span>
       </div>
-
-      <div class="team-member">
-        <div class="team-member-header">
-          <span class="team-member-name">MIKITO MATSUI</span>
-          <span class="team-member-role">COO / Developer</span>
-        </div>
-        <div class="team-member-bio">
-          <p>Mikito began his career building enterprise systems, including airport check-in platforms, before turning
-            his
-            focus to generative AI.</p>
-          <p>His Udemy courses have reached over 10,000 students and earned bestseller status. He has also developed AI
-            training programs for publicly listed companies in Japan.</p>
-          <p>At Ensemble, he leads the design and development of practical AI solutions for organizations.</p>
-        </div>
+      <div class="team-member-bio">
+        <p>Takeshi brings nearly 20 years of experience in marketing and design. He was an early pioneer of influencer
+          advertising in Japan, gaining hands-on expertise across sales, media operations, and campaign planning.</p>
+        <p>He later served as an external advisor for a construction-tech startup, leading PR, marketing, and team
+          building&mdash;including international hiring&mdash;to drive growth with a lean team.</p>
+        <p>At Ensemble, he oversees business strategy and marketing, while continuing to work as a designer specializing
+          in poker table designs for tournaments and venues nationwide.</p>
       </div>
     </div>
+
+    <div class="team-member">
+      <div class="team-member-header">
+        <span class="team-member-name">MIKITO MATSUI</span>
+        <span class="team-member-role">COO / Developer</span>
+      </div>
+      <div class="team-member-bio">
+        <p>Mikito began his career building enterprise systems, including airport check-in platforms, before turning his
+          focus to generative AI.</p>
+        <p>His Udemy courses have reached over 10,000 students and earned bestseller status. He has also developed AI
+          training programs for publicly listed companies in Japan.</p>
+        <p>At Ensemble, he leads the design and development of practical AI solutions for organizations.</p>
+      </div>
+    </div>
+
+    <div class="team-bracket-bottom"></div>
   </div>
 
   <div class="about-overlay" id="aboutOverlay"></div>
